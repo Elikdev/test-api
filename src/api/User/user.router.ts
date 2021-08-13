@@ -1,9 +1,12 @@
 import {Router} from "express";
-import {successRes} from "../../utils/response";
+import {userController} from "./user.controller";
 
 
 const userRouter = Router()
 
-userRouter.route('/').get((req, res) => {
-    successRes(res, {}, 'success', 200)
-})
+userRouter.route('/')
+    // sign up
+    .post(userController.signUp)
+
+userRouter.route('/')
+    .post()
