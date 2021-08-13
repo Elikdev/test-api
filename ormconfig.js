@@ -1,15 +1,15 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 
-if (process.NODE_ENV === 'production'){
+if (process.env.NODE_ENV === 'production'){
    dotenv.config()
 }else {
    dotenv.config({ path: '.test.env'})
 }
 
-export default  {
-   "type": "pg",
+module.exports =  {
+   "type": "postgres",
    "host": "localhost",
-   "port": 3306,
+   "port": 5432,
    "username": process.env.DB_USER,
    "password": process.env.DB_PASSWORD,
    "database": process.env.DB_NAME,
