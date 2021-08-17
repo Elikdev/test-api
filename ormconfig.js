@@ -27,5 +27,10 @@ module.exports =  {
    "cli": {
       "migrationsDir": "src/db/migration",
       "subscribersDir": "src/subscriber"
-   }
+   },
+   "extra": {
+      "ssl": {
+        "rejectUnauthorized": false
+      }
+    }
 }
