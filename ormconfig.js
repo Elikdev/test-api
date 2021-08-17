@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 if (process.env.NODE_ENV === 'production'){
    dotenv.config()
 }else {
-   dotenv.config({ path: '.test.env'})
+   dotenv.config({ path: '.dev.env'})
 }
 
 module.exports =  {
@@ -16,7 +16,7 @@ module.exports =  {
    "synchronize": false,
    "logging": false,
    "entities": [
-      "src/db/api/**/*.model.ts"
+      "src/api/**/*.model.ts"
    ],
    "migrations": [
       "src/db/migration/**/*.ts"
@@ -25,7 +25,6 @@ module.exports =  {
       "src/subscriber/**/*.ts"
    ],
    "cli": {
-      "entitiesDir": "src/db/api/",
       "migrationsDir": "src/db/migration",
       "subscribersDir": "src/subscriber"
    }

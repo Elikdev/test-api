@@ -12,6 +12,12 @@ export enum AccountStatus {
     PENDING = "pending"
 }
 
+export enum AccountType {
+    FAN = "fan",
+    ADMIN = "admin",
+    CELEB = "celebrity"
+}
+
 export type innerResponse = {
     status: boolean,
     statusCode: number,
@@ -19,14 +25,35 @@ export type innerResponse = {
     data : any
 }
 
+
+export interface jwtCred  {
+    username: string
+    email: string 
+    first_name: string 
+    last_name: string
+}
+
+
+
+
 export class BaseService {
-    public  internalResponse (status: boolean = true , data : any, statusCode: number = 200 , message: string = "success") : innerResponse {
+    public  internalResponse (status = true , data : any, statusCode = 200 , message = "success") : innerResponse {
         return {
             status,
             statusCode,
             message,
             data
         }
+    }
+
+    public async save<T, B> (model: EntityTarget<T>, params: T): Promise<T> {
+        return await getRepository(model).save(params)
+    }
+
+    public async findOne<T, B> (model:EntityTarget<T>, params: B ): Promise<T> {
+        return await getRepository(model).findOne(
+            params
+        )
     }
 
     public async getOne<T>(model: EntityTarget<T>, id:number): Promise<T> {
@@ -50,7 +77,7 @@ export class BaseService {
             params,
         )
     }
-    public async execQuery<T>(model: EntityTarget<T> ,query: string) {
+    public async execQuery<T>(model: EntityTarget<T> ,query: string):Promise<T> {
         return await getRepository(model).query(query)
     }
 }

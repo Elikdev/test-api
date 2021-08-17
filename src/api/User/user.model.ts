@@ -1,6 +1,7 @@
+
 import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index} from "typeorm";
-import {AccountStatus, Gender} from "../../enums"
-@Entity()
+import {AccountStatus, Gender, AccountType} from "../../enums"
+@Entity({name: 'user' })
 export class User {
 
     @PrimaryGeneratedColumn()
@@ -22,13 +23,17 @@ export class User {
     @Column()
     profile_pic: string
 
+
+    @Column()
+    phone: string
+
     @Column()
     descriptions: string
 
-    @Column({ default : "pending" })
-    acount_type: ["fan", "admin", "user"]
+    @Column({ type:"enum", enum: AccountType })
+    account_type: AccountType
 
-    @Column({default:AccountStatus.PENDING, type: "enum" })
+    @Column({default:AccountStatus.PENDING, type: "enum", enum: AccountStatus })
     status: AccountStatus
 
     @Column({nullable: false, type: "enum", enum: Gender, default: Gender.UNKNOWN })
@@ -37,14 +42,14 @@ export class User {
     @Column({ type: "date"})
     date_of_birth:string
 
-    @Column()
+    @Column({nullable:true})
     profile_wallpaper:string
 
     @Index({unique: true})
     @Column({ unique: true, nullable:false })
     email:string
 
-    @Column( { type: 'timestamptz' })
+    @Column( { type: 'timestamp' })
     last_seen : Date
 
     @Column({default:0})
@@ -56,13 +61,13 @@ export class User {
     @Column({default:0})
     posts_count: number
 
-    @Column()
+    @Column({nullable:true})
     location: string
 
-    @CreateDateColumn()
+    @CreateDateColumn({type: "timestamp",default: () =>  "CURRENT_TIMESTAMP(6)" })
     created_at: Date;
 
-    @UpdateDateColumn()
+    @UpdateDateColumn({type:"timestamp", default: () =>  "CURRENT_TIMESTAMP(6)" })
     updated_at: Date;
 
 }

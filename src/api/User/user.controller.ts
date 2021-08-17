@@ -4,7 +4,7 @@ import {errorResponse, successRes} from "../../utils/response";
 
 class UserControllers {
     public async getUserDetails( req: Request, res: Response ) {
-        let response = await userService.getUser(req.body.user.id)
+        const response = await userService.getUser(req.body.user.id)
         if(!response.status){
             return errorResponse(res, response.message, response.statusCode)
         }
@@ -13,13 +13,14 @@ class UserControllers {
 
     public async signUp (req: Request, res: Response){
         try {
-            let userDTO = req.body;
-            let response = await userService.SignUp(userDTO)
+            const userDTO = req.body;
+            const response = await userService.SignUp(userDTO)
             if(!response.status){
                 return errorResponse(res, response.message, response.statusCode)
             }
             return  successRes(res, response.data)
         }catch (e){
+            console.log(e)
             return errorResponse(res, "an error occured contact support", 500)
         }
     }

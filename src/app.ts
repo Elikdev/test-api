@@ -1,8 +1,9 @@
-import express, {Request, Response} from 'express'
+import express, { Request, Response } from 'express'
 import * as bodyParser from "body-parser";
 import helmet from 'helmet'
-import {isCelebrateError} from "celebrate";
-import {errorResponse} from "./utils/response";
+import { isCelebrateError } from "celebrate";
+import { errorResponse } from "./utils/response";
+import { userRouter } from './api/User/user.router';
 
 
 const app = express()
@@ -12,6 +13,7 @@ app.use(bodyParser.json())
 
 
 /** Routes **/
+app.use('/user', userRouter)
 
 app.use('*', (req, res) => {
     return errorResponse(res, "route not found", 404)
