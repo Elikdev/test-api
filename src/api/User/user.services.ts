@@ -60,6 +60,36 @@ class UserServices extends BaseService {
 
         return this.internalResponse(true, user)
     }
+
+
+
+    public async signIn (userDTO: {email: string , password: string}) {
+        const user = await this.findOne(User, {
+            where : {
+                email: userDTO.email
+            }
+        })
+
+        if (!user) {
+            return this.internalResponse(false, {}, 404, "Incorrect Email or Password!")
+        }
+
+        const validated = AuthModule.compareHash(userDTO.password, user.password)
+
+        if(!validated){
+            return this.internalResponse(false, {}, 400, "Incorrect Email or Password!")
+        }
+
+        const token = AuthModule.generateJWT({
+            email: user.email,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            username: user.username
+        })
+
+        return this.internalResponse(true, {token})
+
+    }
 }
 
 export const userService = new UserServices()

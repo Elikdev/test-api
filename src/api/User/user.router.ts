@@ -24,4 +24,15 @@ userRouter.route('/sign-up')
         userController.signUp
     )
 
+userRouter.route('/login')
+    .post(celebrate({
+        body: Joi.object({
+            email: Joi.string().email().required(),
+            password: Joi.string().required()
+        })
+    }),
+    userController.signIn
+)
+
+
 export { userRouter }

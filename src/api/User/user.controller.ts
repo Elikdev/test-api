@@ -24,6 +24,20 @@ class UserControllers {
             return errorResponse(res, "an error occured contact support", 500)
         }
     }
+
+    public async signIn (req: Request, res: Response ){
+        try {
+            const userDTO = req.body;
+            const response = await userService.signIn(userDTO)
+            if(!response.status){
+                return errorResponse(res, response.message, response.statusCode)
+            }
+            return  successRes(res, response.data)
+        }catch (e){
+            console.log(e)
+            return errorResponse(res, "an error occured contact support", 500)
+        }
+    }
 }
 
 export const userController = new UserControllers()
