@@ -20,6 +20,25 @@ Steps to run this project:
     └── README.md
 ###
 
+
+### todos
+// install typeorm => ORM  => npm install typeorm -g
+// typescript => compiler => npm install -g typescript
+// postgresql => database => https://www.postgresql.org/download/ 
+
+=> set  root as username and password
+
+
+=> crash course on typescript
+
+=> crash course on sql 
+
+=> cli typeorm
+
+=> crash course typeorm
+
+
+
 ####  Remenber to Update your tests for Every PR. 
 ####  Pushing to the main branch is prohibited.
 ####  Allways pull before pushing. 

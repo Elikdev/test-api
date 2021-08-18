@@ -71,7 +71,7 @@ class UserServices extends BaseService {
         })
 
         if (!user) {
-            return this.internalResponse(false, {}, 404, "Incorrect Email or Password!")
+            return this.internalResponse(false, {}, 400, "Incorrect Email or Password!")
         }
 
         const validated = AuthModule.compareHash(userDTO.password, user.password)

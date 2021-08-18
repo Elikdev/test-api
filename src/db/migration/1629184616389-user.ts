@@ -14,8 +14,6 @@ export class user1629184616389 implements MigrationInterface {
                     isNullable: false,
                     isGenerated: true
                 },
-
-
                 {
                     name: 'firstName',
                     type: 'varchar'

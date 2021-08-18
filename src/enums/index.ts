@@ -25,7 +25,6 @@ export type innerResponse = {
     data : any
 }
 
-
 export interface jwtCred  {
     username: string
     email: string 
