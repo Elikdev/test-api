@@ -1,7 +1,8 @@
 
-import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index} from "typeorm";
-import {AccountStatus, Gender, AccountType} from "../../enums"
-@Entity({name: 'user' })
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, OneToMany, JoinColumn, OneToOne } from "typeorm";
+import { AccountStatus, Gender, AccountType } from "../../enums"
+import { Interest } from "../Interests/interest.model";
+@Entity({ name: 'user' })
 export class User {
 
     @PrimaryGeneratedColumn()
@@ -13,11 +14,11 @@ export class User {
     @Column()
     lastName: string;
 
-    @Column({nullable:false})
+    @Column({ nullable: false })
     password: string
 
-    @Index({unique: true})
-    @Column({ nullable: false})
+    @Index({ unique: true })
+    @Column({ nullable: false })
     username: string
 
     @Column()
@@ -30,44 +31,48 @@ export class User {
     @Column()
     descriptions: string
 
-    @Column({ type:"enum", enum: AccountType })
+    @Column({ type: "enum", enum: AccountType })
     account_type: AccountType
 
-    @Column({default:AccountStatus.PENDING, type: "enum", enum: AccountStatus })
+    @Column({ default: AccountStatus.PENDING, type: "enum", enum: AccountStatus })
     status: AccountStatus
 
-    @Column({nullable: false, type: "enum", enum: Gender, default: Gender.UNKNOWN })
+    @Column({ nullable: false, type: "enum", enum: Gender, default: Gender.UNKNOWN })
     sex: Gender
 
-    @Column({ type: "date"})
-    date_of_birth:string
+    @Column({ type: "date" })
+    date_of_birth: string
 
-    @Column({nullable:true})
-    profile_wallpaper:string
+    @Column({ nullable: true })
+    profile_wallpaper: string
 
-    @Index({unique: true})
-    @Column({ unique: true, nullable:false })
-    email:string
+    @Index({ unique: true })
+    @Column({ unique: true, nullable: false })
+    email: string
 
-    @Column( { type: 'timestamp' })
-    last_seen : Date
+    @Column({ type: 'timestamp' })
+    last_seen: Date
 
-    @Column({default:0})
+    @Column({ default: 0 })
     followers_count: number
 
-    @Column({default:0})
+    @Column({ default: 0 })
     following_count: number
 
-    @Column({default:0})
+    @Column({ default: 0 })
     posts_count: number
 
-    @Column({nullable:true})
+    @Column({ nullable: true })
     location: string
 
-    @CreateDateColumn({type: "timestamp",default: () =>  "CURRENT_TIMESTAMP(6)" })
+    @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
     created_at: Date;
 
-    @UpdateDateColumn({type:"timestamp", default: () =>  "CURRENT_TIMESTAMP(6)" })
+    @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
     updated_at: Date;
+
+    @OneToOne(() => Interest)
+    @JoinColumn()
+    interest: Interest;
 
 }

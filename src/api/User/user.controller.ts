@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {userService} from "./user.services";
+import {userService} from "./user.service";
 import {errorResponse, successRes} from "../../utils/response";
 
 class UserControllers {

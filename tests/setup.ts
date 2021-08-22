@@ -20,7 +20,7 @@
 //         logging:false,
 //         username: process.env.DB_USER,
 //         password: process.env.DB_PASSWORD,
-//         database: 'bamiki_test',
+//         database: 'attenvo_test',
 //         entities: [
 //             User
 //         ],
@@ -38,4 +38,3 @@
 //     await connection.dropDatabase()
 //     await connection.close()
 // })
-

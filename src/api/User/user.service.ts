@@ -1,9 +1,10 @@
 import { AccountType, BaseService } from "../../enums";
 import { User } from "./user.model";
 import { getRepository } from "typeorm";
-import { AuthModule } from "../../utils/auth";
+import  {AuthModule}  from "../../utils/auth";
 
 class UserServices extends BaseService {
+    super
     public async getUser(id: number) {
         const userDetails = await this.getOne(User, id)
         if (!userDetails) {
@@ -54,7 +55,7 @@ class UserServices extends BaseService {
             username: userDTO.user_name
         })
 
-        user = await getRepository(User).save(user)
+        user = await this.save(User,user)
 
         delete user.password
 
@@ -81,6 +82,7 @@ class UserServices extends BaseService {
         }
 
         const token = AuthModule.generateJWT({
+            id: user.id,
             email: user.email,
             first_name: user.firstName,
             last_name: user.lastName,
