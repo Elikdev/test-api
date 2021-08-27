@@ -2,6 +2,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, OneToMany, JoinColumn, OneToOne } from "typeorm";
 import { AccountStatus, Gender, AccountType } from "../../enums"
 import { Interest } from "../Interests/interest.model";
+import { Wallet } from "../wallet/wallet.model";
 @Entity({ name: 'user' })
 export class User {
 
@@ -74,5 +75,8 @@ export class User {
     @OneToOne(() => Interest)
     @JoinColumn()
     interest: Interest;
+
+    @OneToOne(() => Wallet)
+    wallet: Wallet
 
 }
