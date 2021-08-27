@@ -39,22 +39,54 @@ class UserControllers {
   }
  }
 
- // public async forgotPassword(req: Request, res: Response){
- //  try {
- //   const userDTO = req.body;
- //   const response = await userService.forgotPassword(userDTO);
+ public async forgotPassword(req: Request, res: Response){
+  try {
+   const userDTO = req.body;
+   const response = await userService.forgotPassword(userDTO);
 
- //   if(!response.status){
- //    return errorResponse(res, response.message, response.statusCode)
- //   }
+   if(!response.status){
+    return errorResponse(res, response.message, response.statusCode)
+   }
 
- //   return successRes(res, response.data)
- //  } catch (error) {
- //   console.log(error);
- //   return errorResponse(res, "an error occured contact support", 500)
- //  }
+   return successRes(res, response.data, response.message)
+  } catch (error) {
+   console.log(error);
+   return errorResponse(res, "an error occured contact support", 500)
+  }
+ }
 
- // }
+ public async verifyOtp(req: Request, res: Response){
+  try {
+   const userDTO = req.body;
+   const response = await userService.verifyOtp(userDTO);
+
+   if(!response.status){
+    return errorResponse(res, response.message, response.statusCode)
+   }
+
+   return successRes(res, response.data, response.message)
+  } catch (error) {
+   console.log(error);
+   return errorResponse(res, "an error occured contact support", 500)
+  }
+ }
+
+ public async resetPassword(req: Request, res: Response){
+  try {
+   const userDTO = req.body;
+   const updatedUserDTO = {...userDTO, token: req.query.token}
+   const response = await userService.resetPassword(updatedUserDTO);
+
+   if(!response.status){
+    return errorResponse(res, response.message, response.statusCode)
+   }
+
+   return successRes(res, response.data, response.message)
+  } catch (error) {
+   console.log(error);
+   return errorResponse(res, "an error occured contact support", 500)
+  }
+ }
 
  public async updateProfile(req: Request, res: Response) {
   try {

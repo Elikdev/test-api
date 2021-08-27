@@ -1,5 +1,5 @@
 import { celebrate } from "celebrate";
-import {Router} from "express";
+import { query, Router } from "express";
 import Joi from "joi";
 import { AccountType, Gender } from "../../enums";
 import { AuthModule } from "../../utils/auth";
@@ -35,6 +35,37 @@ userRouter.route('/login')
     }),
     userController.signIn
 )
+
+userRouter.route("/forgot-password").post(
+    celebrate({
+        body: Joi.object({
+            email: Joi.string().email().required(),
+        }),
+    }),
+    userController.forgotPassword
+);
+
+userRouter.route("/forgot-password/verify-otp").post(
+    celebrate({
+        body: Joi.object({
+            email: Joi.string().email().required(),
+            otp_code: Joi.string().required(),
+        }),
+    }),
+    userController.verifyOtp
+);
+
+userRouter.route("/forgot-password/reset-password").post(
+    celebrate({
+        body: Joi.object({
+            new_password: Joi.string().required(),
+        }),
+        query: Joi.object({
+            token: Joi.string().required(),
+        }),
+    }),
+    userController.resetPassword
+);
 
 userRouter.route("/update-profile").post(
  AuthModule.isAuthenticatedUser,

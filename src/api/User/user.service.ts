@@ -1,5 +1,6 @@
-import { AccountType, BaseService, jwtCred, Gender } from "../../enums";
+import { AccountType, BaseService, jwtCred, Gender, AccountStatus, ChannelType } from "../../enums";
 import { User } from "./user.model";
+import {Auth_cred} from "./authCred.model";
 import { getRepository } from "typeorm";
 import { AuthModule } from "../../utils/auth";
 
@@ -89,6 +90,129 @@ class UserServices extends BaseService {
 
   return this.internalResponse(true, { token });
  }
+
+ public async forgotPassword(userDTO: {email: string; channel: ChannelType}) {
+     //check if email is registered
+     const user_exists =  await this.findOne(User, {
+         where: {
+             email: userDTO.email,
+         }
+     })
+
+     if(!user_exists){
+         return this.internalResponse(false, {}, 400, 'Email is not registered')
+     }
+
+     //check if user status is pending or disabled -- testing (Add AccountStatus.PENDING) 
+     if(user_exists.status === AccountStatus.DISABLED){
+        return this.internalResponse(false, {}, 400, 'Account disabled, contact support')
+     }
+     
+     //generate otp
+     const otp = AuthModule.generateOtp(6);
+     const expiry_time = new Date(Date.now() + 18000000)//5hrs
+
+     const new_otp = await getRepository(Auth_cred).create({
+         OTP: otp,
+         expTime: expiry_time,
+         receipient: userDTO.email,
+         channel: userDTO.channel,
+         userId: user_exists.id
+     })
+
+     //send email to user
+     const result = await this.save(Auth_cred, new_otp)
+
+     return this.internalResponse(true, {OTP: result.OTP}, 200, "otp generated, expires in 5hrs")
+     
+ }
+
+ public async verifyOtp(userDTO: {email: string; otp_code: string}) {
+    //check if email is registered
+    let auth_cred = await getRepository(Auth_cred).findOne({
+        where : {
+         OTP: userDTO.otp_code,
+        receipient: userDTO.email
+
+        }
+        
+    })
+
+    if(!auth_cred){ 
+        return this.internalResponse(false, {}, 400, "Invalid OTP")
+    }
+
+    if(auth_cred.receipient !== userDTO.email){ 
+        return this.internalResponse(false, {}, 400, "Invalid email")
+    }
+
+    if(auth_cred.blackListed || auth_cred.verified){
+        return this.internalResponse(false, {}, 400, "Invalid otp")
+    }
+
+    const expir_time = new Date(auth_cred.expTime)
+    
+    //compare otp
+    if(new Date(Date.now()) > expir_time){
+        return this.internalResponse(false, {}, 400, "Expired OTP code")
+    }
+    
+    if(userDTO.otp_code !== auth_cred.OTP){
+        return this.internalResponse(false, {}, 400, "Invalid OTP code")
+    }
+
+    auth_cred.blackListed = true
+    auth_cred.verified = true
+    auth_cred.OTP = "------"
+
+    //update auth credentials
+    await this.updateOne(Auth_cred, auth_cred)
+
+
+    //generate a token that will expire in 5 mins
+    const token = AuthModule.createOtpToken({id: auth_cred.userId})
+
+    return this.internalResponse(true, {token}, 200, "otp verified")
+    
+}
+
+public async resetPassword(userDTO: {token: string, new_password: string}) {
+    //verify token
+    const verify =  AuthModule.verifyOtpToken(userDTO.token)
+
+    if(!verify.verified){
+        return this.internalResponse(false, {}, 400, verify?.message ? verify.message : 'Unauthorized')
+    }
+
+    const user_id = verify.otpDetails.id
+
+    if(!user_id){
+        return this.internalResponse(false, {}, 401, "Unauthorized")
+    }
+
+    const user = await this.findOne(User, {
+        where: {
+            id: user_id
+        }
+    })
+
+    if(!user){
+        return this.internalResponse(false, {}, 400, "Unauthorized")
+    }
+
+    const hashedPassword = AuthModule.hashPassWord(userDTO.new_password)
+
+    const new_password = {
+        password: hashedPassword
+    }
+
+    //update password
+    await this.schema(User).merge(user, new_password)
+
+    //send mail
+
+    return this.internalResponse(true, {}, 200, "Password reset successfully")
+}
 
  public async updateProfile(
   authUser: jwtCred,

@@ -1,29 +1,38 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { ChannelType } from "../../enums";
 
 @Entity({ name: "auth_cred" })
 export class Auth_cred {
- @PrimaryGeneratedColumn()
- id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
- @Column()
- OTP: string;
+    @Column()
+    OTP: string;
 
- @Column({ default: false })
- blackListed: boolean;
+    @Column({ default: false })
+    blackListed: boolean;
 
- @Column({ default: () => "CURRENT_TIMESTAMP(6)" })
- issueTime: Date;
+    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
+    issueTime: Date;
 
- @Column()
- expTime: Date;
+    @Column()
+    expTime: Date;
 
- @Column()
- receipient: string;
+    @Column()
+    receipient: string;
 
- @Column({ default: ChannelType.EMAIL, type: "enum", enum: ChannelType })
- channel: ChannelType;
+    @Column()
+    userId: number;
 
- @Column({ default: false })
- verified: boolean;
+    @Column({ default: ChannelType.EMAIL, type: "enum", enum: ChannelType })
+    channel: ChannelType;
+
+    @Column({ default: false })
+    verified: boolean;
+
+    @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
+    created_at: Date;
+   
+    @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
+    updated_at: Date;
 }

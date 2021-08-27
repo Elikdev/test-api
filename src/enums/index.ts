@@ -19,8 +19,8 @@ export enum AccountType {
 }
 
 export enum ChannelType {
- EMAIL = "email",
- MOBILE = "mobile",
+    EMAIL = "email",
+    SMS = "sms",
 }
 
 export type innerResponse = {
