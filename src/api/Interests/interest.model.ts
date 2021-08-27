@@ -1,7 +1,5 @@
 import { Column, CreateDateColumn, Entity,  ManyToOne,  PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Industries } from "../../enums";
-import { User } from "../User/user.model";
-
 
 @Entity({ name: 'interest' })
 export class Interest {

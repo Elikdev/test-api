@@ -1,17 +1,18 @@
 import {
- Entity,
- PrimaryGeneratedColumn,
- Column,
- CreateDateColumn,
- UpdateDateColumn,
- Index,
- OneToMany,
- JoinColumn,
- OneToOne,
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    CreateDateColumn,
+    UpdateDateColumn,
+    Index,
+    OneToMany,
+    JoinColumn,
+    OneToOne,
 } from "typeorm";
 import { AccountStatus, Gender, AccountType } from "../../enums";
 import { Interest } from "../Interests/interest.model";
 import { Payment_detail } from "../Payment/payment.model";
+import { Wallet } from "../wallet/wallet.model";
 @Entity({ name: "user" })
 export class User {
     @PrimaryGeneratedColumn()
@@ -100,4 +101,7 @@ export class User {
 
     @OneToOne(() => Payment_detail, (payment_detail) => payment_detail.user)
     payment_details: Payment_detail;
+
+    @OneToOne(() => Wallet)
+    wallet: Wallet;
 }
