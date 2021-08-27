@@ -1,8 +1,10 @@
 import { celebrate } from "celebrate";
 import {Router} from "express";
 import Joi from "joi";
-import { AccountType } from "../../enums";
+import { AccountType, Gender } from "../../enums";
+import { AuthModule } from "../../utils/auth";
 import {userController} from "./user.controller";
+import { paymentDetailsController } from "../Payment/payment.controller";
 
 
 const userRouter = Router()
@@ -33,6 +35,42 @@ userRouter.route('/login')
     }),
     userController.signIn
 )
+
+userRouter.route("/update-profile").post(
+ AuthModule.isAuthenticatedUser,
+ celebrate({
+  body: Joi.object({
+   first_name: Joi.string().optional(),
+   last_name: Joi.string().optional(),
+   descriptions: Joi.string().optional(),
+   location: Joi.string().optional(),
+   date_of_birth: Joi.date().optional(),
+   sex: Joi.allow(Gender.MALE, Gender.FEMALE, Gender.UNKNOWN).optional(),
+  }),
+ }),
+ userController.updateProfile
+);
+
+userRouter
+ .route("/payment-details")
+ .get(
+  AuthModule.isAuthenticatedUser,
+  paymentDetailsController.getPaymentDetails
+ );
+
+userRouter.route("/update-payment-details").post(
+ AuthModule.isAuthenticatedUser,
+ celebrate({
+  body: Joi.object({
+   account_name: Joi.string().required(),
+   account_number: Joi.string().length(10).required(),
+   bank_code: Joi.string().length(3).required(),
+   frequency: Joi.string().required(),
+   frequency_amount: Joi.string().required(),
+  }),
+ }),
+ paymentDetailsController.addPaymentDetails
+);
 
 
 export { userRouter }
