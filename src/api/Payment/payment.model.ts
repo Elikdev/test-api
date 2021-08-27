@@ -12,31 +12,38 @@ import { User } from "../User/user.model";
 
 @Entity({ name: "payment_detail" })
 export class Payment_detail {
- @PrimaryGeneratedColumn()
- id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
- @Column({ nullable: false })
- accountName: string;
+    @Column({ nullable: false })
+    accountName: string;
 
- @Index({ unique: true })
- @Column({ nullable: false })
- accountNumber: string;
+    @Index({ unique: true })
+    @Column({ nullable: false })
+    accountNumber: string;
 
- @Column({ nullable: false })
- bankCode: string;
+    @Column({ nullable: false })
+    bankCode: string;
 
- @Column({ nullable: false })
- frequency: string;
+    @Column({ nullable: false })
+    frequency: string;
 
- @Column({ nullable: false })
- frequencyAmount: string;
+    @Column({ nullable: false })
+    frequencyAmount: string;
 
- @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
- created_at: Date;
+    @CreateDateColumn({
+        type: "timestamp",
+        default: () => "CURRENT_TIMESTAMP(6)",
+    })
+    created_at: Date;
 
- @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
- updated_at: Date;
+    @UpdateDateColumn({
+        type: "timestamp",
+        default: () => "CURRENT_TIMESTAMP(6)",
+    })
+    updated_at: Date;
 
- @OneToOne(() => User, (user) => user.payment_details)
- user: User;
+    @OneToOne(() => User, (user) => user.payment_details)
+    @JoinColumn()
+    user: User;
 }

@@ -72,32 +72,32 @@ export class PaymentDetails1629975562598 implements MigrationInterface {
   );
 
   await queryRunner.addColumn(
-   "user",
-   new TableColumn({
-    name: "paymentDetailsId",
-    type: "int",
-    isNullable: true,
-   })
+         "payment_detail",
+         new TableColumn({
+                name: "userId",
+                type: "int",
+                isNullable: true,
+         })
   );
 
   await queryRunner.createForeignKey(
-   "user",
-   new TableForeignKey({
-    columnNames: ["paymentDetailsId"],
-    referencedColumnNames: ["id"],
-    referencedTableName: "payment_detail",
-    onDelete: "SET NULL",
-   })
+            "payment_detail",
+            new TableForeignKey({
+                      columnNames: ["userId"],
+                      referencedColumnNames: ["id"],
+                      referencedTableName: "user",
+                      onDelete: "CASCADE",
+            })
   );
  }
 
  public async down(queryRunner: QueryRunner): Promise<void> {
-  const table = await queryRunner.getTable("user");
+  const table = await queryRunner.getTable("payment_detail");
   const foreignKey = table.foreignKeys.find(
-   (fk) => fk.columnNames.indexOf("paymentDetailsId") !== -1
+      (fk) => fk.columnNames.indexOf("userId") !== -1
   );
-  await queryRunner.dropForeignKey("user", foreignKey);
-  await queryRunner.dropColumn("user", "paymentDetailsId");
+  await queryRunner.dropForeignKey("payment_detail", foreignKey);
+  await queryRunner.dropColumn("payment_detail", "userId");
   await queryRunner.dropTable("payment_detail");
  }
 }

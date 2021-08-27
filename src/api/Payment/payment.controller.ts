@@ -8,7 +8,7 @@ class PaymentDetailsController {
   try {
    const authuser = (req as any).user;
    const response = await paymentDetailsService.getUserPaymentDetails(authuser);
-   return successRes(res, response.data);
+   return successRes(res, response.data, response.message);
   } catch (error) {
    console.log(error);
    return errorResponse(res, "an error occured contact support", 500);
@@ -28,7 +28,7 @@ class PaymentDetailsController {
     return errorResponse(res, response.message, response.statusCode);
    }
 
-   return successRes(res, response.data);
+   return successRes(res, response.data, response.message);
   } catch (error) {
    console.log(error);
    return errorResponse(res, "an error occured contact support", 500);
