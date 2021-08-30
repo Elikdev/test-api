@@ -18,6 +18,11 @@ export enum AccountType {
     CELEB = "celebrity"
 }
 
+export enum ChannelType {
+    EMAIL = "email",
+    SMS = "sms",
+}
+
 export type innerResponse = {
     status: boolean,
     statusCode: number,
@@ -43,7 +48,12 @@ export type Industry = {
 
 export type Industries = Industry[]
 
+export type Bank = {
+ name: string;
+ code: string;
+};
 
+export type Banks = Bank[];
 
 export class BaseService {
     public internalResponse(status = true, data: any, statusCode = 200, message = "success"): innerResponse {
