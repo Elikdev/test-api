@@ -46,7 +46,7 @@ class PaymentDetailsServices extends BaseService {
   }
  ) {
      const user_id = authuser.id;
-     let user = await this.findOne(User, {
+     const user = await this.findOne(User, {
          where: {
              id: user_id,
          },
@@ -56,7 +56,7 @@ class PaymentDetailsServices extends BaseService {
 
      //if payment details has been added
      if (user.payment_details) {
-      let payment_detail = await this.findOne(Payment_detail, {
+      const payment_detail = await this.findOne(Payment_detail, {
        where: {
         user: user_id
        }
@@ -89,7 +89,7 @@ class PaymentDetailsServices extends BaseService {
          return this.internalResponse(false, {}, 400, "Invalid bank code");
      }
 
-     let payment_details = getRepository(Payment_detail).create({
+     const payment_details = getRepository(Payment_detail).create({
          accountName: paymentDetailsDTO.account_name,
          accountNumber: paymentDetailsDTO.account_number,
          bankCode: paymentDetailsDTO.bank_code,
