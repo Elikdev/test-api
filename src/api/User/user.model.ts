@@ -12,7 +12,8 @@ import {
 import { AccountStatus, Gender, AccountType } from "../../enums";
 import { Interest } from "../Interests/interest.model";
 import { Payment_detail } from "../Payment/payment.model";
-import { Wallet } from "../wallet/wallet.model";
+import { Transactions } from "../Transactions/transaction.model";
+import { Wallet } from "../Wallet/wallet.model";
 @Entity({ name: "user" })
 export class User {
     @PrimaryGeneratedColumn()
@@ -104,4 +105,7 @@ export class User {
 
     @OneToOne(() => Wallet)
     wallet: Wallet;
+
+    @OneToMany(() => Transactions, (t) => t.user)
+    transactions: Transactions[]
 }

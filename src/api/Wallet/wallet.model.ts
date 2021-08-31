@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, Transaction, UpdateDateColumn } from "typeorm";
+import { Transactions } from "../Transactions/transaction.model";
 import { User } from "../User/user.model";
 
 
@@ -20,4 +21,7 @@ export class Wallet {
 
     @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
     updated_at: Date;
+
+    @OneToMany( () => Transactions, (t) => t.wallet)
+    transactions: Transactions[]
 }

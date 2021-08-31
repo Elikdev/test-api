@@ -4,7 +4,7 @@ import { walletcontroller } from "./wallet.controller";
 
 const route = Router()
 
-route.get('/wallet', AuthModule.isAuthenticatedUser, walletcontroller.getWallet)
+route.get('/', AuthModule.isAuthenticatedUser, walletcontroller.getWallet)
 
 route.post('/deposit', AuthModule.isAuthenticatedUser)
 

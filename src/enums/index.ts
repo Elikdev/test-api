@@ -53,6 +53,23 @@ export type Bank = {
  code: string;
 };
 
+export enum TransactionType  {
+    CREDIT = "credit",
+    DEBIT = "debit"
+}
+
+export enum TransactionStatus {
+    PENDING = "pending", 
+    SUCCESS = "success", 
+    FAILED = "failed"
+}
+
+export type DebitDetails = {
+    accountName: string,
+    accountNumber: string,
+    bankCode: string,
+}
+
 export type Banks = Bank[];
 
 export class BaseService {

@@ -14,7 +14,7 @@ userRouter.route('/sign-up')
     .post( 
         celebrate({
             body: Joi.object({
-                account_type: Joi.allow(AccountType.FAN, AccountType.CELEB, AccountType.ADMIN).required(),
+                account_type: Joi.valid(AccountType.FAN, AccountType.CELEB, AccountType.ADMIN).required(),
                 first_name: Joi.string().required(),
                 last_name: Joi.string().required(),
                 email: Joi.string().email().required(),
@@ -76,7 +76,7 @@ userRouter.route("/update-profile").post(
    descriptions: Joi.string().optional(),
    location: Joi.string().optional(),
    date_of_birth: Joi.date().optional(),
-   sex: Joi.allow(Gender.MALE, Gender.FEMALE, Gender.UNKNOWN).optional(),
+   sex: Joi.valid(Gender.MALE, Gender.FEMALE, Gender.UNKNOWN).optional(),
   }),
  }),
  userController.updateProfile

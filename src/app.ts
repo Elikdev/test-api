@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import { isCelebrateError } from "celebrate";
 import { errorResponse } from "./utils/response";
 import { userRouter } from './api/User/user.router';
+import walletRouter from './api/Wallet/wallet.route'
 import interestRouter from './api/Interests/interest.route'
 
 
@@ -16,6 +17,7 @@ app.use(bodyParser.json())
 /** Routes **/
 app.use('/user', userRouter)
 app.use('/interest', interestRouter)
+app.use('/wallet', walletRouter)
 
 app.use('*', (req, res) => {
     return errorResponse(res, "route not found", 404)
