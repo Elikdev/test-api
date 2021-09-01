@@ -90,17 +90,18 @@ userRouter
  );
 
 userRouter.route("/update-payment-details").post(
- AuthModule.isAuthenticatedUser,
- celebrate({
-  body: Joi.object({
-   account_name: Joi.string().required(),
-   account_number: Joi.string().length(10).required(),
-   bank_code: Joi.string().length(3).required(),
-   frequency: Joi.string().required(),
-   frequency_amount: Joi.string().required(),
-  }),
- }),
- paymentDetailsController.addPaymentDetails
+    AuthModule.isAuthenticatedUser,
+    celebrate({
+        body: Joi.object({
+            account_name: Joi.string().required(),
+            account_number: Joi.string().length(10).required(),
+            bank_code: Joi.string().length(3).required(),
+            frequency: Joi.number().required(),
+            interval: Joi.string().required(),
+            frequency_amount: Joi.string().required(),
+        }),
+    }),
+    paymentDetailsController.addPaymentDetails
 );
 
 

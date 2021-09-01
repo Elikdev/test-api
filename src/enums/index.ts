@@ -23,6 +23,12 @@ export enum ChannelType {
     SMS = "sms",
 }
 
+export enum PaymentInterval {
+    DAILY = "daily",
+    WEEKLY = "weekly",
+    MONTHLY = "monthly",
+}
+
 export type innerResponse = {
     status: boolean,
     statusCode: number,
