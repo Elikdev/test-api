@@ -7,7 +7,8 @@ class CommentController {
     async addNewComment(req: Request, res: Response) {
         try {
             const authuser = (req as any).user;
-            const commentDTO = req.body;
+            const commentbody = req.body;
+            const commentDTO = { ...commentbody, postId: req.params.postId };
             const response = commentService.addNewComment(authuser, commentDTO);
             return successRes(res, response);
         } catch (error) {
@@ -19,7 +20,14 @@ class CommentController {
     async editComment(req: Request, res: Response) {
         try {
             const authuser = (req as any).user;
-            const commentDTO = req.body.interests;
+            const commentbody = req.body;
+            const postParams = req.params.postId;
+            const commentParams = req.params.commentId;
+            const commentDTO = {
+                ...commentbody,
+                postId: postParams,
+                commentId: commentParams,
+            };
             const response = await commentService.editComment();
             if (!response.status) {
                 return errorResponse(

@@ -7,7 +7,7 @@ class PostService extends BaseService {
         return this.internalResponse(true, {});
     }
 
-    public async addNewPost(authuser: jwtCred, postDTO: {}) {
+    public async addNewPost(authuser: jwtCred, postDTO: "body") {
         const user_id = authuser.id;
         let user = await this.findOne(User, {
             where: {

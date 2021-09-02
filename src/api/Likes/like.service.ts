@@ -7,7 +7,7 @@ class LikeService extends BaseService {
         return this.internalResponse(true, {});
     }
 
-    public async addLike(authuser: jwtCred, likeDTO: {}) {
+    public async addLike(authuser: jwtCred, likeDTO: "body") {
         const user_id = authuser.id;
         let user = await this.findOne(User, {
             where: {
