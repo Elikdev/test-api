@@ -31,7 +31,7 @@ class PaymentDetailsServices extends BaseService {
                frequency: user_payment_details.frequency,
                interval: user_payment_details.interval,
                frequency_amount: user_payment_details.frequencyAmount,
-        };;
+        };
 
         return this.internalResponse(
             true,
@@ -75,7 +75,7 @@ class PaymentDetailsServices extends BaseService {
                    frequency: paymentDetailsDTO.frequency,
                    interval: paymentDetailsDTO.interval,
                    frequencyAmount: paymentDetailsDTO.frequency_amount,
-            };;
+            };
 
             const updated_data = this.schema(Payment_detail).merge(
                 payment_detail,

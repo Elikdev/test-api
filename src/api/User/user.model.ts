@@ -14,6 +14,9 @@ import { Interest } from "../Interests/interest.model";
 import { Payment_detail } from "../Payment/payment.model";
 import { Transactions } from "../Transactions/transaction.model";
 import { Wallet } from "../Wallet/wallet.model";
+import { Like } from "../Likes/like.model";
+import { Comment } from "../Comments/comment.model";
+import { Post } from "../Posts/post.model";
 @Entity({ name: "user" })
 export class User {
     @PrimaryGeneratedColumn()
@@ -107,5 +110,14 @@ export class User {
     wallet: Wallet;
 
     @OneToMany(() => Transactions, (t) => t.user)
-    transactions: Transactions[]
+    transactions: Transactions[];
+
+    @OneToMany(() => Like, (like) => like.user)
+    likes: Like[];
+
+    @OneToMany(() => Comment, (comment) => comment.user)
+    comments: Comment[];
+
+    @OneToMany(() => Post, (post) => post.user)
+    posts: Post[];
 }

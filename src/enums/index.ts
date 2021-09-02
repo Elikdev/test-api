@@ -29,6 +29,11 @@ export enum PaymentInterval {
     MONTHLY = "monthly",
 }
 
+export enum MediaType {
+    IMAGE = "image",
+    VIDEO = "video",
+}
+
 export type innerResponse = {
     status: boolean,
     statusCode: number,
