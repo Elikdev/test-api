@@ -52,9 +52,10 @@ class PostController {
     async deletePost(req: Request, res: Response) {
         try {
             const authuser = (req as any).user
-            const postbody = req.body
-            const postDTO = { ...postbody, postId: req.params.postId }
-            const response = await postService.deletePost(authuser, postDTO)
+            const postDTO = req.params.postId
+            const response = await postService.deletePost(authuser, {
+                postId: +postDTO,
+            })
             if (!response.status) {
                 return errorResponse(res, response.message, response.statusCode)
             }

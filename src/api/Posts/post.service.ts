@@ -9,7 +9,7 @@ class PostService extends BaseService {
     public async getPostViaUrl(postDTO: {
         shortUrl: string
     }) {
-        let post = await this.schema(Post).findOne({
+        const post = await this.schema(Post).findOne({
             where: {
                 short_url: postDTO.shortUrl
             }, 
@@ -27,7 +27,7 @@ class PostService extends BaseService {
     public async getPostsByUser(authuser: jwtCred) {
         const user_id = authuser.id
 
-        let posts = await this.schema(Post).find({
+        const posts = await this.schema(Post).find({
             where: {
                 user: user_id
             }, 
@@ -47,7 +47,7 @@ class PostService extends BaseService {
         media: MediaData[]
     }) {
         const user_id = authuser.id;
-        let user = await this.findOne(User, {
+        const user = await this.findOne(User, {
             where: {
                 id: user_id,
             },
@@ -55,7 +55,7 @@ class PostService extends BaseService {
         });
 
 
-        let short_url = Math.random().toString(36).substr(2, 8);
+        const short_url = Math.random().toString(36).substr(2, 8);
 
         const new_post = await getRepository(Post).create({
             title: postDTO.title,
@@ -80,7 +80,7 @@ class PostService extends BaseService {
         } 
 
         if(postDTO.media.length > 1) {
-            let media_data = []
+            const media_data = []
            postDTO.media.forEach(async (m) => {
                 // media_data.push({...m, user_id: user_id})
                new_media =  await getRepository(Media).create({

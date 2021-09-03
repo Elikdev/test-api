@@ -10,7 +10,7 @@ class LikeService extends BaseService {
     }) {
         const user_id =  authUser.id
         //get the user
-        let user = await this.findOne(User, {
+        const user = await this.findOne(User, {
             where: {
                 id: user_id
             },
@@ -77,7 +77,7 @@ class LikeService extends BaseService {
         postId: number
     }) {
         const user_id = authuser.id;
-        let user = await this.findOne(User, {
+        const user = await this.findOne(User, {
             where: {
                 id: user_id,
             },
@@ -85,7 +85,7 @@ class LikeService extends BaseService {
         });
 
         //search for the post
-        let post = await this.findOne(Post, {
+        const post = await this.findOne(Post, {
             where: {
                 id: likeDTO.postId
             }

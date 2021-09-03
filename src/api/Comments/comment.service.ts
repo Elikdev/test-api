@@ -12,7 +12,7 @@ class CommentService extends BaseService {
         const user_id = authuser.id;
 
         //get the user
-        let user = await this.findOne(User, {
+        const user = await this.findOne(User, {
             where: {
                 id: user_id,
             },
@@ -20,7 +20,7 @@ class CommentService extends BaseService {
         });
 
         //get the post
-        let post_exists = await this.findOne(Post, {
+        const post_exists = await this.findOne(Post, {
             where: {
                 id: commentDTO.postId,
             },
@@ -55,7 +55,7 @@ class CommentService extends BaseService {
     const user_id = authuser.id
     
     //get the post
-    let post_exists = await this.findOne(Post, {
+    const post_exists = await this.findOne(Post, {
         where: {
             id: commentDTO.postId
         },
@@ -66,7 +66,7 @@ class CommentService extends BaseService {
     }
 
     //get the comment
-    let comment_exists = await this.findOne(Comment, {
+    const comment_exists = await this.findOne(Comment, {
         where: {
             id: commentDTO.commentId,
             user: user_id
