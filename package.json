@@ -54,9 +54,10 @@
       "@typescript-eslint/eslint-plugin": "^4.29.1",
       "@typescript-eslint/parser": "^4.29.1",
       "eslint": "^7.32.0",
+      "jest": "^27.1.0",
+      "nodemon": "^2.0.12",
       "pre-commit": "^1.2.2",
       "supertest": "^6.1.5",
-      "ts-jest": "^27.0.4",
-      "nodemon": "^2.0.12"
+      "ts-jest": "^27.0.4"
    }
 }
