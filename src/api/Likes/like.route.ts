@@ -6,13 +6,24 @@ import { likeController } from "./like.controller";
 
 const Route = Router();
 
-Route.route("/").get(AuthModule.isAuthenticatedUser);
+Route.route("/").post(
+    AuthModule.isAuthenticatedUser, 
+    celebrate({
+        query: Joi.object({
+            postId: Joi.number().optional()
+        }),
+    }),
+    likeController.getAllLikes
+);
 
-Route.route("").post(
+Route.route("/post/:postId").post(
     AuthModule.isAuthenticatedUser,
     celebrate({
-        body: Joi.object({}),
-    })
+        params: Joi.object({
+            postId: Joi.number().required()
+        }),
+    }),
+    likeController.likeAndUnlike
 );
 
 export default Route;

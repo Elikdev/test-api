@@ -9,8 +9,14 @@ class CommentController {
             const authuser = (req as any).user;
             const commentbody = req.body;
             const commentDTO = { ...commentbody, postId: req.params.postId };
-            const response = commentService.addNewComment(authuser, commentDTO);
-            return successRes(res, response);
+            const response = await commentService.addNewComment(
+                authuser,
+                commentDTO
+            )
+            if (!response.status) {
+                return errorResponse(res, response.message, response.statusCode)
+            }
+            return successRes(res, response.data, response.message)
         } catch (error) {
             console.log(error);
             return errorResponse(res, "an error occured contact support", 500);
@@ -28,7 +34,10 @@ class CommentController {
                 postId: postParams,
                 commentId: commentParams,
             };
-            const response = await commentService.editComment();
+            const response = await commentService.editComment(
+                authuser,
+                commentDTO
+            )
             if (!response.status) {
                 return errorResponse(
                     res,
@@ -36,7 +45,7 @@ class CommentController {
                     response.statusCode
                 );
             }
-            return successRes(res, response.data);
+            return successRes(res, response.data, response.message)
         } catch (e) {
             console.log(e);
             return errorResponse(res, "an error occured contact support", 500);

@@ -6,13 +6,31 @@ import { commentController } from "./comment.controller";
 
 const Route = Router();
 
-Route.route("/").get(AuthModule.isAuthenticatedUser);
+Route.route("/new/:postId").post(
+    AuthModule.isAuthenticatedUser, 
+    celebrate({
+        body: Joi.object({
+            content: Joi.string().required()
+        }),
+        params: Joi.object({
+            postId: Joi.number().required()
+        })
+    }),
+    commentController.addNewComment
+    );
 
-Route.route("").post(
+Route.route("/edit/:postId/:commentId").post(
     AuthModule.isAuthenticatedUser,
     celebrate({
-        body: Joi.object({}),
-    })
+        body: Joi.object({
+            content: Joi.string().required()
+        }),
+        params: Joi.object({
+            postId: Joi.number().required(),
+            commentId: Joi.number().required()
+        })
+    }),
+    commentController.editComment
 );
 
 export default Route;

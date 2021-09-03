@@ -64,6 +64,10 @@ export type Bank = {
  code: string;
 };
 
+export type MediaData = {
+    url: string
+    type: MediaType
+}
 export enum TransactionType  {
     CREDIT = "credit",
     DEBIT = "debit"

@@ -6,6 +6,10 @@ import { errorResponse } from "./utils/response";
 import { userRouter } from './api/User/user.router';
 import walletRouter from './api/Wallet/wallet.route'
 import interestRouter from './api/Interests/interest.route'
+import postRouter from "./api/Posts/post.route"
+import commentRouter from "./api/Comments/comment.route"
+import likeRouter from "./api/Likes/like.route"
+
 
 
 const app = express()
@@ -18,6 +22,9 @@ app.use(bodyParser.json())
 app.use('/user', userRouter)
 app.use('/interest', interestRouter)
 app.use('/wallet', walletRouter)
+app.use("/post", postRouter)
+app.use("/comment", commentRouter)
+app.use("/like", likeRouter)
 
 app.use('*', (req, res) => {
     return errorResponse(res, "route not found", 404)

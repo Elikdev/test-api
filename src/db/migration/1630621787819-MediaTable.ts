@@ -23,10 +23,6 @@ export class MediaTable1630621787819 implements MigrationInterface {
                         type: "varchar",
                     },
                     {
-                        name: "string",
-                        type: "varchar",
-                    },
-                    {
                         name: "user_id",
                         type: "int",
                     },
@@ -49,7 +45,7 @@ export class MediaTable1630621787819 implements MigrationInterface {
                 ],
             }),
             true
-        );
+        )
 
         await queryRunner.addColumn(
             "media",
