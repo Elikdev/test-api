@@ -21,13 +21,14 @@ class FollowService extends BaseService {
     })
 
     if (f.length > 0) {
-      return this.internalResponse(true, "following")
+      return this.internalResponse(false, {}, 409, "already following the user")
     }
 
     let fuser = await getRepository(User).findOne({
       where: [
         { id: followerId }
       ]
+
 
     })
 
@@ -55,6 +56,30 @@ class FollowService extends BaseService {
 
     }
     return this.internalResponse(true, "followed succesfully")
+
+
+  }
+  public async getAllFollowers(userId: number) {
+    let user = await getRepository(User).findOne({
+      where: [
+        { id: userId }
+      ]
+    })
+    if (!user) {
+      return this.internalResponse(false, {}, 404, "user does not exist");
+    }
+    const followers = await getRepository(Follow).find({
+      where: [
+        {
+
+          followed: user.id
+        }
+      ]
+    })
+    if (followers.length < 1) {
+      return this.internalResponse(false, {}, 404, "user has no follower")
+    }
+    return this.internalResponse(true, followers, 200)
 
 
   }

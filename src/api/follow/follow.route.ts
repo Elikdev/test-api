@@ -9,12 +9,18 @@ import { followController } from "./follow.controller";
 
 const Route = Router()
 
-Route.route('/follow/:followedid')
+Route.route('/follow/:userId')
 
     .post(
 
         AuthModule.isAuthenticatedUser,
-        followController.follower
+        followController.follow
+    )
+
+Route.route('/:userId')
+    .get(
+        AuthModule.isAuthenticatedUser,
+        followController.getAllFollowers
     )
 
 export default Route;

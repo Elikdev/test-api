@@ -8,7 +8,7 @@ export class Follow {
     @ManyToOne(() => User, user => user.followers)
     @JoinColumn({ "name": "followed_id" })
     followed: User
-    @ManyToOne(() => User, user => user.followed)
+    @ManyToOne(() => User, user => user.followed, { eager: true })
     @JoinColumn({ "name": "follower_id" })
     follower: User
     @CreateDateColumn({

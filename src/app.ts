@@ -19,7 +19,7 @@ app.use(bodyParser.json())
 app.use('/user', userRouter)
 app.use('/interest', interestRouter)
 app.use('/wallet', walletRouter)
-app.use('/',followerRoute)
+app.use('/follower',followerRoute)
 
 app.use('*', (req, res) => {
     return errorResponse(res, "route not found", 404)
