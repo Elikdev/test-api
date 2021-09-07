@@ -17,6 +17,7 @@ import { Wallet } from "../Wallet/wallet.model";
 import { Like } from "../Likes/like.model";
 import { Comment } from "../Comments/comment.model";
 import { Post } from "../Posts/post.model";
+import { Follow } from "../follow/follow.model";
 @Entity({ name: "user" })
 export class User {
     @PrimaryGeneratedColumn()
@@ -120,4 +121,9 @@ export class User {
 
     @OneToMany(() => Post, (post) => post.user)
     posts: Post[];
+
+    @OneToMany(() => Follow, follow => follow.followed)
+    followers: Follow[];
+    @OneToMany(() => Follow, follow => follow.follower)
+    followed: Follow[];
 }
