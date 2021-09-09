@@ -217,6 +217,8 @@ class UserServices extends BaseService {
         //update password
         await this.schema(User).merge(user, new_password)
 
+        await this.updateOne(User, user)
+
         //send mail
 
         return this.internalResponse(true, {}, 200, "Password reset successfully")
