@@ -171,7 +171,7 @@ class UserServices extends BaseService {
 
         auth_cred.blackListed = true
         auth_cred.verified = true
-        auth_cred.OTP = "------"
+        auth_cred.OTP = '------'
 
         //update auth credentials
         await this.updateOne(Auth_cred, auth_cred)
@@ -230,6 +230,8 @@ class UserServices extends BaseService {
             first_name: string;
             last_name: string;
             descriptions: string;
+            profile_pic: string;
+            website_url: string;
             location: string;
             date_of_birth: string;
             sex: Gender;
@@ -250,6 +252,8 @@ class UserServices extends BaseService {
             firstName: userDTO.first_name,
             lastName: userDTO.last_name,
             descriptions: userDTO.descriptions,
+            profile_pic: userDTO.profile_pic,
+            website_url: userDTO.website_url,
             location: userDTO.location,
             sex: userDTO.sex,
             date_of_birth: userDTO.date_of_birth

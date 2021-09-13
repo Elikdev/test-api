@@ -45,6 +45,9 @@ export class User {
     @Column()
     descriptions: string;
 
+    @Column()
+    website_url: string;
+
     @Column({ type: "enum", enum: AccountType })
     account_type: AccountType;
 
@@ -122,8 +125,8 @@ export class User {
     @OneToMany(() => Post, (post) => post.user)
     posts: Post[];
 
-    @OneToMany(() => Follow, follow => follow.followed)
+    @OneToMany(() => Follow, (follow) => follow.followed)
     followers: Follow[];
-    @OneToMany(() => Follow, follow => follow.follower)
+    @OneToMany(() => Follow, (follow) => follow.follower)
     followed: Follow[];
 }
