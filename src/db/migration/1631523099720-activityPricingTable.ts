@@ -23,15 +23,18 @@ export class activityPricingTable1631523099720 implements MigrationInterface {
                     {
                         name: "message",
                         type: "varchar",
+                        isNullable: true,
                     },
 
                     {
                         name: "picture",
                         type: "varchar",
+                        isNullable: true,
                     },
                     {
                         name: "video",
                         type: "varchar",
+                        isNullable: true,
                     },
 
                     {

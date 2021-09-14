@@ -16,7 +16,7 @@ class MessageService extends BaseService {
         )
     }
 
-    public async newMessage(authuser: jwtCred, messageDTO: {}) {
+    public async newMessage(authuser: jwtCred, messageDTO: "") {
         const user_id = authuser.id
 
         return this.internalResponse(

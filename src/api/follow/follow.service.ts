@@ -24,7 +24,7 @@ class FollowService extends BaseService {
       return this.internalResponse(false, {}, 409, "already following the user")
     }
 
-    let fuser = await getRepository(User).findOne({
+    const fuser = await getRepository(User).findOne({
       where: [
         { id: followerId }
       ]
@@ -32,7 +32,7 @@ class FollowService extends BaseService {
 
     })
 
-    let user = await getRepository(User).findOne({
+    const user = await getRepository(User).findOne({
       where: [
         { id: followedId }
       ]
@@ -60,7 +60,7 @@ class FollowService extends BaseService {
 
   }
   public async getAllFollowers(userId: number) {
-    let user = await getRepository(User).findOne({
+    const user = await getRepository(User).findOne({
       where: [
         { id: userId }
       ]

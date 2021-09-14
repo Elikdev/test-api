@@ -16,7 +16,7 @@ class ChatService extends BaseService {
         )
     }
 
-    public async newChat(authuser: jwtCred, chatDTO: {}) {
+    public async newChat(authuser: jwtCred, chatDTO: "") {
         const user_id = authuser.id
 
         return this.internalResponse(
