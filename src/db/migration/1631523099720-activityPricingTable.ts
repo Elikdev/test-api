@@ -2,36 +2,36 @@ import {
     MigrationInterface,
     QueryRunner,
     Table,
-    TableColumn,
     TableForeignKey,
+    TableColumn,
 } from "typeorm"
 
-export class MessageTable1631511907893 implements MigrationInterface {
+export class activityPricingTable1631523099720 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: "message",
+                name: "activities_pricing",
                 columns: [
                     {
                         name: "id",
                         isGenerated: true,
-                        type: 'int',
-                        isPrimary: true,
-                        isNullable: false
-                    },
-
-                    {
-                        name: "content",
-                        type: "varchar",
-                    },
-
-                    {
-                        name: "type",
-                        type: "varchar",
-                    },
-                    {
-                        name: "sender_id",
                         type: "int",
+                        isPrimary: true,
+                        isNullable: false,
+                    },
+
+                    {
+                        name: "message",
+                        type: "varchar",
+                    },
+
+                    {
+                        name: "picture",
+                        type: "varchar",
+                    },
+                    {
+                        name: "video",
+                        type: "varchar",
                     },
 
                     {
@@ -51,31 +51,31 @@ export class MessageTable1631511907893 implements MigrationInterface {
         )
 
         await queryRunner.addColumn(
-            "message",
+            "activities_pricing",
             new TableColumn({
-                name: "chatId",
+                name: "userId",
                 type: "int",
                 isNullable: true,
             })
         )
 
-        await queryRunner.createForeignKeys("message", [
+        await queryRunner.createForeignKeys("activities_pricing", [
             new TableForeignKey({
-                columnNames: ["chatId"],
+                columnNames: ["userId"],
                 referencedColumnNames: ["id"],
-                referencedTableName: "chat",
+                referencedTableName: "user",
                 onDelete: "CASCADE",
             }),
         ])
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        const table = await queryRunner.getTable("message")
+        const table = await queryRunner.getTable("activities_pricing")
         const foreignKey = table.foreignKeys.find(
-            (fk) => fk.columnNames.indexOf("chatId") !== -1
+            (fk) => fk.columnNames.indexOf("userId") !== -1
         )
-        await queryRunner.dropForeignKey("message", foreignKey)
-        await queryRunner.dropColumn("message", "chatId")
-        await queryRunner.dropTable("message")
+        await queryRunner.dropForeignKey("activities_pricing", foreignKey)
+        await queryRunner.dropColumn("activities_pricing", "userId")
+        await queryRunner.dropTable("activities_pricing")
     }
 }

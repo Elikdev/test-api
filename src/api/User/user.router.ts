@@ -110,5 +110,17 @@ userRouter.route("/update-payment-details").post(
     paymentDetailsController.addPaymentDetails
 );
 
+userRouter.route("/settings/set-activities-price").post(
+    AuthModule.isAuthenticatedUser,
+    paymentDetailsController.setActivityPricing,
+    celebrate({
+        body: Joi.object({
+            message: Joi.string().optional(),
+            video: Joi.string().optional(),
+            picture: Joi.string().optional(),
+        }),
+    })
+)
+
 
 export { userRouter }

@@ -8,8 +8,10 @@ export class chatTable1631511869889 implements MigrationInterface {
                 columns: [
                     {
                         name: "id",
-                        type: "int",
+                        isGenerated: true,
+                        type: 'int',
                         isPrimary: true,
+                        isNullable: false
                     },
 
                     {
