@@ -10,6 +10,8 @@ import postRouter from "./api/Posts/post.route"
 import commentRouter from "./api/Comments/comment.route"
 import likeRouter from "./api/Likes/like.route"
 import followerRoute from "./api/follow/follow.route"
+import chatRoute from "./api/Chat/chat.route"
+import messageRoute from "./api/Message/message.route"
 
 const app = express()
 app.use(helmet())
@@ -24,6 +26,8 @@ app.use("/post", postRouter)
 app.use("/comment", commentRouter)
 app.use("/like", likeRouter)
 app.use("/follower", followerRoute)
+app.use("/chat", chatRoute)
+app.use("/message", messageRoute)
 
 app.use("*", (req, res) => {
  return errorResponse(res, "route not found", 404)

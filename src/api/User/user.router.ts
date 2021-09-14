@@ -68,18 +68,24 @@ userRouter.route("/forgot-password/reset-password").post(
 );
 
 userRouter.route("/update-profile").post(
- AuthModule.isAuthenticatedUser,
- celebrate({
-  body: Joi.object({
-   first_name: Joi.string().optional(),
-   last_name: Joi.string().optional(),
-   descriptions: Joi.string().optional(),
-   location: Joi.string().optional(),
-   date_of_birth: Joi.date().optional(),
-   sex: Joi.valid(Gender.MALE, Gender.FEMALE, Gender.UNKNOWN).optional(),
-  }),
- }),
- userController.updateProfile
+    AuthModule.isAuthenticatedUser,
+    celebrate({
+        body: Joi.object({
+            first_name: Joi.string().optional(),
+            last_name: Joi.string().optional(),
+            descriptions: Joi.string().optional(),
+            profile_pic: Joi.string().optional(),
+            website_url: Joi.string().optional(),
+            location: Joi.string().optional(),
+            date_of_birth: Joi.date().optional(),
+            sex: Joi.valid(
+                Gender.MALE,
+                Gender.FEMALE,
+                Gender.UNKNOWN
+            ).optional(),
+        }),
+    }),
+    userController.updateProfile
 );
 
 userRouter
@@ -103,6 +109,18 @@ userRouter.route("/update-payment-details").post(
     }),
     paymentDetailsController.addPaymentDetails
 );
+
+userRouter.route("/settings/set-activities-price").post(
+    AuthModule.isAuthenticatedUser,
+    paymentDetailsController.setActivityPricing,
+    celebrate({
+        body: Joi.object({
+            message: Joi.string().optional(),
+            video: Joi.string().optional(),
+            picture: Joi.string().optional(),
+        }),
+    })
+)
 
 
 export { userRouter }

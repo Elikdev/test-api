@@ -18,6 +18,7 @@ import { Like } from "../Likes/like.model";
 import { Comment } from "../Comments/comment.model";
 import { Post } from "../Posts/post.model";
 import { Follow } from "../follow/follow.model";
+import { ActivitiesPricing } from "../Payment/activitesPricing.model"
 @Entity({ name: "user" })
 export class User {
     @PrimaryGeneratedColumn()
@@ -44,6 +45,9 @@ export class User {
 
     @Column()
     descriptions: string;
+
+    @Column()
+    website_url: string;
 
     @Column({ type: "enum", enum: AccountType })
     account_type: AccountType;
@@ -102,7 +106,7 @@ export class User {
 
     @OneToOne(() => Interest)
     @JoinColumn()
-    interest: Interest;
+    interest: Interest
 
     @OneToOne(() => Payment_detail, (payment_detail) => payment_detail.user)
     payment_details: Payment_detail;
@@ -122,8 +126,11 @@ export class User {
     @OneToMany(() => Post, (post) => post.user)
     posts: Post[];
 
-    @OneToMany(() => Follow, follow => follow.followed)
+    @OneToMany(() => Follow, (follow) => follow.followed)
     followers: Follow[];
-    @OneToMany(() => Follow, follow => follow.follower)
-    followed: Follow[];
+    @OneToMany(() => Follow, (follow) => follow.follower)
+    followed: Follow[]
+
+    @OneToOne(() => ActivitiesPricing, (aP) => aP.user)
+    activitiesPricing: ActivitiesPricing
 }
