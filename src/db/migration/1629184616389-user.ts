@@ -48,11 +48,6 @@ export class user1629184616389 implements MigrationInterface {
                         isNullable: true,
                     },
                     {
-                        name: "website_url",
-                        type: "varchar",
-                        isNullable: true,
-                    },
-                    {
                         name: "account_type",
                         type: "enum",
                         enum: [
@@ -147,7 +142,7 @@ export class user1629184616389 implements MigrationInterface {
                     },
                 ],
             })
-        );
+        )
 
         await queryRunner.createIndex("user",
             new TableIndex({
