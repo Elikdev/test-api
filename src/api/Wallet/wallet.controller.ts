@@ -33,4 +33,4 @@ class WalletControllers {
 }
 
 
-export const walletcontroller = new WalletControllers()
+export const walletController = new WalletControllers()

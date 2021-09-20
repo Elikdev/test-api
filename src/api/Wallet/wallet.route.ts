@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { AuthModule } from "../../utils/auth";
-import { walletcontroller } from "./wallet.controller";
+import { walletController } from "./wallet.controller";
 
 const route = Router()
 
-route.get('/', AuthModule.isAuthenticatedUser, walletcontroller.getWallet)
+route.get('/', AuthModule.isAuthenticatedUser, walletController.getWallet)
 
 route.post('/deposit', AuthModule.isAuthenticatedUser)
 
