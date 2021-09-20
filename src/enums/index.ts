@@ -23,6 +23,17 @@ export enum ChannelType {
     SMS = "sms",
 }
 
+export enum PaymentInterval {
+    DAILY = "daily",
+    WEEKLY = "weekly",
+    MONTHLY = "monthly",
+}
+
+export enum MediaType {
+    IMAGE = "image",
+    VIDEO = "video",
+}
+
 export type innerResponse = {
     status: boolean,
     statusCode: number,
@@ -53,6 +64,10 @@ export type Bank = {
  code: string;
 };
 
+export type MediaData = {
+    url: string
+    type: MediaType
+}
 export enum TransactionType  {
     CREDIT = "credit",
     DEBIT = "debit"

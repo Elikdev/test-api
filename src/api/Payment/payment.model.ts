@@ -9,6 +9,7 @@ import {
  UpdateDateColumn,
 } from "typeorm";
 import { User } from "../User/user.model";
+import { PaymentInterval } from "../../enums";
 
 @Entity({ name: "payment_detail" })
 export class Payment_detail {
@@ -26,7 +27,10 @@ export class Payment_detail {
     bankCode: string;
 
     @Column({ nullable: false })
-    frequency: string;
+    frequency: number;
+
+    @Column({ type: "enum", enum: PaymentInterval })
+    interval: PaymentInterval;
 
     @Column({ nullable: false })
     frequencyAmount: string;
