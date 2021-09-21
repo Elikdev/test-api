@@ -48,14 +48,12 @@ class FollowService extends BaseService {
 
     }
 
-
-
     if (user) {
       user.followers_count++
       await this.save(User, user)
 
     }
-    return this.internalResponse(true, "followed succesfully")
+    return this.internalResponse(true, {}, 200, "followed succesfully")
 
 
   }
