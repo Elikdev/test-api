@@ -19,6 +19,7 @@ import { Comment } from "../Comments/comment.model";
 import { Post } from "../Posts/post.model";
 import { Follow } from "../follow/follow.model";
 import { ActivitiesPricing } from "../Payment/activitesPricing.model"
+
 @Entity({ name: "user" })
 export class User {
     @PrimaryGeneratedColumn()

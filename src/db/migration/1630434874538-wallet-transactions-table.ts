@@ -32,11 +32,13 @@ export class walletTransactionsTable1630434874538 implements MigrationInterface 
                 },
                 {
                     name: 'credited_by',
-                    type: "int"
+                    type: "int",
+                    default:""
                 },
                 {
                     name: "debited_to",
-                    type: "json"
+                    type: "json",
+                    default:{}
                 },
                 {
                     name: "reference",
