@@ -382,11 +382,11 @@ class UserServices extends BaseService {
     public async search(field, value, limit, page){
         //search for influencers
         let results = []
-        let queryOptions = {
+        const queryOptions = {
             account_type: `celebrity`
         }
-        let results_2 = []
-        let pagination = {}
+        const results_2 = []
+        const pagination = {}
         let totalPage
         let results_count
         const offset = (page - 1) * limit 
@@ -431,7 +431,7 @@ class UserServices extends BaseService {
         }
         //if query-field is interest
         else if(field === "interest" && value !== ""){ 
-           let real_values = value.split(" ") //change to array
+           const real_values = value.split(" ") //change to array
             const [list, count] = await getRepository(User).findAndCount({
                 relations: ["interest"],
             })
