@@ -122,5 +122,8 @@ userRouter.route("/settings/set-activities-price").post(
     })
 )
 
+userRouter
+    .route("/timeline")
+    .post(AuthModule.isAuthenticatedUser, userController.homeScreen)
 
 export { userRouter }

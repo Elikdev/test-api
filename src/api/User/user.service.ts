@@ -4,6 +4,8 @@ import { Auth_cred } from "./authCred.model";
 import { getRepository } from "typeorm";
 import { AuthModule } from "../../utils/auth";
 import { Wallet } from "../Wallet/wallet.model";
+import { Follow } from "../follow/follow.model"
+import { Post } from "../Posts/post.model";
 
 class UserServices extends BaseService {
     super
@@ -312,18 +314,66 @@ class UserServices extends BaseService {
         )
     }
 
-    public async homeScreen(authUser: jwtCred) {
+    public async homeScreen(authUser: jwtCred, limit:number, page:number) {
         const user_id = authUser.id
 
-        //find the user
-        const user = await this.findOne(User, {
+        const offset = limit * (page - 1)
+
+        // const post_limit = 4
+        // const post_offset = 0
+
+        // const next = true
+
+        //get user_following count
+        const user_following_count = await getRepository(Follow).count({
             where: {
-                id: user_id,
-            },
-            relations: ["followers", "followed"],
+                follower: user_id
+            }
         })
 
-        return this.internalResponse(true, user, 200, "User home screen!")
+        //get user following
+        const user_following = await getRepository(Follow).find({
+            where: {
+                follower: user_id,
+            },
+            relations: ["followed"],
+            skip: offset,
+            take: limit,
+            order: {
+                created_at: "DESC"
+            }
+        })
+        
+        //get posts
+        const following_posts = await Promise.all(user_following.map(async (fol) => {
+            let posts = await getRepository(Post).find({
+                where: {
+                    user: fol.followed.id
+                },
+                relations: ["media"],
+                // skip: offset,
+                take: 3,
+                order: {
+                    created_at: "DESC"
+                }
+            })
+            for (let post of posts) {
+                post['userId'] = fol.followed.id
+            }
+            return posts
+        }))
+
+        const response = {
+            following_posts: following_posts,
+            totalPage: Math.ceil(user_following_count / limit),
+            totalPosts: user_following_count * 3
+        }
+
+        return this.internalResponse(true, response, 200, "Your timeline!")
+    }
+
+    public async search(authUser: jwtCred, searchQuery){
+        
     }
 }
 

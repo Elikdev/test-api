@@ -64,6 +64,8 @@ class PostService extends BaseService {
         })
 
         new_post.user = user
+        user.posts_count++
+        await this.save(User, user)
         const result = await this.save(Post, new_post)
         delete result.user
 
