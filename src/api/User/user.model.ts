@@ -22,42 +22,42 @@ import { ActivitiesPricing } from "../Payment/activitesPricing.model"
 @Entity({ name: "user" })
 export class User {
     @PrimaryGeneratedColumn()
-    id: number;
+    id: number
 
     @Column()
-    firstName: string;
+    firstName: string
 
     @Column()
-    lastName: string;
+    lastName: string
 
     @Column({ nullable: false })
-    password: string;
+    password: string
 
     @Index({ unique: true })
     @Column({ nullable: false })
-    username: string;
+    username: string
 
     @Column()
-    profile_pic: string;
+    profile_pic: string
 
     @Column()
-    phone: string;
+    phone: string
 
     @Column()
-    descriptions: string;
+    descriptions: string
 
     @Column()
-    website_url: string;
+    website_url: string
 
     @Column({ type: "enum", enum: AccountType })
-    account_type: AccountType;
+    account_type: AccountType
 
     @Column({
         default: AccountStatus.PENDING,
         type: "enum",
         enum: AccountStatus,
     })
-    status: AccountStatus;
+    status: AccountStatus
 
     @Column({
         nullable: false,
@@ -65,69 +65,69 @@ export class User {
         enum: Gender,
         default: Gender.UNKNOWN,
     })
-    sex: Gender;
+    sex: Gender
 
     @Column({ type: "date" })
-    date_of_birth: string;
+    date_of_birth: string
 
     @Column({ nullable: true })
-    profile_wallpaper: string;
+    profile_wallpaper: string
 
     @Index({ unique: true })
     @Column({ unique: true, nullable: false })
-    email: string;
+    email: string
 
     @Column({ type: "timestamp" })
-    last_seen: Date;
+    last_seen: Date
 
     @Column({ default: 0 })
-    followers_count: number;
+    followers_count: number
 
     @Column({ default: 0 })
-    following_count: number;
+    following_count: number
 
     @Column({ default: 0 })
-    posts_count: number;
+    posts_count: number
 
     @Column({ nullable: true })
-    location: string;
+    location: string
 
     @CreateDateColumn({
         type: "timestamp",
         default: () => "CURRENT_TIMESTAMP(6)",
     })
-    created_at: Date;
+    created_at: Date
 
     @UpdateDateColumn({
         type: "timestamp",
         default: () => "CURRENT_TIMESTAMP(6)",
     })
-    updated_at: Date;
+    updated_at: Date
 
-    @OneToOne(() => Interest)
+    @OneToOne(() => Interest, (interest) => interest.industries)
     @JoinColumn()
     interest: Interest
 
     @OneToOne(() => Payment_detail, (payment_detail) => payment_detail.user)
-    payment_details: Payment_detail;
+    payment_details: Payment_detail
 
     @OneToOne(() => Wallet)
-    wallet: Wallet;
+    wallet: Wallet
 
     @OneToMany(() => Transactions, (t) => t.user)
-    transactions: Transactions[];
+    transactions: Transactions[]
 
     @OneToMany(() => Like, (like) => like.user)
-    likes: Like[];
+    likes: Like[]
 
     @OneToMany(() => Comment, (comment) => comment.user)
-    comments: Comment[];
+    comments: Comment[]
 
     @OneToMany(() => Post, (post) => post.user)
-    posts: Post[];
+    posts: Post[]
 
     @OneToMany(() => Follow, (follow) => follow.followed)
-    followers: Follow[];
+    followers: Follow[]
     @OneToMany(() => Follow, (follow) => follow.follower)
     followed: Follow[]
 

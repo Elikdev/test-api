@@ -5,6 +5,7 @@ import { AccountType, Gender } from "../../enums";
 import { AuthModule } from "../../utils/auth";
 import {userController} from "./user.controller";
 import { paymentDetailsController } from "../Payment/payment.controller";
+import { join } from "path"
 
 
 const userRouter = Router()
@@ -125,5 +126,18 @@ userRouter.route("/settings/set-activities-price").post(
 userRouter
     .route("/timeline")
     .post(AuthModule.isAuthenticatedUser, userController.homeScreen)
+
+userRouter.route("/search").post(
+    AuthModule.isAuthenticatedUser,
+    celebrate({
+        query: Joi.object({
+            field: Joi.string().optional(),
+            value: Joi.string().optional(),
+            limit: Joi.number().greater(0).optional(),
+            page: Joi.number().greater(0).optional(),
+        }),
+    }),
+    userController.search
+)
 
 export { userRouter }

@@ -6,6 +6,7 @@ import { AuthModule } from "../../utils/auth";
 import { Wallet } from "../Wallet/wallet.model";
 import { Follow } from "../follow/follow.model"
 import { Post } from "../Posts/post.model";
+import {Like, In} from "typeorm"
 
 class UserServices extends BaseService {
     super
@@ -314,7 +315,7 @@ class UserServices extends BaseService {
         )
     }
 
-    public async homeScreen(authUser: jwtCred, limit:number, page:number) {
+    public async homeScreen(authUser: jwtCred, limit: number, page: number) {
         const user_id = authUser.id
 
         const offset = limit * (page - 1)
@@ -327,8 +328,8 @@ class UserServices extends BaseService {
         //get user_following count
         const user_following_count = await getRepository(Follow).count({
             where: {
-                follower: user_id
-            }
+                follower: user_id,
+            },
         })
 
         //get user following
@@ -340,40 +341,174 @@ class UserServices extends BaseService {
             skip: offset,
             take: limit,
             order: {
-                created_at: "DESC"
-            }
+                created_at: "DESC",
+            },
         })
-        
+
         //get posts
-        const following_posts = await Promise.all(user_following.map(async (fol) => {
-            let posts = await getRepository(Post).find({
-                where: {
-                    user: fol.followed.id
-                },
-                relations: ["media"],
-                // skip: offset,
-                take: 3,
-                order: {
-                    created_at: "DESC"
+        const following_posts = await Promise.all(
+            user_following.map(async (fol) => {
+                const posts = await getRepository(Post).find({
+                    where: {
+                        user: fol.followed.id,
+                    },
+                    relations: ["media"],
+                    // skip: offset,
+                    take: 3,
+                    order: {
+                        created_at: "DESC",
+                    },
+                })
+                for (const post of posts) {
+                    post["userId"] = fol.followed.id
                 }
+                return posts
             })
-            for (let post of posts) {
-                post['userId'] = fol.followed.id
-            }
-            return posts
-        }))
+        )
+
+        if(following_posts.length <= 0){
+            return this.internalResponse(false, {}, 400, "No posts to display. Follow more friends to see more posts")
+        }
 
         const response = {
             following_posts: following_posts,
             totalPage: Math.ceil(user_following_count / limit),
-            totalPosts: user_following_count * 3
+            totalPosts: user_following_count * 3,
         }
 
         return this.internalResponse(true, response, 200, "Your timeline!")
     }
 
-    public async search(authUser: jwtCred, searchQuery){
-        
+    public async search(field, value, limit, page){
+        //search for influencers
+        let results = []
+        let queryOptions = {
+            account_type: `celebrity`
+        }
+        let results_2 = []
+        let pagination = {}
+        let totalPage
+        let results_count
+        const offset = (page - 1) * limit 
+        const endIndex = page * limit
+
+
+        //no field or no value
+        if(!field || !value){
+           const [list, count] = await getRepository(User).findAndCount({
+                where: queryOptions,
+                relations: ["interest"],
+                skip: offset,
+                take: limit,
+                order: {
+                    firstName: "ASC"
+                }
+            })
+            results = list
+            totalPage = Math.ceil(count / limit)
+            results_count = count
+            
+        }
+        //if query-field includes name
+        else if(field === "name" && value !== ""){
+            const [list, count] =  await getRepository(User).findAndCount({
+                where: [
+                    {firstName: Like(`%${value}%`), ...queryOptions},
+                    {lastName: Like(`%${value}%`), ...queryOptions},
+                    {username: Like(`%${value}%`), ...queryOptions}
+                ],
+                relations: ["interest"],
+                skip: offset,
+                take: limit,
+                order: {
+                    firstName: "ASC"
+                }
+            })
+            results = list
+            totalPage = Math.ceil(count / limit)
+            results_count = count
+            
+        }
+        //if query-field is interest
+        else if(field === "interest" && value !== ""){ 
+           let real_values = value.split(" ") //change to array
+            const [list, count] = await getRepository(User).findAndCount({
+                relations: ["interest"],
+            })
+            results = list
+
+            for (const value of real_values) {
+                results.map((res) => {
+                    if(Array.isArray(res?.interest?.industries)){
+                        res.interest.industries.map((ins) => {
+                            if( ins.slug === value){
+                                results_2.push(res)
+                            }
+                        })
+                    }
+                })
+            }
+
+            if(results_2.length < limit){
+                results = results_2
+            }else{
+                results = results_2.slice(offset, endIndex)
+            }
+            
+            totalPage = Math.ceil(results_2.length / limit)
+            results_count = results_2.length
+            
+        } else{
+            queryOptions[field] = Like(`%${value}%`)
+            const [list, count] = await getRepository(User).findAndCount({
+                where: queryOptions,
+                relations: ["interest"],
+                skip: offset,
+                take: limit,
+                order: {
+                    firstName: "ASC"
+                }
+            })
+            
+            results = list
+            totalPage = Math.ceil(count / limit)
+            results_count = count
+        }
+
+        if(results.length <= 0){
+            return this.internalResponse(false, {}, 400, "No results found")
+        }
+
+        //remove password
+        results = results.map((result) => {
+            const {password,  ...res} = result
+            return res
+        })
+
+        //pagination info        
+        if(endIndex < results.length){
+            pagination["next"] = {
+                page: page + 1,
+                limit
+            }
+        }
+
+        if(offset > 0) {
+            pagination["previous"] = {
+                page: page - 1,
+                limit
+            }
+        }
+
+        //response
+        const response = {
+            influencers: results,
+            pagination_info: {...pagination, totalPage, results_count}
+
+        }
+
+        return this.internalResponse(true, response, 200, "Search results!")
+
     }
 }
 
