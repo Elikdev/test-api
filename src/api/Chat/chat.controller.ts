@@ -52,7 +52,7 @@ class ChatController {
         try {
             const authuser = (req as any).user
             const chatId = parseInt(req.params.chatId as any)
-            let chatDTO = req.body
+            const chatDTO = req.body
             const response = await chatService.updateChat(authuser, {...chatDTO, chatId})
             if (!response.status) {
                 return errorResponse(res, response.message, response.statusCode)

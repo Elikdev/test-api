@@ -56,6 +56,10 @@ class ChatService extends BaseService {
             return !chat.archived || !archived_by?.includes(user_id.toString())
         })
 
+        if (user_chats.length <= 0) {
+            return this.internalResponse(false, {}, 400, "No chats found")
+        }
+        
         return this.internalResponse(true, user_chats, 200, "Chats retrieved")
     }
 
@@ -92,7 +96,7 @@ class ChatService extends BaseService {
         })
         
         //return chat if it exists
-        if(chat_exist){
+        if (chat_exist) {
             return this.internalResponse(true, chat_exist, 200, "Chat existed")
         }
 
@@ -186,9 +190,9 @@ class ChatService extends BaseService {
         }
 
         if(chat_exist.archived && users_archived_by.length < 2 && !users_archived_by?.includes(user_id.toString())){
-            archived_by = `${chat_exist.archived_by.split("+")[0]}+${user_id.toString()}`
+            archived_by = `${users_archived_by[0]}+${user_id.toString()}`
         }else{
-            archived_by = `${user_id.toString()}`
+            archived_by = user_id.toString()
         }
 
         const delete_details = {

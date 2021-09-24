@@ -34,6 +34,12 @@ export enum MediaType {
     VIDEO = "video",
 }
 
+export enum MessageType {
+    IMAGE = "image",
+    VIDEO = "video",
+    TEXT = "text",
+}
+
 export type innerResponse = {
     status: boolean,
     statusCode: number,
