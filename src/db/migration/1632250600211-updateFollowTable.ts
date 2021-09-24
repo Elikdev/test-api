@@ -17,7 +17,7 @@ export class updateFollowTable1632250600211 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropColumn("follwers", "id")
+        await queryRunner.dropColumn("followers", "id")
 
         await queryRunner.addColumn(
             "followers",

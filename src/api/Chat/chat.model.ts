@@ -33,6 +33,12 @@ export class Chat {
     @Column()
     open: boolean
 
+    @Column()
+    archived: boolean
+
+    @Column()
+    archived_by: string
+
     @OneToMany(() => Message, (message) => message.chat)
     messages: Message[]
 
