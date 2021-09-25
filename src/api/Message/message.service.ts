@@ -23,8 +23,9 @@ class MessageService extends BaseService {
 
         const chat_exists = await getRepository(Message).find({
             where: {
-                chat: messageDTO.chatId
-            }
+                chat: messageDTO.chatId,
+            },
+            order: { created_at: "ASC" },
         })
 
         if(!chat_exists){
@@ -42,6 +43,21 @@ class MessageService extends BaseService {
             return !message.deleted || !deleted_by?.includes(user_id.toString())
         })
 
+
+        if (chat_messages.length <= 0) {
+            return this.internalResponse(
+                false,
+                {},
+                400,
+                "No messages under this chat"
+            )
+        }
+
+        for (const msg of chat_messages) {
+            delete msg.deleted
+            delete msg.deleted_by
+        }
+
         return this.internalResponse(true, chat_messages, 200, "Messages retrieved")
     }
 
@@ -55,13 +71,23 @@ class MessageService extends BaseService {
         //check if chat exists
         const chat_exists = await getRepository(Chat).findOne({
             where: [
-                {user_1: user_id, id: messageDTO.chatId},
-                {user_2: user_id, id: messageDTO.chatId}
-            ]
+                { user_1: user_id, id: messageDTO.chatId },
+                { user_2: user_id, id: messageDTO.chatId },
+            ],
         })
 
-        if(!chat_exists){
+        if (!chat_exists) {
             return this.internalResponse(false, {}, 400, "Invalid chat Id")
+        }
+
+        //if has been blocked
+        if (chat_exists.blocked) {
+            return this.internalResponse(
+                false,
+                {},
+                400,
+                "Blocked chat. You can't send/receive messages"
+            )
         }
 
         const new_message = getRepository(Message).create({
@@ -75,17 +101,11 @@ class MessageService extends BaseService {
         //save message
         const message = await this.save(Message, new_message)
 
-        // if(message){
-        //     chat_exists.messages.push(message)
-        //     await this.save(Chat, chat_exists)
-        // }
+        const {  chat, ...data  } = message
 
-        return this.internalResponse(
-            true,
-            message,
-            200,
-            "New message created"
-        )
+        const result = {...data, chatId: message.chat.id}
+
+        return this.internalResponse(true, result, 200, "New message created")
     }
 
     public async deleteMessage(authuser: jwtCred, messageDTO: {messageId: number}){

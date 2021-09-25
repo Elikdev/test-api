@@ -1,5 +1,6 @@
 import { getRepository } from "typeorm"
 import { BaseService, jwtCred } from "../../enums"
+import { Message } from "../Message/message.model"
 import { User } from "../User/user.model"
 import { Chat } from "./chat.model"
 
@@ -25,6 +26,11 @@ class ChatService extends BaseService {
         if(chat_exist.archived && archived_by.includes(user_id.toString())){
             return this.internalResponse(false, {}, 400, "Chat not found")
         }
+
+        delete chat_exist.messages
+        delete chat_exist.archived
+        delete chat_exist.archived_by
+        
         return this.internalResponse(
             true,
             chat_exist,
@@ -42,7 +48,8 @@ class ChatService extends BaseService {
                 {user_1: user_id},
                 {user_2: user_id}
             ],
-            relations: ["messages"]
+            relations: ["messages"],
+            order: {created_at: "DESC"}
         })
 
         if(chats.length <= 0){
@@ -58,6 +65,12 @@ class ChatService extends BaseService {
 
         if (user_chats.length <= 0) {
             return this.internalResponse(false, {}, 400, "No chats found")
+        }
+
+        for (const chat of user_chats) {
+            delete chat.messages
+            delete chat.archived
+            delete chat.archived_by
         }
         
         return this.internalResponse(true, user_chats, 200, "Chats retrieved")
@@ -97,7 +110,33 @@ class ChatService extends BaseService {
         
         //return chat if it exists
         if (chat_exist) {
-            return this.internalResponse(true, chat_exist, 200, "Chat existed")
+            const users_archived_by = chat_exist.archived_by?.split("+")
+            let archived_by
+            let filter_users
+            //remove the user from archived_by
+            if(users_archived_by?.length === 0){
+                archived_by = null
+            }else if(users_archived_by?.length === 2 && users_archived_by?.includes(user_id.toString())){
+                filter_users = users_archived_by?.filter((id)=> {
+                    return parseInt(id) !== user_id
+                })
+                archived_by = filter_users[0].toString()
+            }else if(users_archived_by?.length === 1 && users_archived_by?.includes(user_id.toString())){
+                archived_by = null
+            }
+            
+            //update the chat
+            const update_details = {
+                archived_by: archived_by
+            }
+            this.schema(Chat).merge(chat_exist, update_details)
+
+            const newChat = await this.updateOne(Chat, chat_exist)
+
+            //remove messages
+            const {messages,archived, archived_by:res_archived_by, ...data} = newChat
+
+            return this.internalResponse(true, data, 200, "New chat started")
         }
 
         //slug -- username_1-username_2
@@ -130,6 +169,11 @@ class ChatService extends BaseService {
         chatId: number
     }) {
         const user_id = authUser.id
+
+        const user = await getRepository(User).findOne({
+            where: {id: user_id}
+        })
+
         //get the chat --user owns/is in this chat
         const chat_exist = await getRepository(Chat).findOne({
             where: [
@@ -143,22 +187,92 @@ class ChatService extends BaseService {
             return this.internalResponse(false, {}, 400, "Invalid chat Id")
         }
 
+        const users_blocked_by = chat_exist.blocked_by?.split("+")
         let blocked_at
-        //update chat
-        if(chatDTO.blocked !== undefined){
-            blocked_at = new Date()
+        let blocked_by
+        let filter_users
+        let blocked = chatDTO?.blocked
+
+        if(chatDTO.open && user.account_type !== "celebrity") {
+            return this.internalResponse(false, {}, 400, "You do not have access to open this chat")
         }
 
+        //update chat
+        if (chatDTO.blocked == false) {
+            blocked_at = null
+
+            if (!chat_exist.blocked) {
+                return this.internalResponse(
+                    true,
+                    {},
+                    400,
+                    "Chat was not initially blocked"
+                )
+            } else if (users_blocked_by?.length === 0) {
+                blocked_by = null
+            } else if (
+                users_blocked_by?.length === 2 &&
+                users_blocked_by?.includes(user_id.toString())
+            ) {
+                filter_users = users_blocked_by?.filter((id) => {
+                    return parseInt(id) !== user_id
+                })
+                blocked_by = filter_users[0].toString()
+                blocked = true
+            } else if (
+                users_blocked_by?.length === 1 &&
+                users_blocked_by?.includes(user_id.toString())
+            ) {
+                blocked_by = null
+            } else if (
+                users_blocked_by?.length === 1 &&
+                !users_blocked_by?.includes(user_id.toString())
+            ) {
+                return this.internalResponse(
+                    true,
+                    {},
+                    400,
+                    "Unauthorized to unblock"
+                )
+            } else {
+                blocked_by = null
+            }
+        }
+
+        if(chatDTO.blocked == true){
+            if (chat_exist.blocked == true && users_blocked_by?.includes(user_id.toString())) {
+                return this.internalResponse(
+                    false,
+                    {},
+                    400,
+                    "Chat has been initially blocked"
+                )
+            }else if (users_blocked_by?.length < 2 && !users_blocked_by?.includes(user_id.toString())) {
+                blocked_at = new Date()
+                blocked_by = `${users_blocked_by[0]}+${user_id.toString()}`
+            } else {
+                blocked_at = new Date()
+                blocked_by = user_id.toString()
+            }
+
+        }
+
+
         //update details
-        const update_details =  {
-            blocked: chatDTO?.blocked,
+        const update_details = {
+            blocked: blocked,
             blocked_at: blocked_at,
-            open: chatDTO?.open
+            blocked_by: blocked_by,
+            open: chatDTO?.open,
         }
 
         this.schema(Chat).merge(chat_exist, update_details)
 
         const chat = await this.updateOne(Chat, chat_exist)
+
+        delete chat.messages
+        delete chat.archived
+        delete chat.archived_by
 
         return this.internalResponse(true, chat, 200, "Chat updated successfully")
     }
@@ -189,10 +303,50 @@ class ChatService extends BaseService {
             return this.internalResponse(false, {}, 400, "Chat not found")
         }
 
-        if(chat_exist.archived && users_archived_by.length < 2 && !users_archived_by?.includes(user_id.toString())){
+        if(chat_exist.archived && users_archived_by?.length < 2 && !users_archived_by?.includes(user_id.toString())){
             archived_by = `${users_archived_by[0]}+${user_id.toString()}`
         }else{
             archived_by = user_id.toString()
+        }
+
+
+        //archive the messages too
+        const messages = await getRepository(Message).find({
+            where: {chat: chatDTO.chatId}
+        })
+
+       const filter_messages = messages.filter((msg) => {
+           const users_deleted_by = msg.deleted_by?.split("+")
+           return (
+               !msg.deleted ||
+               (msg.deleted && !users_deleted_by?.includes(user_id.toString()))
+           )
+       })
+
+        for (const msg of filter_messages) {
+            const message = await getRepository(Message).findOne({
+                where: {id: msg.id}
+            })
+            const users_deleted_by = message.deleted_by?.split("+")
+            let msg_deleted_by
+            let deleted
+
+            if(message.deleted_by && users_deleted_by?.length < 2 && !users_deleted_by?.includes(user_id.toString())) {
+                deleted = true
+                msg_deleted_by = `${users_deleted_by[0]}+${user_id.toString()}}`
+            }else{
+                deleted = true
+                msg_deleted_by = user_id.toString()
+            }
+            
+            const delete_msg = {
+                deleted: deleted,
+                deleted_by: msg_deleted_by
+            }
+
+            this.schema(Message).merge(message, delete_msg)
+
+            this.updateOne(Message, message)
         }
 
         const delete_details = {
