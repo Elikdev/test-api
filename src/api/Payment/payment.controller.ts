@@ -54,6 +54,24 @@ class PaymentDetailsController {
    return errorResponse(res, "an error occured contact support", 500);
   }
  }
+
+ async getActivityPricing(req: Request, res: Response) {
+  try {
+   const authuser = (req as any).user;
+   const response = await paymentDetailsService.getActivityPricing(
+    authuser
+   );
+
+   if (!response.status) {
+    return errorResponse(res, response.message, response.statusCode);
+   }
+
+   return successRes(res, response.data, response.message);
+  } catch (error) {
+   console.log(error);
+   return errorResponse(res, "an error occured contact support", 500);
+  }
+ }
 }
 
 

@@ -4,8 +4,7 @@ import Joi from "joi";
 import { AccountType, Gender } from "../../enums";
 import { AuthModule } from "../../utils/auth";
 import {userController} from "./user.controller";
-import { paymentDetailsController } from "../Payment/payment.controller";
-import { join } from "path"
+import { paymentDetailsController } from "../Payment/payment.controller"
 
 
 const userRouter = Router()
@@ -122,6 +121,13 @@ userRouter.route("/settings/set-activities-price").post(
         }),
     })
 )
+
+userRouter
+    .route("/settings/get-activities-price")
+    .post(
+        AuthModule.isAuthenticatedUser,
+        paymentDetailsController.getActivityPricing
+    )
 
 userRouter
     .route("/timeline")
