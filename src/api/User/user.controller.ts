@@ -104,6 +104,43 @@ class UserControllers {
    return errorResponse(res, "an error occured contact support", 500);
   }
  }
+
+ public async homeScreen(req: Request, res: Response) {
+  try {
+   const authUser = (req as any).user;
+   const limit = parseInt(req.query.limit as any) || 10
+   const page = parseInt(req.query.page as any) || 1
+   const response = await userService.homeScreen(authUser, limit, page)
+
+   if   (!response.status)   {
+    return errorResponse(res, response.message, response.statusCode);
+   }
+
+   return successRes(res, response.data, response.message);
+  } catch (error) {
+   console.log(error);
+   return errorResponse(res, "an error occured contact support", 500);
+  }
+ }
+
+ public async search(req: Request, res: Response) {
+  try {
+   const field = req.query.field
+   const value = req.query.value
+   const limit = parseInt(req.query.limit as any) || 20
+   const page = parseInt(req.query.page as any) || 1
+   const response = await userService.search(field, value, limit, page)
+
+   if   (!response.status)   {
+    return errorResponse(res, response.message, response.statusCode);
+   }
+
+   return successRes(res, response.data, response.message);
+  } catch (error) {
+   console.log(error);
+   return errorResponse(res, "an error occured contact support", 500);
+  }
+ }
 }
 
 export const userController = new UserControllers()

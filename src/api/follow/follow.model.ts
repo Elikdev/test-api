@@ -8,7 +8,7 @@ export class Follow {
     @ManyToOne(() => User, user => user.followers)
     @JoinColumn({ "name": "followed_id" })
     followed: User
-    @ManyToOne(() => User, user => user.followed, { eager: true })
+    @ManyToOne(() => User, (user) => user.followed)
     @JoinColumn({ "name": "follower_id" })
     follower: User
     @CreateDateColumn({
@@ -16,6 +16,4 @@ export class Follow {
         default: () => "CURRENT_TIMESTAMP(6)",
     })
     created_at: Date;
-
-
 }

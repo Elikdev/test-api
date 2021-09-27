@@ -4,7 +4,7 @@ import Joi from "joi";
 import { AccountType, Gender } from "../../enums";
 import { AuthModule } from "../../utils/auth";
 import {userController} from "./user.controller";
-import { paymentDetailsController } from "../Payment/payment.controller";
+import { paymentDetailsController } from "../Payment/payment.controller"
 
 
 const userRouter = Router()
@@ -115,12 +115,35 @@ userRouter.route("/settings/set-activities-price").post(
     paymentDetailsController.setActivityPricing,
     celebrate({
         body: Joi.object({
-            message: Joi.string().optional(),
-            video: Joi.string().optional(),
-            picture: Joi.string().optional(),
+            message: Joi.number().optional(),
+            video: Joi.number().optional(),
+            picture: Joi.number().optional(),
         }),
     })
 )
 
+userRouter
+    .route("/settings/get-activities-price")
+    .post(
+        AuthModule.isAuthenticatedUser,
+        paymentDetailsController.getActivityPricing
+    )
+
+userRouter
+    .route("/timeline")
+    .post(AuthModule.isAuthenticatedUser, userController.homeScreen)
+
+userRouter.route("/search").post(
+    AuthModule.isAuthenticatedUser,
+    celebrate({
+        query: Joi.object({
+            field: Joi.string().optional(),
+            value: Joi.string().optional(),
+            limit: Joi.number().greater(0).optional(),
+            page: Joi.number().greater(0).optional(),
+        }),
+    }),
+    userController.search
+)
 
 export { userRouter }

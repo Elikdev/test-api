@@ -28,10 +28,19 @@ export class Chat {
     blocked: boolean
 
     @Column()
+    blocked_by: string
+
+    @Column()
     blocked_at: Date
 
     @Column()
     open: boolean
+
+    @Column()
+    archived: boolean
+
+    @Column()
+    archived_by: string
 
     @OneToMany(() => Message, (message) => message.chat)
     messages: Message[]

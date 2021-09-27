@@ -4,25 +4,28 @@ import { Auth_cred } from "./authCred.model";
 import { getRepository } from "typeorm";
 import { AuthModule } from "../../utils/auth";
 import { Wallet } from "../Wallet/wallet.model";
+import { Follow } from "../follow/follow.model"
+import { Post } from "../Posts/post.model";
+import {Like, In} from "typeorm"
 
 class UserServices extends BaseService {
-    super;
+    super
     public async getUser(id: number) {
-        const userDetails = await this.getOne(User, id);
+        const userDetails = await this.getOne(User, id)
         if (!userDetails) {
-            return this.internalResponse(false, {}, 404, "not found");
+            return this.internalResponse(false, {}, 404, "not found")
         }
-        return this.internalResponse(true, userDetails);
+        return this.internalResponse(true, userDetails)
     }
 
     public async SignUp(userDTO: {
-        account_type: AccountType;
-        first_name: string;
-        last_name: string;
-        email: string;
-        phone: string;
-        user_name: string;
-        password: string;
+        account_type: AccountType
+        first_name: string
+        last_name: string
+        email: string
+        phone: string
+        user_name: string
+        password: string
     }) {
         let user = await getRepository(User).findOne({
             where: [
@@ -30,22 +33,22 @@ class UserServices extends BaseService {
                 { username: userDTO.user_name },
                 { phone: userDTO.phone },
             ],
-        });
+        })
         if (user) {
-            let message: string;
+            let message: string
             if (user.email === userDTO.email) {
-                message = "email already exists";
+                message = "email already exists"
             }
             if (user.username === userDTO.user_name) {
-                message = "username already exists";
+                message = "username already exists"
             }
             if (user.phone === userDTO.phone) {
-                message = "phone number  already exists.";
+                message = "phone number  already exists."
             }
-            return this.internalResponse(false, {}, 400, message);
+            return this.internalResponse(false, {}, 400, message)
         }
 
-        const hashPassword = AuthModule.hashPassWord(userDTO.password);
+        const hashPassword = AuthModule.hashPassWord(userDTO.password)
 
         user = getRepository(User).create({
             firstName: userDTO.first_name,
@@ -55,20 +58,20 @@ class UserServices extends BaseService {
             email: userDTO.email,
             password: hashPassword,
             username: userDTO.user_name,
-        });
+        })
 
-        user = await this.save(User, user);
+        user = await this.save(User, user)
         let wallet
         if (user) {
             wallet = await this.create(Wallet, {
-                user: user
+                user: user,
             })
             await this.save(Wallet, wallet)
         }
 
-        delete user.password;
+        delete user.password
 
-        return this.internalResponse(true, {...user, balance: 0});
+        return this.internalResponse(true, { ...user, balance: 0 })
     }
 
     public async signIn(userDTO: { email: string; password: string }) {
@@ -76,16 +79,29 @@ class UserServices extends BaseService {
             where: {
                 email: userDTO.email,
             },
-        });
+        })
 
         if (!user) {
-            return this.internalResponse(false, {}, 400, "Incorrect Email or Password!");
+            return this.internalResponse(
+                false,
+                {},
+                400,
+                "Incorrect Email or Password!"
+            )
         }
 
-        const validated = AuthModule.compareHash(userDTO.password, user.password);
+        const validated = AuthModule.compareHash(
+            userDTO.password,
+            user.password
+        )
 
         if (!validated) {
-            return this.internalResponse(false, {}, 400, "Incorrect Email or Password!");
+            return this.internalResponse(
+                false,
+                {},
+                400,
+                "Incorrect Email or Password!"
+            )
         }
 
         const token = AuthModule.generateJWT({
@@ -94,45 +110,62 @@ class UserServices extends BaseService {
             first_name: user.firstName,
             last_name: user.lastName,
             username: user.username,
-        });
+        })
 
-        return this.internalResponse(true, { token });
+        return this.internalResponse(true, { token })
     }
 
-    public async forgotPassword(userDTO: { email: string; channel: ChannelType }) {
+    public async forgotPassword(userDTO: {
+        email: string
+        channel: ChannelType
+    }) {
         //check if email is registered
         const user_exists = await this.findOne(User, {
             where: {
                 email: userDTO.email,
-            }
+            },
         })
 
         if (!user_exists) {
-            return this.internalResponse(false, {}, 400, 'Email is not registered')
+            return this.internalResponse(
+                false,
+                {},
+                400,
+                "Email is not registered"
+            )
         }
 
-        //check if user status is pending or disabled -- testing (Add AccountStatus.PENDING) 
+        //check if user status is pending or disabled -- testing (Add AccountStatus.PENDING)
         if (user_exists.status === AccountStatus.DISABLED) {
-            return this.internalResponse(false, {}, 400, 'Account disabled, contact support')
+            return this.internalResponse(
+                false,
+                {},
+                400,
+                "Account disabled, contact support"
+            )
         }
 
         //generate otp
-        const otp = AuthModule.generateOtp(6);
-        const expiry_time = new Date(Date.now() + 18000000)//5hrs
+        const otp = AuthModule.generateOtp(6)
+        const expiry_time = new Date(Date.now() + 18000000) //5hrs
 
         const new_otp = await getRepository(Auth_cred).create({
             OTP: otp,
             expTime: expiry_time,
             receipient: userDTO.email,
             channel: userDTO.channel,
-            userId: user_exists.id
+            userId: user_exists.id,
         })
 
         //send email to user
         const result = await this.save(Auth_cred, new_otp)
 
-        return this.internalResponse(true, { OTP: result.OTP }, 200, "otp generated, expires in 5hrs")
-
+        return this.internalResponse(
+            true,
+            { OTP: result.OTP },
+            200,
+            "otp generated, expires in 5hrs"
+        )
     }
 
     public async verifyOtp(userDTO: { email: string; otp_code: string }) {
@@ -140,10 +173,8 @@ class UserServices extends BaseService {
         const auth_cred = await getRepository(Auth_cred).findOne({
             where: {
                 OTP: userDTO.otp_code,
-                receipient: userDTO.email
-
-            }
-
+                receipient: userDTO.email,
+            },
         })
 
         if (!auth_cred) {
@@ -171,25 +202,31 @@ class UserServices extends BaseService {
 
         auth_cred.blackListed = true
         auth_cred.verified = true
-        auth_cred.OTP = '------'
+        auth_cred.OTP = "------"
 
         //update auth credentials
         await this.updateOne(Auth_cred, auth_cred)
-
 
         //generate a token that will expire in 5 mins
         const token = AuthModule.createOtpToken({ id: auth_cred.userId })
 
         return this.internalResponse(true, { token }, 200, "otp verified")
-
     }
 
-    public async resetPassword(userDTO: { token: string, new_password: string }) {
+    public async resetPassword(userDTO: {
+        token: string
+        new_password: string
+    }) {
         //verify token
         const verify = AuthModule.verifyOtpToken(userDTO.token)
 
         if (!verify.verified) {
-            return this.internalResponse(false, {}, 400, verify?.message ? verify.message : 'Unauthorized')
+            return this.internalResponse(
+                false,
+                {},
+                400,
+                verify?.message ? verify.message : "Unauthorized"
+            )
         }
 
         const user_id = verify.otpDetails.id
@@ -200,8 +237,8 @@ class UserServices extends BaseService {
 
         const user = await this.findOne(User, {
             where: {
-                id: user_id
-            }
+                id: user_id,
+            },
         })
 
         if (!user) {
@@ -211,7 +248,7 @@ class UserServices extends BaseService {
         const hashedPassword = AuthModule.hashPassWord(userDTO.new_password)
 
         const new_password = {
-            password: hashedPassword
+            password: hashedPassword,
         }
 
         //update password
@@ -221,31 +258,36 @@ class UserServices extends BaseService {
 
         //send mail
 
-        return this.internalResponse(true, {}, 200, "Password reset successfully")
+        return this.internalResponse(
+            true,
+            {},
+            200,
+            "Password reset successfully"
+        )
     }
 
     public async updateProfile(
         authUser: jwtCred,
         userDTO: {
-            first_name: string;
-            last_name: string;
-            descriptions: string;
-            profile_pic: string;
-            website_url: string;
-            location: string;
-            date_of_birth: string;
-            sex: Gender;
+            first_name: string
+            last_name: string
+            descriptions: string
+            profile_pic: string
+            website_url: string
+            location: string
+            date_of_birth: string
+            sex: Gender
         }
     ) {
         const user_id = authUser.id
         const user = await this.findOne(User, {
             where: {
                 id: user_id,
-            }
+            },
         })
 
         if (!user) {
-            return this.internalResponse(false, {}, 400, 'Invalid user')
+            return this.internalResponse(false, {}, 400, "Invalid user")
         }
 
         const update_details = {
@@ -256,7 +298,7 @@ class UserServices extends BaseService {
             website_url: userDTO.website_url,
             location: userDTO.location,
             sex: userDTO.sex,
-            date_of_birth: userDTO.date_of_birth
+            date_of_birth: userDTO.date_of_birth,
         }
 
         //update the details
@@ -265,7 +307,208 @@ class UserServices extends BaseService {
         const result = await this.updateOne(User, user)
         const { password, ...data } = result
 
-        return this.internalResponse(true, data, 200, 'User profile updated successfully')
+        return this.internalResponse(
+            true,
+            data,
+            200,
+            "User profile updated successfully"
+        )
+    }
+
+    public async homeScreen(authUser: jwtCred, limit: number, page: number) {
+        const user_id = authUser.id
+
+        const offset = limit * (page - 1)
+
+        // const post_limit = 4
+        // const post_offset = 0
+
+        // const next = true
+
+        //get user_following count
+        const user_following_count = await getRepository(Follow).count({
+            where: {
+                follower: user_id,
+            },
+        })
+
+        //get user following
+        const user_following = await getRepository(Follow).find({
+            where: {
+                follower: user_id,
+            },
+            relations: ["followed"],
+            skip: offset,
+            take: limit,
+            order: {
+                created_at: "DESC",
+            },
+        })
+
+        //get posts
+        const following_posts = await Promise.all(
+            user_following.map(async (fol) => {
+                const posts = await getRepository(Post).find({
+                    where: {
+                        user: fol.followed.id,
+                    },
+                    relations: ["media"],
+                    // skip: offset,
+                    take: 3,
+                    order: {
+                        created_at: "DESC",
+                    },
+                })
+                for (const post of posts) {
+                    post["userId"] = fol.followed.id
+                }
+                return posts
+            })
+        )
+
+        if(following_posts.length <= 0){
+            return this.internalResponse(false, {}, 400, "No posts to display. Follow more friends to see more posts")
+        }
+
+        const response = {
+            following_posts: following_posts,
+            totalPage: Math.ceil(user_following_count / limit),
+            totalPosts: user_following_count * 3,
+        }
+
+        return this.internalResponse(true, response, 200, "Your timeline!")
+    }
+
+    public async search(field, value, limit, page){
+        //search for influencers
+        let results = []
+        const queryOptions = {
+            account_type: `celebrity`
+        }
+        const results_2 = []
+        const pagination = {}
+        let totalPage
+        let results_count
+        const offset = (page - 1) * limit 
+        const endIndex = page * limit
+
+
+        //no field or no value
+        if(!field || !value){
+           const [list, count] = await getRepository(User).findAndCount({
+                where: queryOptions,
+                relations: ["interest"],
+                skip: offset,
+                take: limit,
+                order: {
+                    firstName: "ASC"
+                }
+            })
+            results = list
+            totalPage = Math.ceil(count / limit)
+            results_count = count
+            
+        }
+        //if query-field includes name
+        else if(field === "name" && value !== ""){
+            const [list, count] =  await getRepository(User).findAndCount({
+                where: [
+                    {firstName: Like(`%${value}%`), ...queryOptions},
+                    {lastName: Like(`%${value}%`), ...queryOptions},
+                    {username: Like(`%${value}%`), ...queryOptions}
+                ],
+                relations: ["interest"],
+                skip: offset,
+                take: limit,
+                order: {
+                    firstName: "ASC"
+                }
+            })
+            results = list
+            totalPage = Math.ceil(count / limit)
+            results_count = count
+            
+        }
+        //if query-field is interest
+        else if(field === "interest" && value !== ""){ 
+           const real_values = value.split(" ") //change to array
+            const [list, count] = await getRepository(User).findAndCount({
+                relations: ["interest"],
+            })
+            results = list
+
+            for (const value of real_values) {
+                results.map((res) => {
+                    if(Array.isArray(res?.interest?.industries)){
+                        res.interest.industries.map((ins) => {
+                            if( ins.slug === value){
+                                results_2.push(res)
+                            }
+                        })
+                    }
+                })
+            }
+
+            if(results_2.length < limit){
+                results = results_2
+            }else{
+                results = results_2.slice(offset, endIndex)
+            }
+            
+            totalPage = Math.ceil(results_2.length / limit)
+            results_count = results_2.length
+            
+        } else{
+            queryOptions[field] = Like(`%${value}%`)
+            const [list, count] = await getRepository(User).findAndCount({
+                where: queryOptions,
+                relations: ["interest"],
+                skip: offset,
+                take: limit,
+                order: {
+                    firstName: "ASC"
+                }
+            })
+            
+            results = list
+            totalPage = Math.ceil(count / limit)
+            results_count = count
+        }
+
+        if(results.length <= 0){
+            return this.internalResponse(false, {}, 400, "No results found")
+        }
+
+        //remove password
+        results = results.map((result) => {
+            const {password,  ...res} = result
+            return res
+        })
+
+        //pagination info        
+        if(endIndex < results.length){
+            pagination["next"] = {
+                page: page + 1,
+                limit
+            }
+        }
+
+        if(offset > 0) {
+            pagination["previous"] = {
+                page: page - 1,
+                limit
+            }
+        }
+
+        //response
+        const response = {
+            influencers: results,
+            pagination_info: {...pagination, totalPage, results_count}
+
+        }
+
+        return this.internalResponse(true, response, 200, "Search results!")
+
     }
 }
 

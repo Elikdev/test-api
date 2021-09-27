@@ -23,6 +23,12 @@ export class Message {
     @Column()
     sender_id: number
 
+    @Column()
+    deleted: boolean
+
+    @Column()
+    deleted_by: string
+
     @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: "CASCADE" })
     @JoinColumn()
     chat: Chat
