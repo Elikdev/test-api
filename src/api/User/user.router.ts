@@ -115,9 +115,9 @@ userRouter.route("/settings/set-activities-price").post(
     paymentDetailsController.setActivityPricing,
     celebrate({
         body: Joi.object({
-            message: Joi.string().optional(),
-            video: Joi.string().optional(),
-            picture: Joi.string().optional(),
+            message: Joi.number().optional(),
+            video: Joi.number().optional(),
+            picture: Joi.number().optional(),
         }),
     })
 )

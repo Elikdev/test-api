@@ -136,7 +136,7 @@ class PaymentDetailsServices extends BaseService {
     //add new activity pricing
     public async setActivityPricing(
         authUser: jwtCred,
-        activityDTO: { message: string; video: string; picture: string }
+        activityDTO: { message: number; video: number; picture: number }
     ) {
         const user_id = authUser.id
         const user = await this.findOne(User, {

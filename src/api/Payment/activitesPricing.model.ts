@@ -15,13 +15,13 @@ export class ActivitiesPricing {
     id: number
 
     @Column()
-    message: string
+    message: number
 
     @Column()
-    picture: string
+    picture: number
 
     @Column()
-    video: string
+    video: number
 
     @OneToOne(() => User, (user) => user.activitiesPricing)
     @JoinColumn()

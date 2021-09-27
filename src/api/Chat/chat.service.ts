@@ -155,9 +155,15 @@ class ChatService extends BaseService {
             return this.internalResponse(false, {}, 400, "Error in starting a new chat. Try again later")
         }
 
+        const response = await this.findOne(Chat, {
+            where: {id: chat.id}
+        })
+
+        const {archived, archived_by, messages,  ...data} = response
+
         return this.internalResponse(
             true,
-            chat,
+            data,
             200,
             "New chat started"
         )
