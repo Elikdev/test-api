@@ -72,11 +72,17 @@ class FollowService extends BaseService {
 
           followed: user.id
         }
-      ]
+      ],
+      relations: ["follower"]
     })
     if (followers.length < 1) {
       return this.internalResponse(false, {}, 404, "user has no follower")
     }
+
+    for (const follower of followers) {
+      delete follower.follower.password
+    }
+    
     return this.internalResponse(true, followers, 200)
 
 
