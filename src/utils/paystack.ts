@@ -1,11 +1,4 @@
 import axios from 'axios'
-import * as dotenv from 'dotenv';
-
-if (process.env.NODE_ENV === 'production'){
-    dotenv.config()
-}else {
-    dotenv.config({ path: '.test.env'})
-}
 
 const instance = axios.create({
     baseURL:process.env.PAYSTACK_URL,

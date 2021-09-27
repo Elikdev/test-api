@@ -6,8 +6,6 @@ const route = Router()
 
 route.get('/', AuthModule.isAuthenticatedUser, walletController.getWallet)
 
-route.post('/deposit', AuthModule.isAuthenticatedUser)
-
 route.post('/withdrawal', AuthModule.isAuthenticatedUser)
 
 route.get('/transactions', AuthModule.isAuthenticatedUser)

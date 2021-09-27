@@ -5,7 +5,7 @@ const dotenv = require("dotenv")
 if (process.env.NODE_ENV === "production") {
 	dotenv.config() // .env file
 } else {
-	dotenv.config({ path: ".test.env" })
+	dotenv.config({ path: ".local.env" })
 }
 
 const extra =

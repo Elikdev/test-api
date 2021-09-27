@@ -5,7 +5,7 @@ import {transactionService} from './transaction.service'
 
 
 class TransactionController{
-    static async saveTransactions(req:Request, res:Response){
+    static async createNewPayment(req:Request, res:Response){
         const {narration, reference, wallet} = req.body
         const authUser = (req as any).user;
          try{

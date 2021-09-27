@@ -33,7 +33,7 @@ class TransactionService extends BaseService {
         debited_to:any
     }){
         try{
-            const transaction = getRepository(Transactions).create(transactionDto)
+            const transaction = await this.create(Transactions, transactionDto)
             await this.save(Transactions, transaction)
         }catch(error){
             throw error

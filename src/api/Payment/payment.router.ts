@@ -14,6 +14,6 @@ Route.post('/new_payment',AuthModule.isAuthenticatedUser,celebrate({
             narration: Joi.string().required(),
             reference:Joi.string().required()
         }),
-    }),TransactionController.saveTransactions)
+    }),TransactionController.createNewPayment)
 
 export default Route;
