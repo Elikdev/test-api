@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-
+import {Request, Response} from 'express'
 import { errorResponse, successRes } from "../../utils/response";
 import { walletServices } from "./wallet.service"
 
 
 class WalletControllers {
-    public async getWallet(req, res) {
+    public async getWallet(req:Request, res:Response) {
         try {
             const authUser = (req as any).user;
             const response = await walletServices.getWallet(authUser.id)
@@ -19,18 +19,18 @@ class WalletControllers {
         }
     }
 
-    public async deposit(req, res) {
+    public async deposit(req:Request, res:Response) {
         
     }
 
-    public async withdrawal(req, res) {
+    public async withdrawal(req:Request, res:Response) {
 
     }
 
-    public async transactions(req, res) {
+    public async transactions(req:Request, res:Response) {
 
     }
 }
 
 
-export const walletcontroller = new WalletControllers()
+export const walletController = new WalletControllers()

@@ -12,6 +12,7 @@ import likeRouter from "./api/Likes/like.route"
 import followerRoute from "./api/follow/follow.route"
 import chatRoute from "./api/Chat/chat.route"
 import messageRoute from "./api/Message/message.route"
+import paymentRoute from "./api/Payment/payment.router"
 
 const app = express()
 app.use(helmet())
@@ -28,6 +29,7 @@ app.use("/like", likeRouter)
 app.use("/follower", followerRoute)
 app.use("/chat", chatRoute)
 app.use("/message", messageRoute)
+app.use("/payment", paymentRoute)
 
 app.use("*", (req, res) => {
  return errorResponse(res, "route not found", 404)

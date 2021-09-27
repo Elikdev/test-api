@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 if (process.env.NODE_ENV === 'production'){
     dotenv.config()
 }else {
-    dotenv.config({ path: '.test.env'})
+    dotenv.config({ path: '.local.env'})
 }
 
 import app from "./app";
