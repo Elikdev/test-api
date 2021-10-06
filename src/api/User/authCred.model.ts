@@ -19,7 +19,7 @@ export class Auth_cred {
     expTime: Date;
 
     @Column()
-    receipient: string;
+    recipient: string;
 
     @Column()
     userId: number;
