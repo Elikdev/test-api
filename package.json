@@ -18,8 +18,6 @@
    "author": "Boma",
    "license": "ISC",
    "pre-commit": [
-      // "test",
-      // "lint"
    ],
    "dependencies": {
       "@types/aws-sdk": "^2.7.0",
