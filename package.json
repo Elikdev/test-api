@@ -12,10 +12,10 @@
       "typeorm": "ts-node  ./node_modules/typeorm/cli.js"
    },
    "keywords": [
-      "attenvo",
+      "",
       "backend"
    ],
-   "author": "bemijonathan",
+   "author": "Boma",
    "license": "ISC",
    "pre-commit": [
       "test",

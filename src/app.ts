@@ -1,35 +1,12 @@
 import express, { Request, Response } from "express"
-import * as bodyParser from "body-parser"
 import helmet from "helmet"
 import { isCelebrateError } from "celebrate"
-import { errorResponse } from "./utils/response"
-import { userRouter } from "./api/User/user.router"
-import walletRouter from "./api/Wallet/wallet.route"
-import interestRouter from "./api/Interests/interest.route"
-import postRouter from "./api/Posts/post.route"
-import commentRouter from "./api/Comments/comment.route"
-import likeRouter from "./api/Likes/like.route"
-import followerRoute from "./api/follow/follow.route"
-import chatRoute from "./api/Chat/chat.route"
-import messageRoute from "./api/Message/message.route"
-import paymentRoute from "./api/Payment/payment.router"
+import { errorResponse } from "./helpers/response.helper"
 
 const app = express()
 app.use(helmet())
-app.use(bodyParser.urlencoded())
-app.use(bodyParser.json())
+app.use(express.json())
 
-/** Routes **/
-app.use("/user", userRouter)
-app.use("/interest", interestRouter)
-app.use("/wallet", walletRouter)
-app.use("/post", postRouter)
-app.use("/comment", commentRouter)
-app.use("/like", likeRouter)
-app.use("/follower", followerRoute)
-app.use("/chat", chatRoute)
-app.use("/message", messageRoute)
-app.use("/payment", paymentRoute)
 
 app.use("*", (req, res) => {
  return errorResponse(res, "route not found", 404)

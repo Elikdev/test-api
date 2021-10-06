@@ -1,11 +1,11 @@
 import "reflect-metadata";
 import * as dotenv from 'dotenv';
 
-// if (process.env.NODE_ENV === 'production'){
+if (process.env.NODE_ENV === 'production'){
 dotenv.config()
-// }else {
-//     dotenv.config({ path: '.local.env'})
-// }
+}else {
+    dotenv.config({ path: '.env.local'})
+}
 
 import app from "./app";
 import * as dbConfig from '../ormconfig.js'
@@ -20,5 +20,3 @@ const PORT: string | number = process.env.PORT || 3000
 app.listen(PORT, () => {
     console.log("app is listening 🚀 on ", PORT)
 })
-
-

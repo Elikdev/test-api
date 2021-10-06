@@ -17,5 +17,3 @@ export const errorResponse = (res: Response, message = 'unsuccessful', status = 
         error: true
     })
 }
-
-
