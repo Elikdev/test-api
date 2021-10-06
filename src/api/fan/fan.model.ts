@@ -1,10 +1,9 @@
-import { ChildEntity, Column } from "typeorm";
+import { ChildEntity, Column} from "typeorm";
 import {User} from '../user/user.model'
 
-
-@ChildEntity()
+@ChildEntity({name:'fan'})
 export class Fan extends User{
     
-    @Column()
+    @Column("simple-array")
     interests:string[]
 }

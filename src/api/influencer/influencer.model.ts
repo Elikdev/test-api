@@ -1,12 +1,13 @@
-import { ChildEntity, Column } from "typeorm";
+import { ChildEntity, Column} from "typeorm";
 import {User} from '../user/user.model'
+
 
 
 @ChildEntity()
 export class Influencer extends User {
 
-    // @Column()
-    // industry:
+    @Column("simple-array")
+    industry:string[]
 
     @Column()
     social_media_link:string

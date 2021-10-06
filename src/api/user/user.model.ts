@@ -1,9 +1,9 @@
-import {Column, Entity, OneToMany, TableInheritance} from 'typeorm'
+import {Column, Entity, OneToMany, TableInheritance, ManyToMany, JoinTable} from 'typeorm'
 import { BaseModel } from '../../helpers/db.helper';
-import { Transactions } from '../transactions/transactions.model';
+import { Transactions } from '../transactions/transaction.model';
+import { Requests } from "../requests/request.model";
 
-
-@Entity()
+@Entity({name:'users'})
 @TableInheritance({column:{type: "varchar",name:"type"}})
 export class User extends BaseModel {
 
@@ -28,10 +28,14 @@ export class User extends BaseModel {
     @Column()
     is_verified:false
 
-    @Column()
+    @Column({nullable:true})
     profile_image:string
 
     @OneToMany(()=>Transactions, transaction=>transaction.user)
     transactions:Transactions[]
+
+    @ManyToMany(()=>Requests, requests=>requests.users)
+    @JoinTable()
+    requests:Requests[]
 
 }

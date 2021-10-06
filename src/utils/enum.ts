@@ -54,7 +54,9 @@ export interface jwtCred {
 }
 
 
-
+export enum IndustriesType{
+    
+}
 
 export type Industry = {
     name: string
