@@ -152,7 +152,7 @@ class UserServices extends BaseService {
         const new_otp = await getRepository(Auth_cred).create({
             OTP: otp,
             expTime: expiry_time,
-            receipient: userDTO.email,
+            recipient: userDTO.email,
             channel: userDTO.channel,
             userId: user_exists.id,
         })
@@ -173,15 +173,17 @@ class UserServices extends BaseService {
         const auth_cred = await getRepository(Auth_cred).findOne({
             where: {
                 OTP: userDTO.otp_code,
-                receipient: userDTO.email,
-            },
+                recipient: userDTO.email
+
+            }
+
         })
 
         if (!auth_cred) {
             return this.internalResponse(false, {}, 400, "Invalid OTP")
         }
 
-        if (auth_cred.receipient !== userDTO.email) {
+        if (auth_cred.recipient !== userDTO.email) {
             return this.internalResponse(false, {}, 400, "Invalid email")
         }
 
