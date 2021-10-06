@@ -1,4 +1,11 @@
 /** @format */
+const dotenv = require("dotenv")
+
+if (process.env.NODE_ENV === "production") {
+	dotenv.config()
+} else {
+	dotenv.config({ path: ".env.local" })
+}
 
 const extra =
 	process.env.NODE_ENV === "production"
