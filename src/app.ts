@@ -10,6 +10,7 @@ app.use(express.json());
 
 appRoutes(app);
 
+
 app.use("*", (req, res) => {
   return errorResponse(res, "route not found", 404);
 });

@@ -22,7 +22,7 @@ export class User extends BaseModel {
 
     @Column({unique:true})
     phone_number:string
-
+    
     @Column()
     country_code:number
 
