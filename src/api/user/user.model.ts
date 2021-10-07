@@ -32,6 +32,9 @@ export class User extends BaseModel {
     @Column({nullable:true})
     profile_image:string
 
+    @Column({type: "simple-json"})
+    email_verification: { otp_code: string, expires_in: string }
+    
     @OneToMany(()=>Transactions, transaction=>transaction.user)
     transactions:Transactions[]
 

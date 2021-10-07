@@ -25,7 +25,7 @@ authRouter.post("/sign-up",  authValidation.signUpValidation(), async (req: Requ
   }
 });
 
-authRouter.post("/verify-otp", authValidation.signUpValidation(), async (req: Request, res: Response) => {
+authRouter.post("/verify-otp", authValidation.verifyOtpValidation(), async (req: Request, res: Response) => {
   try {
     const response =  await authService.verifyOtp(req.body)
 

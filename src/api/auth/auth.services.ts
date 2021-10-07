@@ -3,6 +3,7 @@ import {BaseService} from "../../helpers/db.helper"
 import {AccountType} from  "../../utils/enum"
 import {AuthModule} from "../../utils/auth"
 import {Fan} from "../fan/fan.model"
+import { User } from "../user/user.model"
 import {Influencer} from "../influencer/influencer.model"
 import { sendEmail, compileEjs } from "../../helpers/mailer.helper"
 import {userService} from '../user/user.services'
@@ -92,6 +93,7 @@ class AuthService extends BaseService {
       //if everything goes well
       // generate otp
       const otp: string = AuthModule.generateOtp(6);
+      const expiry_time: string =  new Date(Date.now() + 600000).toString()
 
       //send email to user
       const htmlMessage = compileEjs({ template: "code-template" })({
@@ -106,17 +108,60 @@ class AuthService extends BaseService {
         subject: "Bamiki Account Registration",
         to: emailToLower,
       })
+      
 
+      //find the user
+      user.email_verification = {otp_code: otp, expires_in: expiry_time}
+
+      await this.save(User, user)
 
       delete user.password
+      delete user.email_verification
       console.log(email_sent)
       return this.internalResponse(true, user, 200, "Sign up successful")
  }
 
  public async verifyOtp(userDTO: {
-  otp_code: string
+  otp_code: string,
+  email: string
  }) {
-  return this.internalResponse(true, userDTO.otp_code, 200, "otp verified")
+
+    const emailToLower = userDTO.email.toLowerCase()
+    //if user is registered
+    const user_exists = await userService.findUserWithOtp(emailToLower, userDTO.otp_code)
+  
+    if(!user_exists){
+      return this.internalResponse(false, {}, 400, "Invalid email")
+    }
+  
+    //if the user has been verified
+    if(user_exists.is_verified) {
+      return this.internalResponse(false, {}, 400, "You have been verified initially")
+    }
+  
+    //if the code has expired
+    if(new Date(Date.now()) >= new Date(user_exists.email_verification.expires_in)){
+      return this.internalResponse(false, {}, 400, "The OTP code entered has expired")
+    }
+  
+    //if the code is invalid
+    if(userDTO.otp_code !== user_exists.email_verification.otp_code){
+      return this.internalResponse(false, {}, 400, "Invalid OTP code")
+    }
+  
+    //successful... email verified
+    const update_details = {
+      is_verified: true,
+      email_verification: {otp_code: null, expires_in: null}
+    }
+  
+    this.schema(User).merge(user_exists, update_details)
+  
+    await this.updateOne(User, user_exists)
+  
+    
+    return this.internalResponse(true, {}, 200, "otp verified")
+
  }
 }
 

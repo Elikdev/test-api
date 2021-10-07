@@ -17,6 +17,15 @@ class AuthValidation {
    })
   })
  }
+
+ public verifyOtpValidation() {
+  return celebrate({
+   body: Joi.object({
+    otp_code: Joi.string().min(6).required(),
+    email: Joi.string().email().required()
+   })
+  })
+ }
 }
 
 export const authValidation = new AuthValidation()
