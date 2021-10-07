@@ -1,7 +1,8 @@
-import {Column, Entity, OneToMany, TableInheritance, ManyToMany, JoinTable} from 'typeorm'
+import {Column, Entity, OneToMany, TableInheritance, ManyToMany, JoinTable, OneToOne, JoinColumn} from 'typeorm'
 import { BaseModel } from '../../helpers/db.helper';
 import { Transactions } from '../transactions/transaction.model';
 import { Requests } from "../requests/request.model";
+import { Follow } from '../follow/follow.model';
 
 @Entity({name:'users'})
 @TableInheritance({column:{type: "varchar",name:"type"}})
@@ -37,5 +38,11 @@ export class User extends BaseModel {
     @ManyToMany(()=>Requests, requests=>requests.users)
     @JoinTable()
     requests:Requests[]
+
+    @OneToMany(()=>Follow, follow=>follow.followed)
+    followers:Follow[]
+
+    @OneToMany(()=>Follow, follow=>follow.follower)
+    following:Follow[]
 
 }

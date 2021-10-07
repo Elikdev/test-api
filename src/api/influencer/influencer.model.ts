@@ -1,4 +1,4 @@
-import { ChildEntity, Column} from "typeorm";
+import { ChildEntity, Column, JoinColumn, OneToOne} from "typeorm";
 import {User} from '../user/user.model'
 
 
@@ -14,5 +14,9 @@ export class Influencer extends User {
 
     @Column()
     live_video:string
+
+    // @OneToOne(()=>Wallet, wallet=>wallet.influencer)
+    // @JoinColumn()
+    // wallet:Wallet
 
 }
