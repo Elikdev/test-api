@@ -26,8 +26,8 @@ export class User extends BaseModel {
     @Column()
     country_code:number
 
-    @Column()
-    is_verified:false
+    @Column({default:false})
+    is_verified:boolean
 
     @Column({nullable:true})
     profile_image:string
