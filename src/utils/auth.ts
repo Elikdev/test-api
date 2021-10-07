@@ -1,8 +1,6 @@
 import crypto from "bcrypt"
-import { NextFunction, Request, Response } from "express"
 import jwt from 'jsonwebtoken'
-import { jwtCred } from "../enums"
-import { errorResponse } from "./response"
+import { jwtCred } from "./enum"
 
 class AuthUtils {
  public hashPassWord(password: string): string {
@@ -41,32 +39,6 @@ class AuthUtils {
    };
   }
  }
-
- public isAuthenticatedUser = (
-  req: Request,
-  res: Response,
-  next: NextFunction
- ) => {
-  const token = req.headers.authorization;
-  if (!token) {
-   return errorResponse(res, "Unauthorized", 401);
-  }
-  const t = token.split(" ");
-  if (t.length !== 2) {
-   return errorResponse(res, "Unauthorized", 401);
-  }
-  if (t[0].toLocaleLowerCase() !== "bearer") {
-   return errorResponse(res, "Unauthorized", 401);
-  }
-  const verify = this.verifyToken(t[1]);
-  if (!verify.verified) {
-   return errorResponse(res, "Unauthorized", 401);
-  }
-
-  (req as any).user = verify.userDetails;
-
-  next();
- };
 
  public generateOtp(length = 5): string {
   const digits = "0123456789";

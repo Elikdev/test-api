@@ -1,21 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, Column, JoinColumn } from "typeorm";
-import { User } from "../User/user.model";
-@Entity({ name: "followers" })
-export class Follow {
-    @PrimaryGeneratedColumn()
-    id: number;
+import { ManyToOne, Entity, JoinColumn } from "typeorm";
+import { BaseModel } from "../../helpers/db.helper";
+import { User } from "../user/user.model";
+
+
+@Entity({name:'follow'})
+export class Follow extends BaseModel{
 
     @ManyToOne(() => User, user => user.followers)
     @JoinColumn({ "name": "followed_id" })
     followed: User
-    @ManyToOne(() => User, user => user.followed, { eager: true })
+    
+    @ManyToOne(() => User, (user) => user.following)
     @JoinColumn({ "name": "follower_id" })
     follower: User
-    @CreateDateColumn({
-        type: "timestamp",
-        default: () => "CURRENT_TIMESTAMP(6)",
-    })
-    created_at: Date;
-
 
 }
