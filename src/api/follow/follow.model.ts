@@ -3,7 +3,7 @@ import { BaseModel } from "../../helpers/db.helper";
 import { User } from "../user/user.model";
 
 
-@Entity()
+@Entity({name:'follow'})
 export class Follow extends BaseModel{
 
     @ManyToOne(() => User, user => user.followers)

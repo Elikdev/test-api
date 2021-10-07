@@ -1,9 +1,10 @@
 import { Entity, Column, OneToOne } from "typeorm";
 import { BaseModel } from "../../helpers/db.helper";
+import { Influencer } from "../influencer/influencer.model";
 
 
 
-Entity()
+@Entity({name:'wallet'})
 export class Wallet extends BaseModel{
 
     @Column()
@@ -12,5 +13,6 @@ export class Wallet extends BaseModel{
     @Column()
     ledger_balance:number
 
-   
+    @OneToOne(()=>Influencer, influencer=>influencer.wallet)
+    influencer:Influencer
 }
