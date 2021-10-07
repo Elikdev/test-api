@@ -21,8 +21,8 @@ export class User extends BaseModel {
     password:string
 
     @Column({unique:true})
-    phone_number:number
-
+    phone_number:string
+    
     @Column()
     country_code:number
 

@@ -47,10 +47,10 @@ export type innerResponse = {
 
 export interface jwtCred {
     id: number
-    username: string
+    handle: string
     email: string
-    first_name: string
-    last_name: string
+    full_name: string
+
 }
 
 

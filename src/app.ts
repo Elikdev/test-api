@@ -1,27 +1,30 @@
-import express, { Request, Response } from "express"
-import helmet from "helmet"
-import { isCelebrateError } from "celebrate"
-import { errorResponse } from "./helpers/response.helper"
+import express, { Request, Response } from "express";
+import helmet from "helmet";
+import { isCelebrateError } from "celebrate";
+import { errorResponse } from "./helpers/response.helper";
+import appRoutes from "./routes";
 
-const app = express()
-app.use(helmet())
-app.use(express.json())
+const app = express();
+app.use(helmet());
+app.use(express.json());
+
+appRoutes(app);
 
 
 app.use("*", (req, res) => {
- return errorResponse(res, "route not found", 404)
-})
+  return errorResponse(res, "route not found", 404);
+});
 
 app.use((error: any, _req: Request, res: Response, next: any) => {
- if (isCelebrateError(error)) {
-  const errorMessage =
-   error.details.get("body") ||
-   error.details.get("query") ||
-   error.details.get("params")
-  const message = errorMessage!.message.replace(/"/g, "")
-  return errorResponse(res, message)
- }
- next()
-})
+  if (isCelebrateError(error)) {
+    const errorMessage =
+      error.details.get("body") ||
+      error.details.get("query") ||
+      error.details.get("params");
+    const message = errorMessage!.message.replace(/"/g, "");
+    return errorResponse(res, message);
+  }
+  next();
+});
 
-export default app
+export default app;
