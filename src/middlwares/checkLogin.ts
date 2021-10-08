@@ -3,8 +3,8 @@ import { errorResponse } from "../helpers/response.helper";
 import { AuthModule } from "../utils/auth";
 import { userService } from "../api/user/user.services";
 
-export class verificationMiddleware {
-    public static validateToken = async (req: Request, res: Response, next: NextFunction) => {
+class VerificationMiddleware {
+    public validateToken = async (req: Request, res: Response, next: NextFunction) => {
         const authHeader = req.headers.authorization;
         let token: string;
         if (!authHeader) return errorResponse(res, "Unauthorized", 401);
@@ -39,3 +39,5 @@ export class verificationMiddleware {
         }
     }
 }
+
+export const verificationMiddleware = new VerificationMiddleware()
