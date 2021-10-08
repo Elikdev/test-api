@@ -430,14 +430,14 @@ class AuthService extends BaseService {
   }
   // update the user then
   const result = await influencerService.updateInfluencer(influencer, update_details);
-  console.log(result)
+
   if (!result) {
     return this.internalResponse(false, {}, 400, "Unable to upload video for verification")
   }
 
   delete result.password
 
-  return this.internalResponse(true, { data: result }, 200, "Video uploaded successfully, Account pending approval")
+  return this.internalResponse(true, { }, 200, "Video uploaded successfully, Account pending approval")
   }
 
   public async verifyVideo(userDTO: {id: number}) {
