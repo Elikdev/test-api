@@ -125,4 +125,24 @@ authRouter.post("/sign-in",  authValidation.signInValidation(), async (req: Requ
     return errorResponse(res, 'an error occured, contact support', 500)
   }
 });
+
+authRouter.post("/upload-video",  authValidation.uploadVideoValidation(), async (req: Request, res: Response) => {
+  try {
+    //service is being called here
+    const response =  await authService.uploadVideo(req.body)
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400, response.data)
+    }
+
+    return successRes(res, response.data, response.message)
+
+  } catch (error) {
+    console.log(error)
+    if (error?.email_failed) {
+      return errorResponse(res, 'Error in sending email. Contact support for help', 400)
+    }
+    return errorResponse(res, 'an error occured, contact support', 500)
+  }
+});
 export default authRouter;

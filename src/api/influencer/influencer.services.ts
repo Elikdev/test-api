@@ -1,3 +1,4 @@
+import { DeepPartial } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import { Influencer } from "./influencer.model";
 
@@ -30,6 +31,12 @@ class InfluencerService extends BaseService{
             },
         })
     }
+
+    public async updateInfluencer(userToUpdate: Influencer, updateFields: DeepPartial<Influencer>) {
+        this.schema(Influencer).merge(userToUpdate, updateFields);
+        return await this.updateOne(Influencer, userToUpdate)
+    }
+
 }
 
 export const influencerService = new InfluencerService()

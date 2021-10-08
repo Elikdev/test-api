@@ -53,6 +53,15 @@ class AuthValidation {
      })
     })
    }
+
+   public uploadVideoValidation() {
+      return celebrate({
+         body: Joi.object({
+           email: Joi.string().email().required(),
+           video_link: Joi.string().required()
+         })
+      })
+   }
 }
 
 export const authValidation = new AuthValidation()

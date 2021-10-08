@@ -21,6 +21,7 @@ const opts: any = {
 // all templates here and can be easily used
 const templates = {
   "code-template": "code-template.ejs",
+  "update-template": "update-template.ejs",
 };
 
 const transport = createTransport(opts);
