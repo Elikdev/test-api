@@ -184,7 +184,7 @@ class AuthService extends BaseService {
    //send a code to the email
   // generate otp
    const otp: string = AuthModule.generateOtp(6);
-   const expiry_time: string =  new Date(Date.now() + 90000).toString() // 10mins
+   const expiry_time: string =  new Date(Date.now() + 600000).toString() // 10mins
 
    //send email to user
    const htmlMessage = compileEjs({ template: "code-template" })({
