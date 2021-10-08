@@ -145,4 +145,25 @@ authRouter.post("/upload-video",  authValidation.uploadVideoValidation(), async 
     return errorResponse(res, 'an error occured, contact support', 500)
   }
 });
+
+// custom route just for testing sake till we do admin part
+authRouter.post("/verify-video",  authValidation.verifyVideoValidation(), async (req: Request, res: Response) => {
+  try {
+    //service is being called here
+    const response =  await authService.verifyVideo(req.body)
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400, response.data)
+    }
+
+    return successRes(res, response.data, response.message)
+
+  } catch (error) {
+    console.log(error)
+    if (error?.email_failed) {
+      return errorResponse(res, 'Error in sending email. Contact support for help', 400)
+    }
+    return errorResponse(res, 'an error occured, contact support', 500)
+  }
+});
 export default authRouter;

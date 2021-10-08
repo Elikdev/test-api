@@ -62,6 +62,14 @@ class AuthValidation {
          })
       })
    }
+
+   public verifyVideoValidation() {
+      return celebrate({
+         body: Joi.object({
+            id: Joi.number().required(),
+         })
+      })
+   }
 }
 
 export const authValidation = new AuthValidation()

@@ -37,6 +37,14 @@ class InfluencerService extends BaseService{
         return await this.updateOne(Influencer, userToUpdate)
     }
 
+    public async findInfluencerById(id: number) {
+        return await this.findOne(Influencer, {
+            where: {
+                id,
+            },
+        })
+    }
+
 }
 
 export const influencerService = new InfluencerService()
