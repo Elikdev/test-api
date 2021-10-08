@@ -184,7 +184,7 @@ class AuthService extends BaseService {
    //send a code to the email
   // generate otp
    const otp: string = AuthModule.generateOtp(6);
-   const expiry_time: string =  new Date(Date.now() + 600000).toString() // 10mins
+   const expiry_time: string =  new Date(Date.now() + 90000).toString() // 10mins
 
    //send email to user
    const htmlMessage = compileEjs({ template: "code-template" })({
@@ -218,21 +218,21 @@ class AuthService extends BaseService {
   const user_exists = await userService.findUserWithOtp(emailToLower, userDTO.otp_code)
 
   if(!user_exists) {
-    return this.internalResponse(false, {}, 400, "Invalid email")
+    return this.internalResponse(false, {}, 400, "Invalid email/otp entered")
   }
 
   //verify otp
   //if the code has expired
   if(new Date(Date.now()) >= new Date(user_exists.email_verification.expires_in)){
     return this.internalResponse(false, {}, 400, "The OTP code entered has expired")    
-    } 
+   } 
 
   //if the code is invalid
   if(userDTO.otp_code !== user_exists.email_verification.otp_code){
     return this.internalResponse(false, {}, 400, "Invalid OTP code")
   }
 
-  user_exists.email_verification = { otp_verified: true, otp_code: null, expires_in: null }
+  user_exists.email_verification = { otp_verified: true, otp_code: null, expires_in: user_exists.email_verification.expires_in }
 
   await userService.saveUser(user_exists)
 
@@ -250,6 +250,11 @@ class AuthService extends BaseService {
    if(!user_exists.email_verification.otp_verified) {
      return this.internalResponse(false, {email: user_exists.email}, 400, "You need to verify an OTP code that has been sent to your email")
    }
+
+   //if the code has expired
+   if(new Date(Date.now()) >= new Date(user_exists.email_verification.expires_in)){
+     return this.internalResponse(false, { email: user_exists.email }, 400, "Access denied, Request for a new OTP code")    
+   } 
 
    if(userDTO.new_password !== userDTO.confirm_password){
      return this.internalResponse(false, {}, 400, "Passwords do not match")
@@ -333,7 +338,7 @@ class AuthService extends BaseService {
     const influencer = await influencerService.findInfluencerWithEmail(emailToLower)
     // send back the email for client to redirect to video upload screen
     if (!influencer?.is_admin_verified && influencer?.live_video == null ) {
-      return this.internalResponse(false, { email: user_exists.email }, 401, "Video verirification required")
+      return this.internalResponse(false, { email: user_exists.email }, 401, "Video verification required")
     }
 
     if (user_exists.account_type === "celebrity" && !influencer?.is_admin_verified && influencer?.live_video != null ) {

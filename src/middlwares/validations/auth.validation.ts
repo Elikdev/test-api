@@ -38,9 +38,9 @@ class AuthValidation {
  public resetPasswordValidation(){
   return celebrate({
    body: Joi.object({
-    otp_code: Joi.string().min(6).required(),
     email: Joi.string().email().required(),
-    new_passwword: Joi.string().email().required()
+    new_password: Joi.string().min(8).required(),
+    confirm_password: Joi.string().min(8).required()
    })
   })
  }

@@ -74,12 +74,12 @@ authRouter.post("/forgot-password/verify-otp", authValidation.verifyOtpValidatio
 })
 
 
-authRouter.post("/reset-password", authValidation.verifyOtpValidation(), async (req: Request, res: Response) => {
+authRouter.post("/reset-password", authValidation.resetPasswordValidation(), async (req: Request, res: Response) => {
   try {
     const response =  await authService.resetPassword(req.body)
 
     if (!response.status) {
-      return errorResponse(res, response.message, 400)
+      return errorResponse(res, response.message, 400, response.data)
     }
 
     return successRes(res, response.data, response.message)
