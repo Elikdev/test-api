@@ -55,17 +55,18 @@ class AuthService extends BaseService {
       if(userDTO.account_type === AccountType.CELEB){
       //
       
-      const celeb = influencerService.newinfluencerInstance(
-      userDTO.full_name,
-      hashedPassword,
-      emailToLower,
-      userDTO.handle,
-      userDTO.country_code,
-      userDTO.phone_number,
-      userDTO?.social_media_link,
-      userDTO?.live_video,
-      userDTO.account_type,
-      )
+    const celeb = influencerService.newInfluencerInstance(
+    userDTO.full_name,
+    hashedPassword,
+    emailToLower,
+    userDTO.handle,
+    userDTO.country_code,
+    userDTO.phone_number,
+    userDTO?.social_media_link,
+    userDTO?.live_video,
+    userDTO.account_type,
+    )
+
       // if the celeb account is successfully created
       //create wallet
       walletService.newWalletInstance(celeb)
