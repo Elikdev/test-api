@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finza</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      body {
+        background-color: #d8dbdb;
+        font-family: "Roboto", sans-serif;
+        font-size: 18px;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2%;
+        color: #21252A;
+      }
+      #wrapper {
+        background-color: #fff;
+      }
+      img {
+        max-width: 100%;
+      }
+      .header {
+        width: 98%;
+        margin-bottom: 1.5%;
+        padding-top: 4%;
+      }
+      #logo {
+        max-width: 220px;
+        margin: 4% 0 0 3%;
+      }
+      .greetings{
+        text-transform: capitalize;
+        font-size: 18px;
+        line-height: 21px;
+        margin-bottom: 3%;
+        } 
+      .content {
+        padding: 3%;
+        font-size: 1rem;
+      }
+      .content p {
+        text-align: justify;
+      }
+      .p-text {
+       margin-bottom: 3%;
+       font-size: 16px;
+       line-height: 21px;
+       color: #21252A;
+      }
+      .content .p-text b a {
+        text-decoration: none;
+        color: #274ff0;
+        font-weight: 800;
+      }
+      .footer {
+        background-color: rgba(39, 126, 240, 0.05);
+        padding-top: 6%;
+        font-size: 11px;
+        text-align: center !important;
+        padding-bottom: 2%;
+      }
+      .footer p{
+       font-size: 11px !important;
+       margin-bottom: 1% !important;
+      }
+      .contact {
+        text-align: center;
+      }
+      .callout {
+        text-align: center;
+        margin-top: 2%;
+      }
+      .social {
+        list-style-type: none;
+      }
+      .social li {
+        display: inline;
+        margin-left: 1.5%;
+      }
+      .social li a {
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div class="header">
+        <div id="logo">
+          <img
+            src="https://res.cloudinary.com/jimrid/image/upload/v1631000514/zx2hrm16s54z6gzlsdto.png"
+            alt="Finza logo"
+          />
+        </div>
+      </div>
+      <div class="content">
+        <h2
+          id="content-name"
+          class="greetings"
+        >
+          Hello <%- name %>,
+        </h2>
+        <p class="p-text">
+          <%- body %>
+        </p>
+
+      </div>
+      <div class="footer">
+        <p class="p-text">
+          You are receiving this email because you made a transaction that
+          partners with Finza to provide invoicing and payment processing
+          <p class="p-text">Dallas,Texas</p>
+         <p class="p-text">Finza 2021</p>
+        </p>
+        <div class="callout">
+          <ul class="social">
+            <li>
+              <a
+                class="fab"
+                href="https://www.facebook.com/finzapay"
+                target="_blank"
+                ><img
+                  src="https://res.cloudinary.com/jimrid/image/upload/v1631000614/qukqvh2xxscx9hsiosck.png"
+                  alt="fb icon"
+              /></a>
+            </li>
+            <li>
+              <a
+                class="fab"
+                href="https://www.instagram.com/finzapay"
+                target="_blank"
+                ><img
+                  src="https://res.cloudinary.com/jimrid/image/upload/v1631000755/amhuhudamk9yffsg8oja.png"
+                  alt="ig icon"
+              /></a>
+            </li>
+            <li>
+              <a
+                class="fab"
+                href="https://www.twitter.com/finzapay"
+                target="_blank"
+                ><img
+                  src="https://res.cloudinary.com/jimrid/image/upload/v1631000766/pztompx89epjtwlbal5m.png"
+                  alt="twitter icon"
+              /></a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

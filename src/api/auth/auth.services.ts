@@ -395,6 +395,94 @@ class AuthService extends BaseService {
   return this.internalResponse(true, { data, token }, 200, "User login successful")
  }
 
+ public async uploadVideo(userDTO: {email: string, video_link: string}) {
+  const emailToLower = userDTO.email.toLowerCase()
+
+  // check if you are an influencer
+  const influencer = await influencerService.findInfluencerWithEmail(emailToLower);
+  if (!influencer || influencer.account_type !== "celebrity") {
+    return this.internalResponse(false, {}, 400, "This function is not available for you")
+  }
+
+  if (influencer.is_admin_verified) {
+    return this.internalResponse(false, {}, 400, "Your account has already been approved")
+  }
+
+  const update_details = { live_video: userDTO.video_link }
+
+  // send mail to user that its received
+  const message = compileEjs({ template: "update-template" })({
+    body: `Your video verification has been received.
+    This may take a while as we are experiencing a larger than normal volume of requests recently and we are working through them as quickly as we can in order 
+    they are received.<br>
+    We would get back to you in due time 🚀.
+    `,
+    name: `${Array.isArray(influencer.full_name.split(" ")) ? influencer.full_name.split(" ")[0] : influencer.full_name}`,
+  });
+  const sent_mail = await sendEmail({
+    html: message,
+    subject: "Bamiki Influencer Video Verification",
+    to: emailToLower,
+  });
+  
+  if(!sent_mail) {
+    return this.internalResponse(true, {}, 400, "Error in sending email")
+  }
+  // update the user then
+  const result = await influencerService.updateInfluencer(influencer, update_details);
+
+  if (!result) {
+    return this.internalResponse(false, {}, 400, "Unable to upload video for verification")
+  }
+
+  delete result.password
+
+  return this.internalResponse(true, { }, 200, "Video uploaded successfully, Account pending approval")
+  }
+
+  public async verifyVideo(userDTO: {id: number}) {
+    const influencer = await influencerService.findInfluencerById(userDTO.id);
+    if (!influencer || influencer.account_type !== "celebrity") {
+      return this.internalResponse(false, {}, 400, "This function is not available for you")
+    }
+  
+    if (influencer.is_admin_verified) {
+      return this.internalResponse(false, {}, 400, "Account has already been approved")
+    }
+  
+    if (influencer.live_video == null) {
+      return this.internalResponse(false, {}, 400, "No video available for the user yet")
+    }
+
+    const update_details = { is_admin_verified: true }
+  
+    // // send mail to user that its received
+    const message = compileEjs({ template: "update-template" })({
+      body: `Hurray🚀. Your account has been approved. Login and start posting on bamiki today.
+      `,
+      name: `${Array.isArray(influencer.full_name.split(" ")) ? influencer.full_name.split(" ")[0] : influencer.full_name}`,
+    });
+    const sent_mail = await sendEmail({
+      html: message,
+      subject: "Bamiki Influencer Video Verification Successful",
+      to: influencer.email,
+    });
+    
+    if(!sent_mail) {
+      return this.internalResponse(true, {}, 400, "Error in sending email")
+    }
+    // // update the user then
+    const result = await influencerService.updateInfluencer(influencer, update_details);
+
+    if (!result) {
+      return this.internalResponse(false, {}, 400, "Unable to update user")
+    }
+    
+    delete result.password
+  
+    return this.internalResponse(true, { data: result }, 200, "Account approved")
+  }
+    
 }
 
 export const authService = new AuthService()
