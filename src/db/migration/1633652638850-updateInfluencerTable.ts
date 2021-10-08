@@ -1,18 +1,17 @@
 import {MigrationInterface, QueryRunner, TableColumn} from "typeorm";
 
-export class setupOtp1633614298180 implements MigrationInterface {
+export class updateInfluencerTable1633652638850 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.addColumn("users", new TableColumn({
-            name: "email_verification",
-            type: "jsonb",
-            isNullable: true
+            name: "is_admin_verified",
+            type: "boolean",
+            default: false
         }))
-        
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropColumn("users", "email_verification")
+        await queryRunner.dropColumn("users", "is_admin_verified")
     }
 
 }

@@ -1,6 +1,6 @@
 import { getRepository } from "typeorm"
 import {BaseService} from "../../helpers/db.helper"
-import {AccountType} from  "../../utils/enum"
+import { AccountType } from '../../utils/enum';
 import {AuthModule} from "../../utils/auth"
 import {Fan} from "../fan/fan.model"
 import { User } from "../user/user.model"
@@ -63,7 +63,8 @@ class AuthService extends BaseService {
     userDTO.country_code,
     userDTO.phone_number,
     userDTO?.social_media_link,
-    userDTO?.live_video
+    userDTO?.live_video,
+    userDTO.account_type,
     )
       // if the celeb account is successfully created
       //create wallet
@@ -86,7 +87,8 @@ class AuthService extends BaseService {
         emailToLower,
         userDTO.handle,
         userDTO.country_code,
-        userDTO.phone_number
+        userDTO.phone_number,
+        userDTO.account_type,
       )
       }
 
@@ -131,7 +133,7 @@ class AuthService extends BaseService {
     const user_exists = await userService.findUserWithOtp(emailToLower, userDTO.otp_code)
   
     if(!user_exists){
-      return this.internalResponse(false, {}, 400, "Invalid email")
+      return this.internalResponse(false, {}, 400, "Invalid email/otp entered")
     }
   
     //if the user has been verified
@@ -262,10 +264,23 @@ class AuthService extends BaseService {
     return this.internalResponse(false, { email: user_exists.email }, 401, "The email that you entered has not been verified")
   }
 
+  if (user_exists.account_type === "celebrity") {
+    const influencer = await influencerService.findInfluencerWithEmail(emailToLower)
+    // send back the email for client to redirect to video upload screen
+    if (!influencer?.is_admin_verified && influencer?.live_video == null ) {
+      return this.internalResponse(false, { email: user_exists.email }, 401, "Video verifirication required")
+    }
+
+    if (user_exists.account_type === "celebrity" && !influencer?.is_admin_verified && influencer?.live_video != null ) {
+      return this.internalResponse(false, { email: user_exists.email }, 401, "Your account is awaiting approval")
+    }
+  }
+
+
   // add this and update the usertable with migration
-  // if (user_exists.status === "disabled") {
-  //   return this.internalResponse(false, {}, 400, "Your account has been disabled. Contact Support")
-  // }
+  if (user_exists.status === "disabled") {
+    return this.internalResponse(false, {}, 400, "Your account has been disabled. Contact Support")
+  }
 
   const isPasswordValid = AuthModule.compareHash(userDTO.password, user_exists.password);
   if (!isPasswordValid) {
@@ -288,8 +303,6 @@ class AuthService extends BaseService {
     full_name: user_exists.full_name,
     handle: user_exists.handle,
   })
-
-  console.log("hh", result)
   
   return this.internalResponse(true, { data, token }, 200, "User login successful")
  }

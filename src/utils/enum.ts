@@ -7,7 +7,6 @@ export enum Gender {
 export enum AccountStatus {
     DISABLED = "disabled",
     ACTIVE = "active",
-    PENDING = "pending"
 }
 
 export enum AccountType {

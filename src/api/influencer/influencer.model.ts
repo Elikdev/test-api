@@ -19,4 +19,7 @@ export class Influencer extends User {
     @OneToOne(()=>Wallet, wallet=>wallet.influencer)
     @JoinColumn()
     wallet:Wallet
+
+    @Column({ default: false })
+    is_admin_verified: boolean;
 }

@@ -3,6 +3,7 @@ import { BaseModel } from '../../helpers/db.helper';
 import { Transactions } from '../transactions/transaction.model';
 import { Requests } from "../requests/request.model";
 import { Follow } from '../follow/follow.model';
+import { AccountStatus, AccountType } from "../../utils/enum"
 
 @Entity({name:'users'})
 @TableInheritance({column:{type: "varchar",name:"type"}})
@@ -29,17 +30,24 @@ export class User extends BaseModel {
     @Column({default:false})
     is_verified:boolean
 
-    @Column({default: false})
-    email_verified: boolean
+    @Column({
+        default: AccountStatus.ACTIVE,
+        type: "enum",
+        enum: AccountStatus,
+    })
+    status: AccountStatus // so that admin can disable or reactivate an account and prevent from logging
+
+    @Column({ type: "timestamp" })
+    last_login: Date
+
+    @Column()
+    account_type: string
 
     @Column({nullable:true})
     profile_image:string
 
     @Column({type: "simple-json"})
     email_verification: { otp_code: string, expires_in: string }
-
-    @Column()
-    last_login: Date
 
     @OneToMany(()=>Transactions, transaction=>transaction.user)
     transactions:Transactions[]
