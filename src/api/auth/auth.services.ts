@@ -163,6 +163,85 @@ class AuthService extends BaseService {
     return this.internalResponse(true, {}, 200, "otp verified")
 
  }
+
+ public async forgotPassword(userDTO: { email: string }) {
+  const emailToLower = userDTO.email.toLowerCase()
+
+   //check if the email is registered
+   const user_exists = await userService.findUserWithEmail(emailToLower)
+
+   if(!user_exists) {
+     return this.internalResponse(false, {}, 400, "Invalid email")
+   }
+
+   //check if the user has been verified
+   if(!user_exists.is_verified) {
+     return this.internalResponse(false, {}, 400, "Verify your account to proceed")
+   } 
+
+   //send a code to the email
+  // generate otp
+   const otp: string = AuthModule.generateOtp(6);
+   const expiry_time: string =  new Date(Date.now() + 600000).toString() // 10mins
+
+   //send email to user
+   const htmlMessage = compileEjs({ template: "code-template" })({
+     first_title: "Reset Password",
+     second_title: " ",
+     name: `${Array.isArray(user_exists.full_name.split(" ")) ? user_exists.full_name.split(" ")[0] : user_exists.full_name}`,
+     code: otp,
+    });
+
+    const email_sent = await sendEmail({
+      html: htmlMessage,
+      subject: "Request to Reset Password",
+      to: emailToLower,
+    })
+    
+    if(!email_sent) {
+      return this.internalResponse(true, {}, 400, "Error in sending email")
+    }
+
+    user_exists.email_verification =  { otp_code: otp, expires_in: expiry_time }
+
+    await this.save(User, user_exists)
+    
+    return this.internalResponse(true, {}, 200, "A code has been sent to your email")
+ }
+
+ public async resetPassword(userDTO: { email: string, otp_code: string, new_password } ) {
+   //search for the user
+   const user_exists = await userService.findUserWithOtp(userDTO.email.toLowerCase(), userDTO.otp_code)
+
+   if(!user_exists){
+     return this.internalResponse(false, {}, 400, "invalid email")
+   }
+
+  //if the code has expired
+   if(new Date(Date.now()) >= new Date(user_exists.email_verification.expires_in)){
+    return this.internalResponse(false, {}, 400, "The OTP code entered has expired")    
+   } 
+
+  //if the code is invalid
+  if(userDTO.otp_code !== user_exists.email_verification.otp_code){
+   return this.internalResponse(false, {}, 400, "Invalid OTP code")
+  }
+
+  //hashPassword
+  const hashedPassword = AuthModule.hashPassWord(userDTO.new_password)
+
+  //reset the email_verification
+  const update_details = {
+    password: hashedPassword,
+    email_verification: {otp_code: null, expires_in: null}
+  }
+
+  this.schema(User).merge(user_exists, update_details)
+
+  await this.updateOne(User, user_exists)
+
+  return this.internalResponse(true, {}, 200, "Password changed successully")
+ }
 }
 
 export const authService = new AuthService()

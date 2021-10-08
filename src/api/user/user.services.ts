@@ -23,6 +23,14 @@ class UserService extends BaseService{
             email: email
         }).getOne()
     }
+
+    public async findUserWithEmail(email: string) {
+        return await this.findOne(User, {
+            where: {
+                email
+            }
+        })
+    }
 }
 
 export const userService = new UserService()
