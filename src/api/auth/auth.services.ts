@@ -113,9 +113,9 @@ class AuthService extends BaseService {
       
 
       //find the user
-      user.email_verification = {otp_code: otp, expires_in: expiry_time}
+      user.email_verification = {otp_verified: false, otp_code: otp, expires_in: expiry_time}
 
-      await this.save(User, user)
+      await userService.saveUser(user)
 
       delete user.password
       delete user.email_verification
@@ -154,7 +154,7 @@ class AuthService extends BaseService {
     //successful... email verified
     const update_details = {
       is_verified: true,
-      email_verification: {otp_code: null, expires_in: null}
+      email_verification: {otp_verifed: false, otp_code: null, expires_in: null}
     }
   
     this.schema(User).merge(user_exists, update_details)
@@ -162,7 +162,7 @@ class AuthService extends BaseService {
     await this.updateOne(User, user_exists)
   
     
-    return this.internalResponse(true, {}, 200, "otp verified")
+    return this.internalResponse(true, {}, 200, "OTP verified")
 
  }
 
@@ -204,45 +204,110 @@ class AuthService extends BaseService {
       return this.internalResponse(true, {}, 400, "Error in sending email")
     }
 
-    user_exists.email_verification =  { otp_code: otp, expires_in: expiry_time }
+    user_exists.email_verification =  { otp_verified: false, otp_code: otp, expires_in: expiry_time }
 
-    await this.save(User, user_exists)
+    await userService.saveUser(user_exists)
     
     return this.internalResponse(true, {}, 200, "A code has been sent to your email")
  }
 
- public async resetPassword(userDTO: { email: string, otp_code: string, new_password } ) {
-   //search for the user
-   const user_exists = await userService.findUserWithOtp(userDTO.email.toLowerCase(), userDTO.otp_code)
+ public async verifyForgotPasswordOtp(userDTO: {email: string, otp_code: string}) {
+  const emailToLower = userDTO.email.toLowerCase()
 
-   if(!user_exists){
-     return this.internalResponse(false, {}, 400, "invalid email")
-   }
+  //check if the email is registered
+  const user_exists = await userService.findUserWithOtp(emailToLower, userDTO.otp_code)
 
+  if(!user_exists) {
+    return this.internalResponse(false, {}, 400, "Invalid email")
+  }
+
+  //verify otp
   //if the code has expired
-   if(new Date(Date.now()) >= new Date(user_exists.email_verification.expires_in)){
+  if(new Date(Date.now()) >= new Date(user_exists.email_verification.expires_in)){
     return this.internalResponse(false, {}, 400, "The OTP code entered has expired")    
-   } 
+    } 
 
   //if the code is invalid
   if(userDTO.otp_code !== user_exists.email_verification.otp_code){
-   return this.internalResponse(false, {}, 400, "Invalid OTP code")
+    return this.internalResponse(false, {}, 400, "Invalid OTP code")
   }
 
-  //hashPassword
-  const hashedPassword = AuthModule.hashPassWord(userDTO.new_password)
+  user_exists.email_verification = { otp_verified: true, otp_code: null, expires_in: null }
 
-  //reset the email_verification
-  const update_details = {
-    password: hashedPassword,
-    email_verification: {otp_code: null, expires_in: null}
+  await userService.saveUser(user_exists)
+
+  return this.internalResponse(true, {}, 200, "OTP verified")
+ }
+
+ public async resetPassword(userDTO: { email: string, new_password: string, confirm_password: string } ) {
+   //search for the user
+   const user_exists = await userService.findUserWithEmail(userDTO.email.toLowerCase())
+
+   if(!user_exists){
+     return this.internalResponse(false, {}, 400, "Invalid email")
+   }
+
+   if(!user_exists.email_verification.otp_verified) {
+     return this.internalResponse(false, {email: user_exists.email}, 400, "You need to verify an OTP code that has been sent to your email")
+   }
+
+   if(userDTO.new_password !== userDTO.confirm_password){
+     return this.internalResponse(false, {}, 400, "Passwords do not match")
+   }
+
+   //hashPassword
+   const hashedPassword = AuthModule.hashPassWord(userDTO.new_password)
+
+   //reset the email_verification
+   const update_details = {
+     password: hashedPassword,
+     email_verification: { otp_verified: false, otp_code: null, expires_in: null }
+   }
+
+   await userService.updateUser(user_exists, update_details)
+
+   return this.internalResponse(true, {}, 200, "Password reset successfully")
+ }
+
+ public async resendOtp(userDTO: {email: string}){
+  const emailToLower = userDTO.email.toLowerCase()
+
+  //check if the email is registered
+  const user_exists = await userService.findUserWithEmail(emailToLower)
+
+  if(!user_exists) {
+    return this.internalResponse(false, {}, 400, "Incorrect email")
   }
 
-  this.schema(User).merge(user_exists, update_details)
+  //resend code to the email
+  // generate otp
+  const otp: string = AuthModule.generateOtp(6);
+  const expiry_time: string =  new Date(Date.now() + 600000).toString() // 10mins
 
-  await this.updateOne(User, user_exists)
+  //send email to user
+  const htmlMessage = compileEjs({ template: "code-template" })({
+    first_title: "Resend OTP",
+    second_title: " ",
+    name: `${Array.isArray(user_exists.full_name.split(" ")) ? user_exists.full_name.split(" ")[0] : user_exists.full_name}`,
+    code: otp,
+   });
 
-  return this.internalResponse(true, {}, 200, "Password changed successully")
+   const email_sent = await sendEmail({
+     html: htmlMessage,
+     subject: "Resend OTP",
+     to: emailToLower,
+   })
+   
+   if(!email_sent) {
+     return this.internalResponse(true, {}, 400, "Error in sending email")
+   }
+
+   user_exists.email_verification =  {otp_verified: false, otp_code: otp, expires_in: expiry_time }
+
+   await userService.saveUser(user_exists)
+
+   return this.internalResponse(true, {}, 200, "OTP code has been sent to your email")
+
  }
 
  public async signIn(userDTO: {
@@ -268,7 +333,7 @@ class AuthService extends BaseService {
     const influencer = await influencerService.findInfluencerWithEmail(emailToLower)
     // send back the email for client to redirect to video upload screen
     if (!influencer?.is_admin_verified && influencer?.live_video == null ) {
-      return this.internalResponse(false, { email: user_exists.email }, 401, "Video verifirication required")
+      return this.internalResponse(false, { email: user_exists.email }, 401, "Video verirification required")
     }
 
     if (user_exists.account_type === "celebrity" && !influencer?.is_admin_verified && influencer?.live_video != null ) {

@@ -26,7 +26,25 @@ class AuthValidation {
    })
   })
  }
- 
+
+ public forgotPasswordValidation(){
+  return celebrate({
+   body: Joi.object({
+    email: Joi.string().email().required()
+   })
+  })
+ }
+
+ public resetPasswordValidation(){
+  return celebrate({
+   body: Joi.object({
+    otp_code: Joi.string().min(6).required(),
+    email: Joi.string().email().required(),
+    new_passwword: Joi.string().email().required()
+   })
+  })
+ }
+
  public signInValidation(){
     return celebrate({
      body: Joi.object({

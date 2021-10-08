@@ -50,6 +50,10 @@ class UserService extends BaseService{
         
         return user
     }
+
+    public async saveUser(user: User) {
+        return await this.save(User, user)
+    }
 }
 
 export const userService = new UserService()
