@@ -17,6 +17,15 @@ class AuthValidation {
    })
   })
  }
+
+ public signInValidation(){
+    return celebrate({
+     body: Joi.object({
+      email: Joi.string().email().required(),
+      password: Joi.string().required()
+     })
+    })
+   }
 }
 
 export const authValidation = new AuthValidation()
