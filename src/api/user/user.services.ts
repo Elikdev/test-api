@@ -2,6 +2,7 @@ import { DeepPartial } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import {User} from './user.model'
 import {getRepository, Like} from "typeorm"
+import {jwtCred} from "../../utils/enum"
 
 
 
@@ -47,12 +48,43 @@ class UserService extends BaseService{
         })
 
         delete user.password
+        delete user.email_verification
         
         return user
     }
 
     public async saveUser(user: User) {
         return await this.save(User, user)
+    }
+    
+    public async updateProfile(authUser:jwtCred, userDTO: {
+        profile_image: string
+        bio: string
+    }) {
+        const user_id = authUser.id
+        
+        const user = await this.getUserDetails(user_id)
+
+        if(!user){
+            return this.internalResponse(false, {}, 200, "Invalid user")
+        }
+        const { profile_image, bio } = userDTO
+
+        if(!profile_image && !bio) {
+            return this.internalResponse(false, {}, 400, "No data to update")
+        }
+
+        const update_details = {
+            profile_image: userDTO?.profile_image,
+            bio: userDTO?.bio
+        }
+
+        //update user
+        const result = await this.updateUser(user, update_details)
+
+        const {password, ...data} = result
+
+        return this.internalResponse(true, data, 200, "Profile updated")
     }
 }
 

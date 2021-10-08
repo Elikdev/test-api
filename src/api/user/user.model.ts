@@ -45,6 +45,9 @@ export class User extends BaseModel {
 
     @Column({nullable:true})
     profile_image:string
+    
+    @Column({nullable:true})
+    bio:string
 
     @Column({type: "simple-json"})
     email_verification: { otp_verified:boolean, otp_code: string, expires_in: string }
