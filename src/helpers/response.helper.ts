@@ -10,10 +10,11 @@ export const successRes = (res: Response, data: any, message = 'success', status
 }
 
 
-export const errorResponse = (res: Response, message = 'unsuccessful', status = 400) => {
+export const errorResponse = (res: Response, message = 'unsuccessful', status = 400, data={}) => {
     return res.status(status).json({
         status: false,
         message,
-        error: true
+        error: true,
+        data
     })
 }

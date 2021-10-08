@@ -242,6 +242,58 @@ class AuthService extends BaseService {
 
   return this.internalResponse(true, {}, 200, "Password changed successully")
  }
+
+ public async signIn(userDTO: {
+  email: string;
+  password: string
+ }) {
+  const emailToLower = userDTO.email.toLowerCase();
+  const user_exists = await userService.findUserWithEmail(emailToLower);
+  if (!user_exists) {
+    return this.internalResponse(
+      false,
+      {},
+      400,
+      "Incorrect Email or Password!"
+    )
+  }
+
+  if(!user_exists.is_verified) {
+    return this.internalResponse(false, { email: user_exists.email }, 401, "The email that you entered has not been verified")
+  }
+
+  // add this and update the usertable with migration
+  // if (user_exists.status === "disabled") {
+  //   return this.internalResponse(false, {}, 400, "Your account has been disabled. Contact Support")
+  // }
+
+  const isPasswordValid = AuthModule.compareHash(userDTO.password, user_exists.password);
+  if (!isPasswordValid) {
+    return this.internalResponse(
+      false,
+      {},
+      400,
+      "Incorrect Email or Password!"
+    )
+  }
+
+  // update the last login date AND add this to the user table
+  const update_details = { last_login: new Date(Date.now()) }
+  const result = await userService.updateUser(user_exists, update_details);
+  const { password, ...data } = result
+
+  const token = AuthModule.generateJWT({
+    id: user_exists.id,
+    email: user_exists.email,
+    full_name: user_exists.full_name,
+    handle: user_exists.handle,
+  })
+
+  console.log("hh", result)
+  
+  return this.internalResponse(true, { data, token }, 200, "User login successful")
+ }
+
 }
 
 export const authService = new AuthService()

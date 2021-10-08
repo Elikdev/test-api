@@ -8,10 +8,25 @@ export class setupOtp1633614298180 implements MigrationInterface {
             type: "jsonb",
             isNullable: true
         }))
+
+        await queryRunner.addColumn("users",  new TableColumn({
+            name: "email_verified",
+            type: "boolean",
+            default: false
+        }))
+
+        await queryRunner.addColumn("users",  new TableColumn({
+            name: "last_login",
+            type: "timestamp",
+            isNullable: true
+        }))
+        
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.dropColumn("users", "email_verification")
+        await queryRunner.dropColumn("users", "email_verified")
+        await queryRunner.dropColumn("users", "last_login")
     }
 
 }

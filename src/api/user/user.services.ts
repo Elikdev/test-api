@@ -1,3 +1,4 @@
+import { DeepPartial } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import {User} from './user.model'
 import {getRepository, Like} from "typeorm"
@@ -24,12 +25,30 @@ class UserService extends BaseService{
         }).getOne()
     }
 
-    public async findUserWithEmail(email: string) {
+    public async findUserWithEmail(email: string): Promise<User> {
         return await this.findOne(User, {
             where: {
-                email
-            }
+                email,
+            },
         })
+    }
+
+    public async updateUser(userToUpdate: User, updateFields: DeepPartial<User>) {
+       this.schema(User).merge(userToUpdate, updateFields);
+       return await this.updateOne(User, userToUpdate)
+    }
+
+    public async getUserDetails(id: number) {
+        const user = await this.findOne(User, {
+            where: {
+                id
+            },
+            relations: ["transactions", "requests", "followers", "following"]
+        })
+
+        delete user.password
+        
+        return user
     }
 }
 
