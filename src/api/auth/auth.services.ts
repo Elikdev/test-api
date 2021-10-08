@@ -55,7 +55,7 @@ class AuthService extends BaseService {
       if(userDTO.account_type === AccountType.CELEB){
       //
       
-    const celeb = influencerService.newinfluencerInstance(
+    const celeb = influencerService.newInfluencerInstance(
     userDTO.full_name,
     hashedPassword,
     emailToLower,
