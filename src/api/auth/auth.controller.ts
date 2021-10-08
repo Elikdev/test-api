@@ -41,6 +41,71 @@ authRouter.post("/verify-otp", authValidation.verifyOtpValidation(), async (req:
   }
 })
 
+authRouter.post("/forgot-password", authValidation.forgotPasswordValidation(), async (req: Request, res: Response) => {
+  try {
+    const response =  await authService.forgotPassword(req.body)
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400)
+    }
+
+    return successRes(res, response.data, response.message)
+
+  } catch (error) {
+    console.log(error)
+    return errorResponse(res, 'an error occured, contact support', 500)
+  }
+})
+
+authRouter.post("/forgot-password/verify-otp", authValidation.verifyOtpValidation(), async (req: Request, res: Response) => {
+  try {
+    const response =  await authService.verifyForgotPasswordOtp(req.body)
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400)
+    }
+
+    return successRes(res, response.data, response.message)
+
+  } catch (error) {
+    console.log(error)
+    return errorResponse(res, 'an error occured, contact support', 500)
+  }
+})
+
+
+authRouter.post("/reset-password", authValidation.resetPasswordValidation(), async (req: Request, res: Response) => {
+  try {
+    const response =  await authService.resetPassword(req.body)
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400, response.data)
+    }
+
+    return successRes(res, response.data, response.message)
+
+  } catch (error) {
+    console.log(error)
+    return errorResponse(res, 'an error occured, contact support', 500)
+  }
+})
+
+authRouter.post("/resend-otp", authValidation.forgotPasswordValidation(), async (req: Request, res: Response) => {
+  try {
+    const response =  await authService.resendOtp(req.body)
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400)
+    }
+
+    return successRes(res, response.data, response.message)
+
+  } catch (error) {
+    console.log(error)
+    return errorResponse(res, 'an error occured, contact support', 500)
+  }
+})
+
 authRouter.post("/sign-in",  authValidation.signInValidation(), async (req: Request, res: Response) => {
   try {
     //service is being called here

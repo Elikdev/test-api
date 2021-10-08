@@ -8,6 +8,7 @@ export class setupOtp1633614298180 implements MigrationInterface {
             type: "jsonb",
             isNullable: true
         }))
+        
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
