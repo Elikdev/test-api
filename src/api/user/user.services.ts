@@ -58,10 +58,8 @@ class UserService extends BaseService{
     }
     
     public async updateProfile(authUser:jwtCred, userDTO: {
-        full_name: string
-        phone_number: string
-        country_code: number
-        social_media_link: string
+        profile_image: string
+        bio: string
     }) {
         const user_id = authUser.id
         
@@ -70,17 +68,15 @@ class UserService extends BaseService{
         if(!user){
             return this.internalResponse(false, {}, 200, "Invalid user")
         }
-        const { country_code, full_name, phone_number, social_media_link } = userDTO
+        const { profile_image, bio } = userDTO
 
-        if(!country_code && !full_name && !phone_number && !social_media_link) {
+        if(!profile_image && !bio) {
             return this.internalResponse(false, {}, 400, "No data to update")
         }
 
         const update_details = {
-            full_name: userDTO?.full_name,
-            phone_number: userDTO?.phone_number,
-            country_code: userDTO?.country_code,
-            social_media_link: userDTO?.social_media_link
+            profile_image: userDTO?.profile_image,
+            bio: userDTO?.bio
         }
 
         //update user
