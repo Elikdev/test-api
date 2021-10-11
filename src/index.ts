@@ -7,8 +7,6 @@ dotenv.config()
     dotenv.config({ path: '.env.local'})
 }
 
-console.log(process.env.PRIVATE_KEY)
-
 import app from "./app";
 import * as dbConfig from '../ormconfig.js'
 import { createConnection } from "typeorm";
