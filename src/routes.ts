@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRouter from "./api/auth/auth.controller";
 import userRouter from "./api/user/user.controller";
+import followRouter from "./api/follow/follow.controller";
 const apiPrefix: string = "/api/v1";
 
 const routes = [
@@ -11,6 +12,10 @@ const routes = [
   {
     prefix: "user",
     name: userRouter
+  },
+  {
+    prefix: "follower",
+    name: followRouter
   }
 ];
 

@@ -28,7 +28,7 @@ userRouter.post("/update-profile", verificationMiddleware.validateToken, userVal
 }
 })
 
-userRouter.post("/change-password", verificationMiddleware.validateToken, userValidation.changePasswordValidation(), async (req: Request, res: Response) => {
+userRouter.post("/change-password", verificationMiddleware.validateToken, userValidation.changePasswordValidation, async (req: Request, res: Response) => {
   try {
    const authUser = (req as any).user
  
