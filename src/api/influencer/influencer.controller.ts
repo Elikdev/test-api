@@ -12,7 +12,7 @@ influencerRouter.get('/find-influencer', verificationMiddleware.validateToken, a
         errorResponse(res, 'search parameter must be a string')
         return 
     }
-    const response = await influencerService.findAllInfluencer(search.toString())
+    const response = await influencerService.findInfluencer(search.toString())
     successRes(res,response)
   }catch(error){
       errorResponse(res, error.message)
