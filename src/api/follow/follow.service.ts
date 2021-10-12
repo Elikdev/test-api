@@ -3,11 +3,12 @@ import { Follow } from "./follow.model";
 import { getRepository, Like } from "typeorm";
 import { jwtCred } from "../../utils/enum";
 import { userService } from "../user/user.services";
+import { User } from "../user/user.model";
 
 class FollowService extends BaseService {
   super: any;
 
-  public createFollowInstance(followed, follower): Follow {
+  public createFollowInstance(followed: User, follower: User): Follow {
     return getRepository(Follow).create({
       followed,
       follower,
