@@ -1,4 +1,4 @@
-import { DeepPartial } from "typeorm";
+import { DeepPartial, Like } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import { Influencer } from "./influencer.model";
 
@@ -41,13 +41,17 @@ class InfluencerService extends BaseService{
         return await this.getOne(Influencer, id)
     }
 
-    public async findAllInfluencer(search:string){
-        const influencer_list = await this.findAll(Influencer)
-       return influencer_list.filter(influencer=>
-            influencer?.full_name?.toLowerCase()?.includes(search.toLowerCase())||
-            influencer?.email?.toLowerCase()?.includes(search.toLowerCase())||
-            influencer?.handle?.toLowerCase()?.includes(search.toLowerCase())||
-            influencer?.industry?.includes(search.toLowerCase()))
+    public async findInfluencer(search:string){
+        const influencer_list = await this.getMany(Influencer, {
+            where:[
+                {full_name:Like(`%${search}%`)},
+                {handle:Like(`%${search}%`)},
+                {email:Like(`%${search}%`)},
+                {industry:Like(`%${search}%`)},
+
+            ]
+        })
+       return influencer_list
     }
 
 }
