@@ -1,8 +1,9 @@
 import { DeepPartial } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
-import {User} from './user.model'
-import {getRepository, Like} from "typeorm"
-import {jwtCred} from "../../utils/enum"
+import { User } from './user.model'
+import { getRepository, Like } from "typeorm"
+import { jwtCred } from "../../utils/enum"
+import { AuthModule } from "../../utils/auth"
 
 
 
@@ -17,7 +18,7 @@ class UserService extends BaseService{
         })
     }
 
-    public async findUserWithOtp(email: string, otp_code) {
+    public async findUserWithOtp(email: string, otp_code: string) {
         return await getRepository(User).createQueryBuilder().where(`User.email_verification ::jsonb @> :email_verification AND User.email = :email`, {
             email_verification: {
                 otp_code: otp_code.toString()
@@ -85,6 +86,51 @@ class UserService extends BaseService{
         const {password, ...data} = result
 
         return this.internalResponse(true, data, 200, "Profile updated")
+    }
+
+    public async changePassword(authUser: jwtCred, userDTO: {
+        old_password: string
+        new_password: string
+        confirm_password: string
+    }) {
+        const user_email = authUser.email;
+
+        const user = await this.findUserWithEmail(user_email)
+
+        if (!user) {
+            return this.internalResponse(false, {}, 200, "Invalid user")
+        }
+
+        const isPasswordValid = AuthModule.compareHash(userDTO.old_password, user.password);
+        if (!isPasswordValid) {
+            return this.internalResponse(
+            false,
+            {},
+            400,
+            "Incorrect Password entered"
+            )
+        }
+
+        const hashedPassword = AuthModule.hashPassWord(userDTO.new_password)
+
+        const update_details = {
+            password: hashedPassword,
+        }
+
+        const result =  await userService.updateUser(user, update_details);
+        if (!result) {
+            return this.internalResponse(false, {}, 400, "Could not update user's password")
+        }
+
+        return this.internalResponse(true, {}, 200, "Password updated")
+    }
+
+    public async findUserWithId(id: number): Promise<User> {
+        return await this.findOne(User, {
+            where: {
+                id,
+            },
+        })
     }
 }
 

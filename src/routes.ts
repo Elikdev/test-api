@@ -1,8 +1,10 @@
-import { Router } from "express";
-import authRouter from "./api/auth/auth.controller";
-import userRouter from "./api/user/user.controller";
+import { Router } from "express"
+import authRouter from "./api/auth/auth.controller"
+import influencerRouter from "./api/influencer/influencer.controller"
+import userRouter from "./api/user/user.controller"
 import bankRouter from "./api/bank/bank.controller"
-const apiPrefix: string = "/api/v1";
+import followRouter from "./api/follow/follow.controller"
+const apiPrefix: string = "/api/v1"
 
 const routes = [
   {
@@ -14,6 +16,14 @@ const routes = [
     name: userRouter,
   },
   {
+    prefix: "follower",
+    name: followRouter,
+  },
+  {
+    prefix: "influencer",
+    name: influencerRouter,
+  },
+  {
     prefix: "bank",
     name: bankRouter,
   },
@@ -21,7 +31,7 @@ const routes = [
 
 export default (app: any) => {
   routes.forEach((element) => {
-    app.use(`${apiPrefix}/${element.prefix}`, element.name);
-  });
-  return app;
-};
+    app.use(`${apiPrefix}/${element.prefix}`, element.name)
+  })
+  return app
+}
