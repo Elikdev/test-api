@@ -38,11 +38,11 @@ class InfluencerService extends BaseService{
     }
 
     public async findInfluencerById(id: number) {
-        return await this.findOne(Influencer, {
-            where: {
-                id,
-            },
-        })
+        return await this.getOne(Influencer, id)
+    }
+
+    public async findAllInfluencer(){
+        return await this.getMany(Influencer,{})
     }
 
 }
