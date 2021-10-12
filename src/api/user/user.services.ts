@@ -124,6 +124,14 @@ class UserService extends BaseService{
 
         return this.internalResponse(true, {}, 200, "Password updated")
     }
+
+    public async findUserWithId(id: number): Promise<User> {
+        return await this.findOne(User, {
+            where: {
+                id,
+            },
+        })
+    }
 }
 
 export const userService = new UserService()
