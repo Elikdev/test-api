@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRouter from "./api/auth/auth.controller";
 import userRouter from "./api/user/user.controller";
+import bankRouter from "./api/bank/bank.controller"
 const apiPrefix: string = "/api/v1";
 
 const routes = [
@@ -10,9 +11,13 @@ const routes = [
   },
   {
     prefix: "user",
-    name: userRouter
-  }
-];
+    name: userRouter,
+  },
+  {
+    prefix: "bank",
+    name: bankRouter,
+  },
+]
 
 export default (app: any) => {
   routes.forEach((element) => {
