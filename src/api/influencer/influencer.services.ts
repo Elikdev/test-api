@@ -41,8 +41,13 @@ class InfluencerService extends BaseService{
         return await this.getOne(Influencer, id)
     }
 
-    public async findAllInfluencer(){
-        return await this.getMany(Influencer,{})
+    public async findAllInfluencer(search:string){
+        const influencer_list = await this.findAll(Influencer)
+       return influencer_list.filter(influencer=>
+            influencer?.full_name?.toLowerCase()?.includes(search.toLowerCase())||
+            influencer?.email?.toLowerCase()?.includes(search.toLowerCase())||
+            influencer?.handle?.toLowerCase()?.includes(search.toLowerCase())||
+            influencer?.industry?.includes(search.toLowerCase()))
     }
 
 }

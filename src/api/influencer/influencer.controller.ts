@@ -6,9 +6,17 @@ import { verificationMiddleware } from "../../middlwares/checkLogin"
 const influencerRouter = Router()
 
 influencerRouter.get('/find-influencer', verificationMiddleware.validateToken, async (req: Request, res: Response)=>{
-    console.log(req.query.search)
-    const response = await influencerService.findAll()
+  try{
+        const {search} =req.query
+    if(typeof search !== 'string'){
+        errorResponse(res, 'search parameter must be a string')
+        return 
+    }
+    const response = await influencerService.findAllInfluencer(search.toString())
     successRes(res,response)
+  }catch(error){
+      errorResponse(res, error.message)
+  }
 })
 
 export default influencerRouter
