@@ -25,6 +25,10 @@ export class BaseService {
         )
     }
 
+    public async findAll<T>(model: EntityTarget<T>): Promise<T[]> {
+        return await this.schema(model).find()
+    }
+
     public async getOne<T>(model: EntityTarget<T>, id: number): Promise<T> {
         return await this.schema(model).findOne({
             where: {
