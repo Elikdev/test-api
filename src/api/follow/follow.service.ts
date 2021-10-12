@@ -52,10 +52,19 @@ class FollowService extends BaseService {
       );
     }
 
+    if (followed.account_type !== "celebrity") {
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "You can only follow an influencer"
+      );
+    }
+
     const followrepo = this.createFollowInstance(followed, follower);
     const result = await this.saveFollow(followrepo);
     if (!result) {
-        return this.internalResponse(false, {}, 400, "Unable to follow user.")
+      return this.internalResponse(false, {}, 400, "Unable to follow user.");
     }
     return this.internalResponse(true, {}, 200, "followed succesfully");
   }
