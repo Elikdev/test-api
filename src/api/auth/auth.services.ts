@@ -48,41 +48,31 @@ class AuthService extends BaseService {
       return this.internalResponse(false, {}, 400, message)
       }
 
-      let user: Influencer | Fan
+      let user: any
+      let isFan: boolean
+      
       //hash the password
       const hashedPassword = AuthModule.hashPassWord(userDTO.password)
+
       //if account type is fan or influencer
       if(userDTO.account_type === AccountType.CELEB){
-      //
-      
-    const celeb = influencerService.newInfluencerInstance(
-    userDTO.full_name,
-    hashedPassword,
-    emailToLower,
-    userDTO.handle,
-    userDTO.country_code,
-    userDTO.phone_number,
-    userDTO?.social_media_link,
-    userDTO?.live_video,
-    userDTO.account_type,
-    )
-
-      // if the celeb account is successfully created
-      //create wallet
-      walletService.newWalletInstance(celeb)
-
-      
-      user = await influencerService.createInfluencer(celeb)
-
-
-      if(user) {
-          await walletService.createWallet(user)
-      }
+        isFan = false
+        user = influencerService.newInfluencerInstance(
+        userDTO.full_name,
+        hashedPassword,
+        emailToLower,
+        userDTO.handle,
+        userDTO.country_code,
+        userDTO.phone_number,
+        userDTO?.social_media_link,
+        userDTO?.live_video,
+        userDTO.account_type,
+        )
       }
 
       if (userDTO.account_type === AccountType.FAN){
-
-      user = await fanService.newFan(
+        isFan = true
+        user = await fanService.newFan(
         userDTO.full_name,
         hashedPassword,
         emailToLower,
@@ -93,7 +83,6 @@ class AuthService extends BaseService {
       )
       }
 
-      //if everything goes well
       // generate otp
       const otp: string = AuthModule.generateOtp(6);
       const expiry_time: string =  new Date(Date.now() + 600000).toString()
@@ -111,16 +100,28 @@ class AuthService extends BaseService {
         subject: "Bamiki Account Registration",
         to: emailToLower,
       })
-      
 
-      //find the user
+      if(email_sent) {
+        if(!isFan){
+          walletService.newWalletInstance(user)
+
+          user = await influencerService.createInfluencer(user)
+  
+          if(user) {
+              await walletService.createWallet(user)
+          }
+        }else {
+          user = await fanService.createFan(user)
+        }
+      }
+
+      //update the user
       user.email_verification = {otp_verified: false, otp_code: otp, expires_in: expiry_time}
 
       await userService.saveUser(user)
 
       delete user.password
       delete user.email_verification
-      console.log(email_sent)
       return this.internalResponse(true, user, 200, "Sign up successful")
  }
 
