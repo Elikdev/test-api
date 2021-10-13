@@ -158,15 +158,6 @@ class BankService extends BaseService {
     const user_id = authUser.id
     const influencer = await influencerService.findInfluencerById(user_id)
 
-    if (influencer.account_type === "fan") {
-      return this.internalResponse(
-        false,
-        {},
-        400,
-        "This function is not available for fan"
-      )
-    }
-
     const bank_exists = await this.getUserBankwithAccountNumber(
       user_id,
       bankDTO.account_number

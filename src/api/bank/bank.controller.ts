@@ -9,6 +9,7 @@ const bankRouter = Router()
 bankRouter.post(
   "/get-bank-account-details",
   verificationMiddleware.validateToken,
+  verificationMiddleware.checkCeleb,
   bankValidation.getBankAccountValidation(),
   async (req: Request, res: Response) => {
     try {
@@ -32,6 +33,7 @@ bankRouter.post(
 bankRouter.post(
   "/add-bank-details",
   verificationMiddleware.validateToken,
+  verificationMiddleware.checkCeleb,
   bankValidation.addBankDetailsValidation(),
   async (req: Request, res: Response) => {
     try {
@@ -55,6 +57,7 @@ bankRouter.post(
 bankRouter.post(
   "/get-bank/:bankId",
   verificationMiddleware.validateToken,
+  verificationMiddleware.checkCeleb,
   bankValidation.getBankDetailsValidation(),
   async (req: Request, res: Response) => {
     try {
@@ -79,6 +82,7 @@ bankRouter.post(
 bankRouter.post(
   "/get-banks",
   verificationMiddleware.validateToken,
+  verificationMiddleware.checkCeleb,
   async (req: Request, res: Response) => {
     try {
       const authUser = (req as any).user
