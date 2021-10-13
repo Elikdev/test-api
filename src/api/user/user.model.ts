@@ -56,7 +56,7 @@ export class User extends BaseModel {
     transactions:Transactions[]
 
     @ManyToMany(()=>Requests, requests=>requests.users)
-    @JoinTable()
+    @JoinColumn()
     requests:Requests[]
 
     @OneToMany(()=>Follow, follow=>follow.followed)

@@ -96,3 +96,13 @@ export enum RequestStatus {
     REJECTED = "rejected",
     PENDING = "pending"
 }
+
+export enum RequestType{
+    DM='direct message',
+    SHOUT_OUT="shout out"
+}
+
+export enum RequestDelivery{
+    STANDARD="standard",
+    EXPRESS="express"
+}

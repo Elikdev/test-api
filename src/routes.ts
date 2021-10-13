@@ -3,6 +3,7 @@ import authRouter from "./api/auth/auth.controller";
 import influencerRouter from "./api/influencer/influencer.controller";
 import userRouter from "./api/user/user.controller";
 import followRouter from "./api/follow/follow.controller";
+import requestRouter from "./api/requests/request.controller";
 const apiPrefix: string = "/api/v1";
 
 const routes = [
@@ -17,9 +18,14 @@ const routes = [
   {
     prefix: "follower",
     name: followRouter
-  },{
+  },
+  {
     prefix:"influencer",
     name:influencerRouter
+  },
+  {
+    prefix:"request",
+    name:requestRouter
   }
 ];
 
