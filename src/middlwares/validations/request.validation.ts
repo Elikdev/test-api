@@ -20,7 +20,8 @@ class RequestValidation{
         return celebrate({
             body:Joi.object({
                 id:Joi.number().required(),
-                status:Joi.valid(RequestStatus.ACCEPTED, RequestStatus.REJECTED).required()
+                status:Joi.valid(RequestStatus.ACCEPTED, RequestStatus.REJECTED).required(),
+                reason:Joi.string()
             })
         })
     }
