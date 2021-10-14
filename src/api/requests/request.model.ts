@@ -1,12 +1,25 @@
-import {Column, Entity, OneToOne, JoinColumn, ManyToMany} from 'typeorm'
+import {Column, Entity, OneToOne, JoinColumn, ManyToMany, ManyToOne} from 'typeorm'
 import { BaseModel } from '../../helpers/db.helper';
-import { RequestStatus } from '../../utils/enum';
+import { RequestStatus, RequestType, RequestDelivery } from '../../utils/enum';
+import { Influencer } from '../influencer/influencer.model';
 import { Transactions } from '../transactions/transaction.model';
 import { User } from '../user/user.model';
 
 
 @Entity({name:'requests'})
 export class Requests extends BaseModel{
+
+    @Column({
+        enum:RequestType,
+    })
+    request_type:string
+
+    @Column({
+    enum:RequestDelivery,
+    default:RequestDelivery.STANDARD
+    })
+    request_delivery:string
+
 
     @Column()
     purpose:string;
@@ -24,7 +37,16 @@ export class Requests extends BaseModel{
     @JoinColumn()
     transaction:Transactions
 
-    @ManyToMany(()=>User, user=>user.requests)
-    users:User[]
+   @ManyToMany(()=>User, user=>user.requests)
+    users:User[] 
+
+    @ManyToOne(()=>User, user=>user.influencer_requests)
+    @JoinColumn({"name":"influencer"})
+    influencer:User
+
+    @ManyToOne(()=>User,user=>user.fan_requests)
+    @JoinColumn({"name":"fan"})
+    fan:User
+
     
 }

@@ -1,6 +1,6 @@
 import {Column, Entity, JoinColumn, ManyToOne, OneToOne} from 'typeorm'
 import { BaseModel } from '../../helpers/db.helper';
-import { TransactionType } from '../../utils/enum';
+import { TransactionType, TransactionStatus } from '../../utils/enum';
 import { Requests } from '../requests/request.model';
 import {User} from '../user/user.model'
 
@@ -16,6 +16,18 @@ export class Transactions extends BaseModel{
 
     @Column()
     description:string;
+
+    @Column({
+        enum:TransactionStatus,
+        default:TransactionStatus.PENDING
+    })
+    status:string
+
+    @Column()
+    transaction_reference:string
+
+    @Column()
+    transaction_id:string
 
     @Column()
     amount:number
