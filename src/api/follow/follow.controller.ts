@@ -9,7 +9,7 @@ const followRouter = Router();
 followRouter.post(
   "/follow/:userId",
   verificationMiddleware.validateToken,
-  followValidation.followInfluencerValidation,
+  followValidation.followInfluencerValidation(),
   async (req: Request, res: Response) => {
     try {
       const followedId = parseInt(req.params.userId);
@@ -42,7 +42,7 @@ followRouter.post(
 followRouter.post(
     "/unfollow/:userId",
     verificationMiddleware.validateToken,
-    followValidation.followInfluencerValidation,
+    followValidation.followInfluencerValidation(),
     async (req: Request, res: Response) => {
       try {
         const followedId = parseInt(req.params.userId);
