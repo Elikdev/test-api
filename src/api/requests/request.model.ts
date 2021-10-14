@@ -40,5 +40,13 @@ export class Requests extends BaseModel{
    @ManyToMany(()=>User, user=>user.requests)
     users:User[] 
 
+    @ManyToOne(()=>User, user=>user.influencer_requests)
+    @JoinColumn({"name":"influencer"})
+    influencer:User
+
+    @ManyToOne(()=>User,user=>user.fan_requests)
+    @JoinColumn({"name":"fan"})
+    fan:User
+
     
 }

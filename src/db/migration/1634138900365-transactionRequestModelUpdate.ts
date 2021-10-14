@@ -9,11 +9,12 @@ export class transactionRequestModelUpdate1634138900365 implements MigrationInte
                 name:'request_type',
                 type:'varchar',
                 enum:[RequestType.DM, RequestType.SHOUT_OUT],
-                isNullable:false
+                isNullable:false,
             }),
               new TableColumn({
                 name:'request_delivery',
                 type:'varchar',
+                isNullable:true,
                 enum:[RequestDelivery.EXPRESS, RequestDelivery.STANDARD],
             })
         ])
@@ -50,6 +51,7 @@ export class transactionRequestModelUpdate1634138900365 implements MigrationInte
                 name:'request_delivery',
                 type:'varchar',
                 enum:[RequestDelivery.EXPRESS, RequestDelivery.STANDARD],
+                isNullable:true
             })
         ])
 

@@ -3,6 +3,8 @@ export class CreateTransactionsDto{
     description:string;
     amount:number;
     user:number;
-    reference:string
+    transaction_reference:string;
+    transaction_id:number;
+    status:string;
 }
 

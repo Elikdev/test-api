@@ -56,7 +56,7 @@ export class User extends BaseModel {
     transactions:Transactions[]
 
     @ManyToMany(()=>Requests, requests=>requests.users)
-    @JoinColumn()
+    @JoinTable()
     requests:Requests[]
 
     @OneToMany(()=>Follow, follow=>follow.followed)
@@ -64,5 +64,11 @@ export class User extends BaseModel {
 
     @OneToMany(()=>Follow, follow=>follow.follower)
     following:Follow[]
+
+    @OneToMany(()=>Requests, requests=>requests.influencer)
+    influencer_requests:Requests[]
+
+    @OneToMany(()=>Requests, requests=>requests.fan)
+    fan_requests:Requests[]
 
 }
