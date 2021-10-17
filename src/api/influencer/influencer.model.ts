@@ -17,6 +17,15 @@ export class Influencer extends User {
   @Column({ default: false })
   is_admin_verified: boolean
 
+  @Column()
+  referral_code: string
+
+  @Column()
+  referral_count: number
+
+  @Column()
+  referred_by: number
+
   @OneToMany(() => Bank, (bank) => bank.user)
   banks: Bank[]
 }

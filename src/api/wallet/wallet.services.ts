@@ -2,6 +2,7 @@ import { BaseService } from "../../helpers/db.helper";
 import {Wallet} from './wallet.model'
 import {Influencer} from '../influencer/influencer.model'
 import { User } from "../user/user.model"
+import { DeepPartial } from "typeorm";
 
 
 class WalletService extends BaseService {
@@ -16,7 +17,21 @@ class WalletService extends BaseService {
   }
 
   public async saveWallet(wallet: Wallet) {
-      return await this.save(Wallet, wallet)
+    return await this.save(Wallet, wallet)
+  }
+
+  public async findWalletByUserId(id: number) {
+    return await this.findOne(Wallet, {
+      where: { user: id },
+    })
+  }
+
+  public async updateWallet(
+    walletToUpdate: Wallet,
+    updateFields: DeepPartial<Wallet>
+  ) {
+    this.schema(Wallet).merge(walletToUpdate, updateFields)
+    return await this.updateOne(Wallet, walletToUpdate)
   }
 }
 

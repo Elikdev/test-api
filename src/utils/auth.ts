@@ -52,7 +52,7 @@ class AuthUtils {
  public createOtpToken(payload: {id: number}){
   return jwt.sign(payload, process.env.JWT_SECRET || "supersecrete", {expiresIn: "5m"} )
  }
-
+ 
  public verifyOtpToken(token: string): {
   verified: boolean;
   otpDetails?: {id: number};
@@ -88,6 +88,16 @@ class AuthUtils {
   };
  }
 }
+
+ public generateRefCode(length = 8): string {
+  const uniqueid = Math.round((Math.random() * 10) * Math.round(Date.now())).toString(36) //max-length == 9 or 8
+	let ref = ""
+	
+	for (let i = 0; i < length; i++) {
+		ref += uniqueid[i]
+	}
+  return ref
+ }
 }
 
 export const AuthModule = new AuthUtils()
