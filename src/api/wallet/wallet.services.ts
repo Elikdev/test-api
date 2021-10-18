@@ -1,28 +1,23 @@
 import { BaseService } from "../../helpers/db.helper";
 import {Wallet} from './wallet.model'
 import {Influencer} from '../influencer/influencer.model'
+import { User } from "../user/user.model"
 
 
 class WalletService extends BaseService {
-    super:any
+  super: any
 
-    public newWalletInstance(celeb:Influencer){
-        const celeb_wallet = new Wallet()
-        celeb_wallet.wallet_balance = 0
-        celeb_wallet.ledger_balance = 0
-        celeb_wallet.influencer = celeb
-        return celeb_wallet
-    }
-    
-    public async createWallet(user:Influencer){
-        const wallet = await this.create(Wallet, {
-            wallet_balance: 0,
-            ledger_balance: 0,
-            influencer: user
-         })
+  public newWalletInstance(user: User) {
+    const user_wallet = new Wallet()
+    user_wallet.wallet_balance = 0
+    user_wallet.ledger_balance = 0
+    user_wallet.user = user
+    return user_wallet
+  }
 
-         await this.save(Wallet, wallet)
-    }
+  public async saveWallet(wallet: Wallet) {
+      return await this.save(Wallet, wallet)
+  }
 }
 
 export const walletService = new WalletService

@@ -1,11 +1,4 @@
-import {
-  ChildEntity,
-  Column,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from "typeorm"
+import { ChildEntity, Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { User } from "../user/user.model"
 import { Wallet } from "../wallet/wallet.model"
 import { Bank } from "../bank/bank.model"
@@ -20,10 +13,6 @@ export class Influencer extends User {
 
   @Column()
   live_video: string
-
-  @OneToOne(() => Wallet, (wallet) => wallet.influencer)
-  @JoinColumn()
-  wallet: Wallet
 
   @Column({ default: false })
   is_admin_verified: boolean

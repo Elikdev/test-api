@@ -26,74 +26,81 @@ class AuthService extends BaseService {
       live_video: string,
       account_type: AccountType
     }) {
-      const emailToLower = userDTO.email.toLowerCase();
-      const user_exists =  await userService.findOneUser(userDTO.handle, emailToLower, userDTO.phone_number) 
-      
+      const emailToLower = userDTO.email.toLowerCase()
+      const user_exists = await userService.findOneUser(
+        userDTO.handle,
+        emailToLower,
+        userDTO.phone_number
+      )
 
       //if the user_exists, return error
-      if(user_exists){
-      let message: string
-      if(user_exists.email === emailToLower){
-        message = "Email already exists"
-      } 
-      
-      if (user_exists.handle === userDTO.handle) {
-        message = "Username has been taken already"
-      }
+      if (user_exists) {
+        let message: string
+        if (user_exists.email === emailToLower) {
+          message = "Email already exists"
+        }
 
-      if (user_exists.phone_number === userDTO.phone_number) {
-        message = "Phone number already exists"
-      }
+        if (user_exists.handle === userDTO.handle) {
+          message = "Username has been taken already"
+        }
 
-      return this.internalResponse(false, {}, 400, message)
+        if (user_exists.phone_number === userDTO.phone_number) {
+          message = "Phone number already exists"
+        }
+
+        return this.internalResponse(false, {}, 400, message)
       }
 
       let user: any
       let isFan: boolean
-      
+
       //hash the password
       const hashedPassword = AuthModule.hashPassWord(userDTO.password)
 
       //if account type is fan or influencer
-      if(userDTO.account_type === AccountType.CELEB){
+      if (userDTO.account_type === AccountType.CELEB) {
         isFan = false
         user = influencerService.newInfluencerInstance(
-        userDTO.full_name,
-        hashedPassword,
-        emailToLower,
-        userDTO.handle,
-        userDTO.country_code,
-        userDTO.phone_number,
-        userDTO?.social_media_link,
-        userDTO?.live_video,
-        userDTO.account_type,
+          userDTO.full_name,
+          hashedPassword,
+          emailToLower,
+          userDTO.handle,
+          userDTO.country_code,
+          userDTO.phone_number,
+          userDTO?.social_media_link,
+          userDTO?.live_video,
+          userDTO.account_type
         )
       }
 
-      if (userDTO.account_type === AccountType.FAN){
+      if (userDTO.account_type === AccountType.FAN) {
         isFan = true
         user = await fanService.newFan(
-        userDTO.full_name,
-        hashedPassword,
-        emailToLower,
-        userDTO.handle,
-        userDTO.country_code,
-        userDTO.phone_number,
-        userDTO.account_type,
-      )
+          userDTO.full_name,
+          hashedPassword,
+          emailToLower,
+          userDTO.handle,
+          userDTO.country_code,
+          userDTO.phone_number,
+          userDTO.account_type
+        )
       }
 
       // generate otp
-      const otp: string = AuthModule.generateOtp(6);
-      const expiry_time: string =  new Date(Date.now() + 600000).toString()
+      const otp: string = AuthModule.generateOtp(6)
+      const expiry_time: string = new Date(Date.now() + 600000).toString()
 
       //send email to user
       const htmlMessage = compileEjs({ template: "code-template" })({
         first_title: "Email Verification",
         second_title: " ",
-        name: `${Array.isArray(userDTO.full_name.split(" ")) ? userDTO.full_name.split(" ")[0] : userDTO.full_name}`,
+        name: `${
+          Array.isArray(userDTO.full_name.split(" "))
+            ? userDTO.full_name.split(" ")[0]
+            : userDTO.full_name
+        }`,
         code: otp,
-      });
+      })
 
       const email_sent = await sendEmail({
         html: htmlMessage,
@@ -101,29 +108,44 @@ class AuthService extends BaseService {
         to: emailToLower,
       })
 
-      if(email_sent) {
-        if(!isFan){
-          walletService.newWalletInstance(user)
-
+      if (email_sent) {
+        if (!isFan) {
           user = await influencerService.createInfluencer(user)
-  
-          if(user) {
-              await walletService.createWallet(user)
-          }
-        }else {
+        } else {
           user = await fanService.createFan(user)
         }
+
+        //update the user
+        user.email_verification = {
+          otp_verified: false,
+          otp_code: otp,
+          expires_in: expiry_time,
+        }
+
+        const user_created = await userService.saveUser(user)
+
+        if (!user_created) {
+          return this.internalResponse(false, {}, 400, "Error in saving user")
+        }
+
+        //create wallet
+        const new_wallet = walletService.newWalletInstance(user_created)
+        const wallet_created = await walletService.saveWallet(new_wallet)
+
+        if (!wallet_created) {
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            "An error occured while creating wallet"
+          )
+        }
+
+        delete user.password
+        delete user.email_verification
+        return this.internalResponse(true, user, 200, "Sign up successful")
       }
-
-      //update the user
-      user.email_verification = {otp_verified: false, otp_code: otp, expires_in: expiry_time}
-
-      await userService.saveUser(user)
-
-      delete user.password
-      delete user.email_verification
-      return this.internalResponse(true, user, 200, "Sign up successful")
- }
+    }
 
 
 
