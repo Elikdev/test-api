@@ -1,34 +1,26 @@
-import { getConnection } from "typeorm";
-import { BaseService } from "../../helpers/db.helper";
-<<<<<<< HEAD
-import {Wallet} from './wallet.model'
-import {Influencer} from '../influencer/influencer.model'
+import { getConnection } from "typeorm"
+import { BaseService } from "../../helpers/db.helper"
+import { DeepPartial } from "typeorm"
+import { Wallet } from "./wallet.model"
+import { Influencer } from "../influencer/influencer.model"
 import { User } from "../user/user.model"
-import { DeepPartial } from "typeorm";
-
-=======
-import { Wallet } from "./wallet.model";
-import { Influencer } from "../influencer/influencer.model";
-import { User } from "../user/user.model";
-import { jwtCred } from "../../utils/enum";
-import { userService } from "../user/user.services";
-import { transactionService } from "../transactions/transaction.services";
-import { verifyPaymentFromFlutterWave } from "../../helpers/flutterwave";
->>>>>>> 0611efc4b653bab820f52e80f916c5786ff21bdf
+import { jwtCred } from "../../utils/enum"
+import { userService } from "../user/user.services"
+import { transactionService } from "../transactions/transaction.services"
+import { verifyPaymentFromFlutterWave } from "../../helpers/flutterwave"
 
 class WalletService extends BaseService {
-  super: any;
+  super: any
 
   public newWalletInstance(user: User) {
-    const user_wallet = new Wallet();
-    user_wallet.wallet_balance = "0.00";
-    user_wallet.ledger_balance = "0.00";
-    user_wallet.user = user;
-    return user_wallet;
+    const user_wallet = new Wallet()
+    user_wallet.wallet_balance = "0.00"
+    user_wallet.ledger_balance = "0.00"
+    user_wallet.user = user
+    return user_wallet
   }
 
   public async saveWallet(wallet: Wallet) {
-<<<<<<< HEAD
     return await this.save(Wallet, wallet)
   }
 
@@ -44,26 +36,24 @@ class WalletService extends BaseService {
   ) {
     this.schema(Wallet).merge(walletToUpdate, updateFields)
     return await this.updateOne(Wallet, walletToUpdate)
-=======
-    return await this.save(Wallet, wallet);
   }
 
   public async fundFanWallet(
     authUser: jwtCred,
     userDTO: {
-      amount: any;
-      transaction_status: string;
-      transaction_reference: string;
-      transaction_id: string;
-      currency: string;
+      amount: any
+      transaction_status: string
+      transaction_reference: string
+      transaction_id: string
+      currency: string
     }
   ) {
-    const user_id = authUser.id;
+    const user_id = authUser.id
 
-    const user = await userService.getUserDetails(user_id);
+    const user = await userService.getUserDetails(user_id)
 
     if (!user) {
-      return this.internalResponse(false, {}, 200, "Invalid user");
+      return this.internalResponse(false, {}, 200, "Invalid user")
     }
 
     let {
@@ -72,13 +62,13 @@ class WalletService extends BaseService {
       transaction_id,
       transaction_status,
       currency,
-    } = userDTO;
+    } = userDTO
 
     //set amount to float
-    amount = parseFloat(amount);
+    amount = parseFloat(amount)
 
     //set transaction_status to lowercase
-    transaction_status = transaction_status.toLowerCase();
+    transaction_status = transaction_status.toLowerCase()
 
     if (amount <= 0.0) {
       return this.internalResponse(
@@ -86,7 +76,7 @@ class WalletService extends BaseService {
         {},
         400,
         "Amount must be greater than zero"
-      );
+      )
     }
 
     // check if transaction is successful from clientside
@@ -96,26 +86,26 @@ class WalletService extends BaseService {
         {},
         400,
         "Payment failed. Please try again"
-      );
+      )
     }
 
     // check if transaction has been made Already
     const transaction_exists = await transactionService.findOneTransaction(
       transaction_reference,
       transaction_id
-    );
+    )
     if (transaction_exists) {
-      return this.internalResponse(false, {}, 400, "Invalid transaction");
+      return this.internalResponse(false, {}, 400, "Invalid transaction")
     }
 
     // verify payment from flutterwave and check status, amount, reference, currency and id
     const { data_received, error, error_data } =
       await verifyPaymentFromFlutterWave(
         `transactions/${transaction_id}/verify`
-      );
+      )
     // catch flutter error
     if (error) {
-      const { message: error_data_msg } = error_data;
+      const { message: error_data_msg } = error_data
       return this.internalResponse(
         false,
         {},
@@ -123,14 +113,14 @@ class WalletService extends BaseService {
         error_data_msg
           ? error_data_msg
           : "Error in verifying payment. Try again later"
-      );
+      )
     }
 
     const {
       status: data_received_status,
       message: data_received_msg,
       data: data_received_data,
-    } = data_received;
+    } = data_received
     if (
       data_received_status === "success" &&
       data_received_msg === "Transaction fetched successfully"
@@ -147,15 +137,15 @@ class WalletService extends BaseService {
           {},
           400,
           "Transaction details not valid"
-        );
+        )
       } else {
         // start ACID transaction
-        const connection = getConnection();
-        const queryRunner = connection.createQueryRunner();
+        const connection = getConnection()
+        const queryRunner = connection.createQueryRunner()
 
-        await queryRunner.connect();
+        await queryRunner.connect()
 
-        await queryRunner.startTransaction();
+        await queryRunner.startTransaction()
         try {
           // create a new transaction for user
           await transactionService.saveTransactionWithQueryRunner(queryRunner, {
@@ -165,40 +155,42 @@ class WalletService extends BaseService {
             transaction_reference,
             transaction_id,
             status: "success",
-          });
-          
+          })
+
           // update the wallet of the user
-          const user_wallet = await queryRunner.manager.findOne(Wallet, { where: [{ user: authUser }]});
+          const user_wallet = await queryRunner.manager.findOne(Wallet, {
+            where: [{ user: authUser }],
+          })
           const new_wallet_balance =
-            parseFloat(user_wallet.wallet_balance) + amount;
+            parseFloat(user_wallet.wallet_balance) + amount
           const new_ledger_balance =
-            parseFloat(user_wallet.ledger_balance) + amount;
+            parseFloat(user_wallet.ledger_balance) + amount
           const update_details = {
             wallet_balance: new_wallet_balance.toFixed(2),
             ledger_balance: new_ledger_balance.toFixed(2),
-          };
+          }
           await queryRunner.manager.update(
             Wallet,
             user_wallet.id,
             update_details
-          );
-          await queryRunner.commitTransaction();
+          )
+          await queryRunner.commitTransaction()
           return this.internalResponse(
             true,
             { data_received_data },
             200,
             "Payment successful"
-          );
+          )
         } catch (error) {
-          await queryRunner.rollbackTransaction();
-          await queryRunner.release();
+          await queryRunner.rollbackTransaction()
+          await queryRunner.release()
           return this.internalResponse(
             false,
             {},
             400,
             "Payment not successful. Please try again"
-          );
-        } 
+          )
+        }
       }
     } else {
       return this.internalResponse(
@@ -208,10 +200,9 @@ class WalletService extends BaseService {
         data_received_msg
           ? data_received_msg
           : "Error in verifying payment. Try again later"
-      );
+      )
     }
->>>>>>> 0611efc4b653bab820f52e80f916c5786ff21bdf
   }
 }
 
-export const walletService = new WalletService();
+export const walletService = new WalletService()
