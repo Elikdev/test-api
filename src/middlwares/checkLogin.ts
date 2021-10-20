@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { errorResponse } from "../helpers/response.helper";
 import { AuthModule } from "../utils/auth";
 import { userService } from "../api/user/user.services";
+import { influencerService } from "../api/influencer/influencer.services"
 
 class VerificationMiddleware {
   public validateToken = async (
@@ -26,8 +27,8 @@ class VerificationMiddleware {
       const { userDetails, verified } = grantAccess
       if (!verified) {
         return errorResponse(res, "Unauthorized", 401)
-      }
-      
+      };
+
       (req as any).user = await userService.getUserDetails(userDetails.id)
 
       return next()
@@ -60,10 +61,39 @@ class VerificationMiddleware {
         "Unauthorized. Function not available for your account type",
         401
       )
-    }else{
-        return next()
+    } else {
+      return next()
     }
+  }
 
+  public checkRefCode = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      //check the req_body
+      if (req.body?.account_type === "celebrity") {
+        //check the query field
+        if (req.query?.ref) {
+          const ref = (req.query as any).ref
+          const referrer = await influencerService.findInfluencerByRefCode(ref)
+
+          if (referrer) {
+            (req as any).referrer = referrer.id
+            return next()
+          } else {
+            return errorResponse(res, "Invalid referral code", 400)
+          }
+        } else {
+          return next()
+        }
+      } else {
+        return next()
+      }
+    } catch (error) {
+      return errorResponse(res, "An error from the referral code", 400)
+    }
   }
 }
 
