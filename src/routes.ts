@@ -5,7 +5,7 @@ import userRouter from "./api/user/user.controller";
 import followRouter from "./api/follow/follow.controller";
 import requestRouter from "./api/requests/request.controller";
 import bankRouter from "./api/bank/bank.controller"
-import ratingRouter from "./api/ratings/ratings.controller";
+import walletRouter from "./api/wallet/wallet.controller"
 
 const apiPrefix: string = "/api/v1";
 
@@ -20,25 +20,25 @@ const routes = [
   },
   {
     prefix: "follower",
-    name: followRouter,
+    name: followRouter
   },
   {
-    prefix: "influencer",
-    name: influencerRouter,
+    prefix:"influencer",
+    name:influencerRouter
   },
   {
-    prefix: "request",
-    name: requestRouter,
+    prefix:"request",
+    name:requestRouter
   },
   {
     prefix: "bank",
     name: bankRouter,
   },
   {
-    prefix: "rating",
-    name: ratingRouter,
+    prefix: "wallet",
+    name: walletRouter,
   },
-]
+];
 
 export default (app: any) => {
   routes.forEach((element) => {

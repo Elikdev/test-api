@@ -2,7 +2,6 @@ import { ChildEntity, Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { User } from "../user/user.model"
 import { Wallet } from "../wallet/wallet.model"
 import { Bank } from "../bank/bank.model"
-import { Rating } from "../ratings/ratings.model"
 
 @ChildEntity()
 export class Influencer extends User {
@@ -29,8 +28,4 @@ export class Influencer extends User {
 
   @OneToMany(() => Bank, (bank) => bank.user)
   banks: Bank[]
-
-  @OneToMany(() => Rating, (rating) => rating.influencer)
-  ratings: Rating[]
-
 }

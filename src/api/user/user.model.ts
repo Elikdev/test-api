@@ -13,7 +13,6 @@ import { Transactions } from "../transactions/transaction.model"
 import { Requests } from "../requests/request.model"
 import { Follow } from "../follow/follow.model"
 import { Wallet } from "../wallet/wallet.model"
-import { Rating } from "../ratings/ratings.model"
 import { AccountStatus, AccountType } from "../../utils/enum"
 
 @Entity({ name: "users" })
@@ -86,7 +85,4 @@ export class User extends BaseModel {
 
   @OneToMany(() => Requests, (requests) => requests.fan)
   fan_requests: Requests[]
-
-  @OneToMany(() => Rating, (ra) => ra.user)
-  all_ratings_made_for_influencer: Rating[]
 }
