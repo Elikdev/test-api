@@ -4,6 +4,7 @@ import {
   OneToMany,
   TableInheritance,
   ManyToMany,
+  ManyToOne,
   JoinTable,
   OneToOne,
   JoinColumn,

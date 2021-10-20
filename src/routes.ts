@@ -6,6 +6,7 @@ import followRouter from "./api/follow/follow.controller";
 import requestRouter from "./api/requests/request.controller";
 import bankRouter from "./api/bank/bank.controller"
 import walletRouter from "./api/wallet/wallet.controller"
+import ratingRouter from "./api/ratings/ratings.controller"
 
 const apiPrefix: string = "/api/v1";
 
@@ -38,6 +39,10 @@ const routes = [
     prefix: "wallet",
     name: walletRouter,
   },
+  {
+    prefix: "rating",
+    name: ratingRouter,
+  }
 ];
 
 export default (app: any) => {
