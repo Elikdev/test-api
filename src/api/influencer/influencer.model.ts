@@ -2,6 +2,7 @@ import { ChildEntity, Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { User } from "../user/user.model"
 import { Wallet } from "../wallet/wallet.model"
 import { Bank } from "../bank/bank.model"
+import { Rating } from "../ratings/ratings.model"
 
 @ChildEntity()
 export class Influencer extends User {
@@ -26,6 +27,12 @@ export class Influencer extends User {
   @Column()
   referred_by: number
 
+  @Column()
+  average_rating: string
+
   @OneToMany(() => Bank, (bank) => bank.user)
   banks: Bank[]
+
+  @OneToMany(() => Rating, (ratings) => ratings.influencer)
+  ratings: Rating[]
 }
