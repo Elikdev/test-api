@@ -6,10 +6,10 @@ import { User } from "../user/user.model"
 @Entity({ name: "wallet" })
 export class Wallet extends BaseModel {
   @Column()
-  wallet_balance: number
+  wallet_balance: string
 
   @Column()
-  ledger_balance: number
+  ledger_balance: string
 
   @OneToOne(() => User, (user) => user.wallet)
   @JoinColumn()

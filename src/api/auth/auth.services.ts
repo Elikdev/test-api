@@ -532,7 +532,7 @@ class AuthService extends BaseService {
           )
           //update the wallet -- add to the ledger balance for now
           const new_balance =
-            parseFloat(referrer_wallet.ledger_balance.toFixed(2)) + 5.0 //$5 bonus
+            (parseFloat(referrer_wallet.ledger_balance) + 5.0).toFixed(2) //$5 bonus
           const wallet_update_details = {
             ledger_balance: new_balance,
           }
