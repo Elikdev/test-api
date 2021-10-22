@@ -10,52 +10,52 @@ class VerificationMiddleware {
     res: Response,
     next: NextFunction
   ) => {
-    const authHeader = req.headers.authorization
-    let token: string
-    if (!authHeader) return errorResponse(res, "Unauthorized", 401)
+    const authHeader = req.headers.authorization;
+    let token: string;
+    if (!authHeader) return errorResponse(res, "Unauthorized", 401);
 
     //separate the Bearer from the string if it exists
-    const separateBearer = authHeader.split(" ")
+    const separateBearer = authHeader.split(" ");
     if (separateBearer.includes("Bearer")) {
-      token = separateBearer[1]
+      token = separateBearer[1];
     } else {
-      token = authHeader
+      token = authHeader;
     }
 
     try {
-      const grantAccess = AuthModule.verifyToken(token)
-      const { userDetails, verified } = grantAccess
+      const grantAccess = AuthModule.verifyToken(token);
+      const { userDetails, verified } = grantAccess;
       if (!verified) {
-        return errorResponse(res, "Unauthorized", 401)
+        return errorResponse(res, "Unauthorized", 401);
       };
 
       (req as any).user = await userService.getUserDetails(userDetails.id)
 
-      return next()
+      return next();
     } catch (err) {
-      console.log(`Error from token verification >> `, err)
+      console.log(`Error from token verification >> `, err);
       if (err?.name === "TokenExpiredError") {
-        return errorResponse(res, "Unauthorized. Token expired", 401)
+        return errorResponse(res, "Unauthorized. Token expired", 401);
       }
       if (err?.name === "JsonWebTokenError") {
-        return errorResponse(res, "Unauthorized. Invalid token format.", 401)
+        return errorResponse(res, "Unauthorized. Invalid token format.", 401);
       }
       return errorResponse(
         res,
         "Something went wrong, please try again later.",
         500
-      )
+      );
     }
-  }
+  };
 
-  public checkCeleb = async (
+  public checkUserType = async (
+    userType: string,
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
-    const user = (req as any).user
-
-    if (user.account_type.toLowerCase() !== "celebrity") {
+    const user = (req as any).user;
+    if (user.account_type.toLowerCase() !== userType) {
       return errorResponse(
         res,
         "Unauthorized. Function not available for your account type",
@@ -95,6 +95,19 @@ class VerificationMiddleware {
       return errorResponse(res, "An error from the referral code", 400)
     }
   }
+
+  public checkCeleb = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    await this.checkUserType("celebrity", req, res, next);
+  };
+
+  public checkFan = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    await this.checkUserType("fan", req, res, next);
+  };
+
 }
 
-export const verificationMiddleware = new VerificationMiddleware()
+export const verificationMiddleware = new VerificationMiddleware();

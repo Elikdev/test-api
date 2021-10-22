@@ -1,4 +1,4 @@
-import { DeepPartial } from "typeorm";
+import { DeepPartial, QueryRunner } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import {Transactions} from './transaction.model'
 import {Requests} from '../requests/request.model'
@@ -26,6 +26,21 @@ class TransactionService extends BaseService{
         }catch(error){
             throw error
         }
+    }
+
+    public async findOneTransaction(transaction_reference: string, transaction_id: string) {
+        return this.findOne(Transactions, {
+            where : [
+                { transaction_reference },
+                { transaction_id },
+            ]
+        })
+    }
+
+    public async saveTransactionWithQueryRunner(queryRunner: QueryRunner, createTransactionDto: DeepPartial<Transactions>){
+        const newTransaction =  queryRunner.manager.create(Transactions, createTransactionDto);
+
+        return await queryRunner.manager.save(newTransaction)
     }
 }
 
