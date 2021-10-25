@@ -4,7 +4,6 @@ import { Influencer } from "../influencer/influencer.model"
 import { jwtCred } from "../../utils/enum"
 import { BaseService } from "../../helpers/db.helper"
 import { influencerService } from "../influencer/influencer.services"
-import { getRepository } from "typeorm"
 
 const NUBAN_API_KEY = process.env.NUBAN_API_KEY
 
@@ -230,6 +229,31 @@ class BankService extends BaseService {
 
     return this.internalResponse(true, banks, 200, "Banks retrieved")
   }
+
+  public async removeBank(authUser: jwtCred, bankDTO: { bankId: number }) {
+    const user_id = authUser.id
+
+    const bank = await this.getUserBankwithId(user_id, bankDTO.bankId)
+
+    if (!bank) {
+      return this.internalResponse(false, {}, 400, "Bank not found or already deleted")
+    }
+
+    const deleted_bank = await this.deleteBankWithId(user_id, bankDTO.bankId)
+    if (!deleted_bank) {
+      return this.internalResponse(false, {}, 400, "Unable to delete bank")
+    }
+
+    return this.internalResponse(true, {}, 200, "Bank deleted")
+  }
+
+  public async deleteBankWithId(
+    userId: number,
+    bankId: number
+  ): Promise<boolean | Error>{
+    return await this.deleteOne(Bank, { id: bankId, user: userId})
+  }
+
 }
 
 export const bankService = new BankService()
