@@ -56,7 +56,12 @@ class InfluencerService extends BaseService {
   }
 
   public async findInfluencerById(id: number) {
-    return await this.getOne(Influencer, id)
+      const influencer = await this.getOne(Influencer, id)
+      if(!influencer){
+         throw new Error('invalid influencer id')
+      }
+      return influencer
+   
   }
 
   public async findInfluencerByRefCode(ref: any) {
@@ -81,6 +86,25 @@ class InfluencerService extends BaseService {
     })
     return influencer_list
   }
+
+
+  public async setRate(type:string, amount:number, id:number){
+    try{
+      const influencer = await this.findInfluencerById(id)
+
+      if(type === 'dm'){
+        return await this.updateInfluencer(influencer,{rate_dm:amount})
+      }
+      if(type === 'shoutout'){
+        return await this.updateInfluencer(influencer,{rate_shout_out:amount})
+      }
+    }catch(error){
+      throw error
+    }
+
+  }
+
+
 }
 
 export const influencerService = new InfluencerService()
