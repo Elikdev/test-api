@@ -35,4 +35,10 @@ export class Influencer extends User {
 
   @OneToMany(() => Rating, (ratings) => ratings.influencer)
   ratings: Rating[]
+
+  @Column()
+  rate_dm:number
+
+  @Column()
+  rate_shout_out:number
 }
