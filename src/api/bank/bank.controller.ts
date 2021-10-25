@@ -1,4 +1,4 @@
-import { query, Router, Request, Response } from "express"
+import { Router, Request, Response } from "express"
 import { successRes, errorResponse } from "../../helpers/response.helper"
 import { bankService } from "./bank.services"
 import { bankValidation } from "../../middlwares/validations/bank.validation"
@@ -101,5 +101,31 @@ bankRouter.post(
     }
   }
 )
+
+bankRouter.post(
+  "/remove-bank/:bankId",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkCeleb,
+  bankValidation.getBankDetailsValidation(),
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user
+      const bankId = parseInt(req.params.bankId as any)
+
+      //service is being called here
+      const response = await bankService.removeBank(authUser, { bankId })
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
 
 export default bankRouter

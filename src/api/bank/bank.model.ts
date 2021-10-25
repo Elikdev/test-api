@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, ManyToOne, JoinColumn } from "typeorm"
+import { Column, Entity, ManyToOne, JoinColumn } from "typeorm"
 import { BaseModel } from "../../helpers/db.helper"
 import { Influencer } from "../influencer/influencer.model"
 
