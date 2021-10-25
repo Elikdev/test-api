@@ -373,7 +373,7 @@ class AuthService extends BaseService {
       false,
       {},
       400,
-      "Incorrect Email or Password!"
+      "Incorrect Email address"
     )
   }
 
@@ -405,7 +405,7 @@ class AuthService extends BaseService {
       false,
       {},
       400,
-      "Incorrect Email or Password!"
+      "Incorrect Password!"
     )
   }
 
