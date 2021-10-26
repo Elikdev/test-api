@@ -2,6 +2,7 @@ import { Industry } from "./industry.model"
 import { BaseService } from "../../helpers/db.helper"
 import { userService } from "../user/user.services"
 import { jwtCred, Industry as IndustryEnum } from "../../utils/enum"
+import { IndustriesOption } from "./IndustryOptions/industries"
 
 class IndustryService extends BaseService {
   super: any
@@ -39,6 +40,9 @@ class IndustryService extends BaseService {
     )
   }
   
+  public getAllIndustries() {
+    return this.internalResponse(true, IndustriesOption, 200, "all industies fetched")
+  }
 }
 
 export const industryService = new IndustryService()

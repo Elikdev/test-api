@@ -17,7 +17,6 @@ industryRouter.post(
         return errorResponse(res, "no data entered", 400)
       }
       const authUser = (req as any).user
-      console.log("ggg")
 
       //service is being called here
       const response = await industryService.addUserIndustries(authUser, interestDTO)
@@ -33,4 +32,23 @@ industryRouter.post(
     }
   }
 )
+
+industryRouter.post(
+  "/get-all",
+  verificationMiddleware.validateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const response = industryService.getAllIndustries()
+      if (!response.status) {
+        return errorResponse(res, "error occured. try again", 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
 export default industryRouter
