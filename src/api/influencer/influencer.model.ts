@@ -6,9 +6,6 @@ import { Rating } from "../ratings/ratings.model"
 
 @ChildEntity()
 export class Influencer extends User {
-  @Column("simple-array")
-  industry: string[]
-
   @Column()
   social_media_link: string
 

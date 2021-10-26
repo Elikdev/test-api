@@ -132,6 +132,15 @@ class UserService extends BaseService{
             },
         })
     }
+
+    public async findUserWithIndustry(userId: number): Promise<User>{
+        return await this.findOne(User, {
+            where: {
+                id: userId,
+            },
+            relations: ["industry"]
+        })
+    }
 }
 
 export const userService = new UserService()

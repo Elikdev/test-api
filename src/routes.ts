@@ -1,4 +1,3 @@
-import { Router } from "express";
 import authRouter from "./api/auth/auth.controller";
 import influencerRouter from "./api/influencer/influencer.controller";
 import userRouter from "./api/user/user.controller";
@@ -7,8 +6,9 @@ import requestRouter from "./api/requests/request.controller";
 import bankRouter from "./api/bank/bank.controller"
 import walletRouter from "./api/wallet/wallet.controller"
 import ratingRouter from "./api/ratings/ratings.controller"
+import industryRouter from "./api/industry/industry.controller"
 
-const apiPrefix: string = "/api/v1";
+const apiPrefix = "/api/v1";
 
 const routes = [
   {
@@ -42,6 +42,10 @@ const routes = [
   {
     prefix: "rating",
     name: ratingRouter,
+  },
+  {
+    prefix: "industry",
+    name: industryRouter,
   }
 ];
 
