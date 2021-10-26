@@ -11,6 +11,10 @@ const requestRouter = Router()
 requestRouter.post('/new-request', verificationMiddleware.validateToken, requestValidation.newRequest(),  async(req:Request, res:Response)=>{
     try{
         const authUser = (req as any).user
+        const {influencer} = req.body
+        if(authUser.id === influencer){
+            throw new Error('cant make request to self')
+        }
         const response = await requestService.createRequest({fan:authUser.id,...req.body})
         successRes(res, response)
     }catch(error){

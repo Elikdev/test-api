@@ -54,7 +54,7 @@ bankRouter.post(
   }
 )
 
-bankRouter.post(
+bankRouter.get(
   "/get-bank/:bankId",
   verificationMiddleware.validateToken,
   verificationMiddleware.checkCeleb,
@@ -79,7 +79,7 @@ bankRouter.post(
   }
 )
 
-bankRouter.post(
+bankRouter.get(
   "/get-banks",
   verificationMiddleware.validateToken,
   verificationMiddleware.checkCeleb,
