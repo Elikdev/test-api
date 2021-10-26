@@ -4,7 +4,6 @@ import {
   OneToMany,
   TableInheritance,
   ManyToMany,
-  ManyToOne,
   JoinTable,
   OneToOne,
   JoinColumn,
@@ -14,7 +13,8 @@ import { Transactions } from "../transactions/transaction.model"
 import { Requests } from "../requests/request.model"
 import { Follow } from "../follow/follow.model"
 import { Wallet } from "../wallet/wallet.model"
-import { AccountStatus, AccountType } from "../../utils/enum"
+import { Industry } from "../industry/industry.model"
+import { AccountStatus } from "../../utils/enum"
 
 @Entity({ name: "users" })
 @TableInheritance({ column: { type: "varchar", name: "type" } })
@@ -86,4 +86,8 @@ export class User extends BaseModel {
 
   @OneToMany(() => Requests, (requests) => requests.fan)
   fan_requests: Requests[]
+
+  @OneToOne(() => Industry, (industry) => industry.industries)
+  @JoinColumn()
+  industry: Industry
 }
