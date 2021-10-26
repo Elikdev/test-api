@@ -28,6 +28,12 @@ export class Influencer extends User {
   referred_by: number
 
   @Column()
+  average_shout_out_rating: string
+
+  @Column()
+  average_dm_rating: string
+
+  @Column()
   average_rating: string
 
   @OneToMany(() => Bank, (bank) => bank.user)

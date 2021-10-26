@@ -57,9 +57,6 @@ class InfluencerService extends BaseService {
 
   public async findInfluencerById(id: number) {
       const influencer = await this.getOne(Influencer, id)
-      if(!influencer){
-         throw new Error('invalid influencer id')
-      }
       return influencer
    
   }
@@ -92,6 +89,10 @@ class InfluencerService extends BaseService {
     try{
       const influencer = await this.findInfluencerById(id)
 
+      if(!influencer) {
+        return this.internalResponse(false, {}, 400, "Influencer does not exist")
+      }
+      
       if(type === 'dm'){
         return await this.updateInfluencer(influencer,{rate_dm:amount})
       }

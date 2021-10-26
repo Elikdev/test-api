@@ -5,7 +5,7 @@ import { User } from "../user/user.model"
 import { Influencer } from "../influencer/influencer.model"
 import { influencerService } from "../influencer/influencer.services"
 import { userService } from "../user/user.services"
-import { jwtCred } from "../../utils/enum"
+import { jwtCred, RequestType } from "../../utils/enum"
 
 class RatingService extends BaseService {
   super: any
@@ -13,6 +13,7 @@ class RatingService extends BaseService {
   public async ratingInstance(
     rating: number,
     review_message: string,
+    request_type: RequestType,
     user: User,
     influencer: Influencer
   ) {
@@ -20,6 +21,7 @@ class RatingService extends BaseService {
 
     new_rating.rating = rating
     new_rating.review_message = review_message
+    new_rating.request_type = request_type 
     new_rating.user = user
     new_rating.influencer = influencer
 
@@ -40,16 +42,33 @@ class RatingService extends BaseService {
     return updated_result
   }
 
-  public async findExistingRating(userId: number, influencerId: number) {
+  public async findExistingRating(
+    userId: number,
+    influencerId: number,
+    request_type: RequestType
+  ) {
     return await this.findOne(Rating, {
-      where: { user: userId, influencer: influencerId },
+      where: {
+        user: userId,
+        influencer: influencerId,
+        request_type: request_type,
+      },
       relations: ["user", "influencer"],
     })
   }
 
   public async findAllInfluencerRating(influencerId: number) {
     return await this.schema(Rating).find({
-      where: {influencer: influencerId}
+      where: { influencer: influencerId },
+    })
+  }
+
+  public async findAllInfluencerRatingByType(
+    influencerId: number,
+    request_type: RequestType
+  ) {
+    return await this.schema(Rating).find({
+      where: { influencer: influencerId, request_type },
     })
   }
 
@@ -73,7 +92,12 @@ class RatingService extends BaseService {
 
   public async newRating(
     authUser: jwtCred,
-    ratingDTO: { rating: number; review_message: string; influencerId: number }
+    ratingDTO: {
+      rating: number
+      review_message: string
+      request_type: RequestType
+      influencerId: number
+    }
   ) {
     const user_id = authUser.id
     //search for influencer
@@ -91,7 +115,8 @@ class RatingService extends BaseService {
     //check if the user has rated the influencer initially
     const rating_exists = await this.findExistingRating(
       user.id,
-      influencer_exists.id
+      influencer_exists.id,
+      ratingDTO.request_type
     )
 
     let newRating: any
@@ -108,6 +133,7 @@ class RatingService extends BaseService {
       const new_rating = await this.ratingInstance(
         ratingDTO.rating,
         ratingDTO.review_message,
+        ratingDTO.request_type,
         user,
         influencer_exists
       )
@@ -121,22 +147,72 @@ class RatingService extends BaseService {
 
     //update the average rating
     const allRating = await this.findAllInfluencerRating(influencer_exists.id)
+    const allRequestRating = await this.findAllInfluencerRatingByType(
+      influencer_exists.id,
+      ratingDTO.request_type
+    )
 
     //totalRating
     const totalRates = allRating.reduce((acc, currentRate) => {
       return acc + parseFloat(currentRate.rating.toString())
     }, 0)
 
-    const averageRating = (totalRates / allRating.length).toFixed(1)
+    const totalReqRating = allRequestRating.reduce((acc, currentRate) => {
+      return acc + parseFloat(currentRate.rating.toString())
+    }, 0)
 
-    const update_details =  {
-      average_rating: averageRating
+    if (ratingDTO.request_type === RequestType.SHOUT_OUT) {
+      const average_shout_out_rating = (
+        totalReqRating / allRequestRating.length
+      ).toFixed(1)
+
+      await influencerService.updateInfluencer(influencer_exists, {
+        average_shout_out_rating,
+      })
     }
 
-    const updateInfluencer = await influencerService.updateInfluencer(influencer_exists, update_details)
+    if (ratingDTO.request_type === RequestType.DM) {
+      const average_dm_rating = (
+        totalReqRating / allRequestRating.length
+      ).toFixed(1)
 
-    if(!updateInfluencer){
-      return this.internalResponse(false, {}, 400, "Failed to update influencer's average rating")
+      await influencerService.updateInfluencer(influencer_exists, {
+        average_dm_rating,
+      })
+    }
+
+    const {
+      average_dm_rating: avg_dm_rating,
+      average_shout_out_rating: avg_so_rating,
+    } = influencer_exists
+
+    const avgRat =
+      avg_dm_rating && avg_so_rating
+        ? ((parseFloat(avg_dm_rating) + parseFloat(avg_so_rating)) / 2).toFixed(
+            1
+          )
+        : avg_dm_rating
+        ? parseFloat(avg_dm_rating).toFixed(1)
+        : avg_so_rating
+        ? parseFloat(avg_so_rating).toFixed(1)
+        : null
+
+    const update_details = {
+      average_rating: avgRat,
+    }
+
+    const updateInfluencer = await influencerService.updateInfluencer(
+      influencer_exists,
+      update_details
+    )
+
+    if (!updateInfluencer) {
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "Failed to update influencer's average rating"
+      )
     }
 
     return this.internalResponse(true, newRating, 200, "Rating saved")
