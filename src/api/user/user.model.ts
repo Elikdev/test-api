@@ -15,6 +15,8 @@ import { Follow } from "../follow/follow.model"
 import { Wallet } from "../wallet/wallet.model"
 import { Industry } from "../industry/industry.model"
 import { AccountStatus } from "../../utils/enum"
+import { Room } from "../room/room.model"
+import { Message } from "../messages/messages.model"
 
 @Entity({ name: "users" })
 @TableInheritance({ column: { type: "varchar", name: "type" } })
@@ -81,13 +83,27 @@ export class User extends BaseModel {
 
   @OneToMany(() => Follow, (follow) => follow.follower)
   following: Follow[]
+
   @OneToMany(() => Requests, (requests) => requests.influencer)
   influencer_requests: Requests[]
 
   @OneToMany(() => Requests, (requests) => requests.fan)
   fan_requests: Requests[]
 
+  @OneToMany(() => Room, (room) => room.influencer)
+  influencer_rooms: Room[]
+
+  @OneToMany(() => Room, (room) => room.fan)
+  fan_rooms: Room[]
+
   @OneToOne(() => Industry, (industry) => industry.industries)
   @JoinColumn()
   industry: Industry
+
+  @OneToMany(()=>Message, message=>message.sender)
+  sent:Message[]
+
+  @OneToMany(()=>Message, message=>message.receiver)
+  received:Message[]
+  
 }
