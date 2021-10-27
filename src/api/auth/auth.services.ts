@@ -420,8 +420,12 @@ class AuthService extends BaseService {
     full_name: user_exists.full_name,
     handle: user_exists.handle,
   })
+
+  // get data
+  const userDetails = await userService.aggregateUserDetails(user_exists.id, user_exists.account_type);
+
   
-  return this.internalResponse(true, { data, token }, 200, "User login successful")
+  return this.internalResponse(true, { data: userDetails, token }, 200, "User login successful")
  }
 
  public async uploadVideo(userDTO: {email: string, video_link: string}) {

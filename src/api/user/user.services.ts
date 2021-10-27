@@ -141,6 +141,30 @@ class UserService extends BaseService{
             relations: ["industry"]
         })
     }
+
+    public async aggregateUserDetails(id: number, account_type: string): Promise<User> {
+        const user = await this.findOne(User, {
+            where: {
+                id
+            },
+            relations: [
+                "wallet", 
+                `${account_type == "celebrity" && 'banks'}`, 
+                "transactions", 
+                "requests", 
+                "followers", 
+                "following", 
+                "industry", 
+                `${account_type == "celebrity" && 'ratings'}`
+            ]
+        })
+
+        delete user.password
+        delete user.email_verification
+        
+        return user
+    }
+
 }
 
 export const userService = new UserService()
