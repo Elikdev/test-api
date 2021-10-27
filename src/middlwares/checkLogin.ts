@@ -27,13 +27,12 @@ class VerificationMiddleware {
       const { userDetails, verified } = grantAccess;
       if (!verified) {
         return errorResponse(res, "Unauthorized", 401);
-      };
+      }
 
       (req as any).user = await userService.getUserDetails(userDetails.id)
 
       return next();
     } catch (err) {
-      console.log(`Error from token verification >> `, err);
       if (err?.name === "TokenExpiredError") {
         return errorResponse(res, "Unauthorized. Token expired", 401);
       }
