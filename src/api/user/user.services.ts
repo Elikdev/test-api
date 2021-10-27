@@ -143,20 +143,13 @@ class UserService extends BaseService{
     }
 
     public async aggregateUserDetails(id: number, account_type: string): Promise<User> {
+        const user_ralations= ["wallet", "transactions", "requests", "followers", "following", "industry"]
+        if (account_type === "celebrity") user_ralations.push("banks", "ratings");
         const user = await this.findOne(User, {
             where: {
                 id
             },
-            relations: [
-                "wallet", 
-                `${account_type == "celebrity" && 'banks'}`, 
-                "transactions", 
-                "requests", 
-                "followers", 
-                "following", 
-                "industry", 
-                `${account_type == "celebrity" && 'ratings'}`
-            ]
+            relations: user_ralations
         })
 
         delete user.password
