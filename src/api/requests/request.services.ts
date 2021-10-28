@@ -125,8 +125,9 @@ class RequestService extends BaseService{
             })
 
             // set time to 72 hours from now, using 5 mins for testing
-            // 72 = 259200000
-            const in72hours = new Date(Date.now() + 120000);
+            // 72 = 259200000 plus 1 hour cos server time is 1 hr behind
+            const in72hours = new Date(Date.now() + 3900000);
+            console.log(in72hours, 'ttt')
             
             // send mail notification to influencer/, text will be changed
             const message = compileEjs({ template: "update-template" })({
@@ -149,6 +150,7 @@ class RequestService extends BaseService{
 
             // run cron job to check if the request has been responded to after expiry time
             const cronFunParam = async () => {
+                console.log("iiiii")
                 const cronFunctionRequest = await this.findRequestWithId(reques.id);
                 if (cronFunctionRequest.status === "pending") {
                     // return money back to fan and remove from influencer
@@ -180,7 +182,7 @@ class RequestService extends BaseService{
     
                 }
             }
-            await scheduleRequestJobChecker(in72hours, cronFunParam)
+            scheduleRequestJobChecker(in72hours, cronFunParam)
 
             return this.internalResponse(true, { request: reques }, 200, "Request created")
         } catch (error) {
