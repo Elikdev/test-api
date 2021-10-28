@@ -7,6 +7,7 @@ import bankRouter from "./api/bank/bank.controller"
 import walletRouter from "./api/wallet/wallet.controller"
 import ratingRouter from "./api/ratings/ratings.controller"
 import industryRouter from "./api/industry/industry.controller"
+import transactionRouter from "./api/transactions/transaction.controller";
 import tempRouter from "./api/temp/temp.controller";
 
 const apiPrefix = "/api/v1";
@@ -51,6 +52,10 @@ const routes = [
   {
     prefix: "temp",
     name: tempRouter
+  }
+  {
+    prefix: "transaction",
+    name: transactionRouter,
   }
 ];
 
