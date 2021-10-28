@@ -158,6 +158,23 @@ class UserService extends BaseService{
         return user
     }
 
+    public async tempDeleteUser(id:string){
+        const user = await this.findUserWithId(Number(id))
+        if(!user){
+            throw new Error(' invalid user id')
+        }
+        const deleteUser = await this.deleteOne(User,{
+                id
+        })
+        
+        if(!deleteUser){
+            throw new Error('undable to delete user')
+        }
+
+        return `user with is ${id} deleted successfully`
+        
+    }
+
 }
 
 export const userService = new UserService()
