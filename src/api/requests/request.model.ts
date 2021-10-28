@@ -22,7 +22,13 @@ export class Requests extends BaseModel{
 
 
     @Column()
-    purpose:string;
+    purpose:string; // same as occasion
+
+    @Column()
+    fan_introduction: string
+
+    @Column()
+    shoutout_message: string
 
     @Column({
         enum:RequestStatus,
@@ -47,6 +53,5 @@ export class Requests extends BaseModel{
     @ManyToOne(()=>User,user=>user.fan_requests)
     @JoinColumn({"name":"fan"})
     fan:User
-
     
 }
