@@ -150,7 +150,6 @@ class RequestService extends BaseService{
 
             // run cron job to check if the request has been responded to after expiry time
             const cronFunParam = async () => {
-                console.log("iiiii")
                 const cronFunctionRequest = await this.findRequestWithId(reques.id);
                 if (cronFunctionRequest.status === "pending") {
                     // return money back to fan and remove from influencer
