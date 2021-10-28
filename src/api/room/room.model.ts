@@ -15,7 +15,7 @@ export class Room extends BaseModel{
     fan:User
 
     @Column()
-    unique_string:string
+    room_id:string
 
     @OneToMany(()=>Message, message=>message.room)
     conversations:Message[]
