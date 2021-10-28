@@ -52,7 +52,7 @@ const routes = [
   {
     prefix: "temp",
     name: tempRouter
-  }
+  },
   {
     prefix: "transaction",
     name: transactionRouter,
