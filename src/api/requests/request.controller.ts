@@ -9,16 +9,29 @@ const requestRouter = Router()
 
 
 requestRouter.post('/new-request', verificationMiddleware.validateToken, requestValidation.newRequest(),  async(req:Request, res:Response)=>{
-    try{
+    try {
         const authUser = (req as any).user
         const {influencer} = req.body
         if(authUser.id === influencer){
-            throw new Error('cant make request to self')
+            return errorResponse(res, "can't make request for self", 400)
         }
-        const response = await requestService.createRequest({fan:authUser.id,...req.body})
-        successRes(res, response)
-    }catch(error){
-        errorResponse(res, error.message, 404 )
+
+        const response = await requestService.createRequest(authUser, req.body)
+    
+          if (!response.status) {
+            return errorResponse(res, response.message, 400)
+          }
+    
+          return successRes(res, response.data, response.message)
+    } catch(error) {
+        if (error?.email_failed) {
+            return errorResponse(
+              res,
+              "Error in sending email. Contact support for help",
+              400
+            )
+        }
+        return errorResponse(res, "an error occured, contact support", 500)
     }
 })
 

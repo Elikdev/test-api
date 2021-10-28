@@ -8,8 +8,18 @@ class RequestValidation{
     public newRequest(){
         return celebrate({
             body:Joi.object({
-                purpose:Joi.string().required(),
+                purpose:Joi.string().when('request_type', {
+                    is: Joi.exist().equal(RequestType.SHOUT_OUT),
+                    then: Joi.string().required(),
+                    otherwise: Joi.optional(),
+                }),
                 influencer:Joi.number().required(),
+                fan_introduction:Joi.string().optional(),
+                shoutout_message:Joi.string().when('request_type', {
+                    is: Joi.exist().equal(RequestType.SHOUT_OUT),
+                    then: Joi.string().required(),
+                    otherwise: Joi.string().optional(),
+                }),
                 request_type:Joi.valid(RequestType.DM, RequestType.SHOUT_OUT).required(),
                 request_delivery:Joi.valid(RequestDelivery.EXPRESS, RequestDelivery.STANDARD)
             })
