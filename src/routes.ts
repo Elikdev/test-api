@@ -9,6 +9,7 @@ import ratingRouter from "./api/ratings/ratings.controller"
 import industryRouter from "./api/industry/industry.controller"
 import transactionRouter from "./api/transactions/transaction.controller";
 import tempRouter from "./api/temp/temp.controller";
+import messageRouter from "./api/messages/messages.controller";
 
 const apiPrefix = "/api/v1";
 
@@ -56,6 +57,10 @@ const routes = [
   {
     prefix: "transaction",
     name: transactionRouter,
+  }, 
+  {
+    prefix: "message",
+    name: messageRouter,
   }
 ];
 
