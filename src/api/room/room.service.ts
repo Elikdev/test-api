@@ -27,6 +27,19 @@ class RoomService extends BaseService {
       where: { id },
     })
   }
+
+  public async findRoomByRoomId(room_id: any, user_id: number) {
+    const queryOptions = {
+      room_id,
+    }
+
+    return await this.findOne(Room, {
+      where: [
+        { fan: user_id, ...queryOptions },
+        { influencer: user_id, ...queryOptions },
+      ],
+    })
+  }
 }
 
 export const roomService = new RoomService()

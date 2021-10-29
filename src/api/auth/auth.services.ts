@@ -10,6 +10,7 @@ import {userService} from '../user/user.services'
 import { influencerService } from "../influencer/influencer.services"
 import { walletService } from "../wallet/wallet.services"
 import { fanService } from "../fan/fan.services"
+import { roomService } from "../room/room.service";
 
 class AuthService extends BaseService {
 
@@ -558,6 +559,32 @@ class AuthService extends BaseService {
     }
   
     return this.internalResponse(true, { data: result }, 200, "Account approved")
+  }
+
+  public async verifyRoomAndToken(sDTO: {room_id: string, token: string}) {
+    const { room_id, token } = sDTO
+    //verify the token 
+    const {verified, userDetails} = AuthModule.verifyToken(token)
+
+    if(!verified) {
+      return this.internalResponse(false, {}, 400, "Invalid token")
+    }
+
+    //get the user
+    const user_exists = await userService.getUserDetails(userDetails.id)
+
+    if(!user_exists) {
+      return this.internalResponse(false, {}, 400, "User does not exist")
+    }
+
+    // get the room 
+    const room_exists = await roomService.findRoomByRoomId(room_id, user_exists.id)
+
+    if(!room_exists){
+      return this.internalResponse(false, {}, 400, `Room_id ${room_id} does not exist for user`)
+    }
+
+    return this.internalResponse(true, {verified: true, user: user_exists.id}, 200, "Token and room verified")
   }
     
 }
