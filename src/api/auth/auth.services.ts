@@ -62,6 +62,7 @@ class AuthService extends BaseService {
       //if account type is fan or influencer
       if (userDTO.account_type === AccountType.CELEB) {
         isFan = false
+
         //generate invite_code
         const ref_code = AuthModule.generateRefCode()
 
@@ -89,7 +90,8 @@ class AuthService extends BaseService {
           userDTO.handle,
           userDTO.country_code,
           userDTO.phone_number,
-          userDTO.account_type
+          userDTO.account_type,
+          userDTO?.ref
         )
       }
 
@@ -531,30 +533,34 @@ class AuthService extends BaseService {
           update_details
         )
 
-        if (referrer_updated) {
-          const referrer_wallet = await walletService.findWalletByUserId(
-            referrer_updated.id
-          )
-          //update the wallet -- add to the ledger balance for now
-          const new_balance =
-            (parseFloat(referrer_wallet.ledger_balance) + 5.0).toFixed(2) //$5 bonus
-          const wallet_update_details = {
-            ledger_balance: new_balance,
-          }
-          const wallet_updated = await walletService.updateWallet(
-            referrer_wallet,
-            wallet_update_details
-          )
-
-          if (!wallet_updated) {
-            return this.internalResponse(
-              false,
-              {},
-              400,
-              "Failed to update referrer's wallet"
-            )
-          }
+        if(!referrer_updated) {
+          return this.internalResponse(false, {}, 400, "Failed to update referrer")
         }
+
+        // if (referrer_updated) {
+        //   const referrer_wallet = await walletService.findWalletByUserId(
+        //     referrer_updated.id
+        //   )
+        //   //update the wallet -- add to the ledger balance for now
+        //   const new_balance =
+        //     (parseFloat(referrer_wallet.ledger_balance) + 5.0).toFixed(2) //$5 bonus
+        //   const wallet_update_details = {
+        //     ledger_balance: new_balance,
+        //   }
+        //   const wallet_updated = await walletService.updateWallet(
+        //     referrer_wallet,
+        //     wallet_update_details
+        //   )
+
+        //   if (!wallet_updated) {
+        //     return this.internalResponse(
+        //       false,
+        //       {},
+        //       400,
+        //       "Failed to update referrer's wallet"
+        //     )
+        //   }
+        // }
       }
     }
   

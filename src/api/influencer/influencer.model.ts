@@ -22,9 +22,6 @@ export class Influencer extends User {
   referral_count: number
 
   @Column()
-  referred_by: number
-
-  @Column()
   average_shout_out_rating: string
 
   @Column()
