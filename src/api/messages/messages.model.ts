@@ -18,7 +18,13 @@ export class Message extends BaseModel{
     message:string
 
     @Column()
+    message_id: number
+
+    @Column()
     room_id:string
+
+    @Column()
+    time: Date
 
     @ManyToOne(()=>Room, room=>room.conversations)
     @JoinColumn({'name':"room"})

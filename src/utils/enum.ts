@@ -106,3 +106,15 @@ export enum RequestDelivery{
     STANDARD="standard",
     EXPRESS="express"
 }
+
+export type IncomingMessage = {
+    id: number;
+    sender: any;
+    receiver: any;
+    message: any;
+    room: number;
+    room_id: string;
+    time: Date;
+    created_at: Date;
+    updated_at: Date;
+   }
