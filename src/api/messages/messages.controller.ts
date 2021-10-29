@@ -9,7 +9,6 @@ const messageRouter = Router()
 
 messageRouter.post(
   "/new-messages",
-  verificationMiddleware.validateToken,
   messageValidation.newMessageSetValidation(),
   async (req: Request, res: Response) => {
     try {
@@ -17,10 +16,9 @@ messageRouter.post(
       if (!messageDTO) {
         return errorResponse(res, "no data entered", 400)
       }
-      const authUser = (req as any).user
 
       //service is being called here
-      const response = await messageService.newSetOfMessages(authUser, messageDTO)
+      const response = await messageService.newSetOfMessages(messageDTO)
 
       if (!response.status) {
         return errorResponse(res, response.message, 400, response.data)

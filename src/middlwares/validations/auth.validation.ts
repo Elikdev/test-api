@@ -70,6 +70,15 @@ class AuthValidation {
          })
       })
    }
+
+   public verifyTokenAndRoomoValidation() {
+      return celebrate({
+         body: Joi.object({
+            token: Joi.string().required(),
+            room_id: Joi.string().required()
+         })
+      })
+   }
 }
 
 export const authValidation = new AuthValidation()

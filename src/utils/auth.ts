@@ -12,9 +12,7 @@ class AuthUtils {
  }
 
  public generateJWT(details: jwtCred): string {
-  return jwt.sign(details, process.env.JWT_SECRET || "supersecrete", {
-   expiresIn: process.env.JWT_EXP_TIME || "6h",
-  });
+  return jwt.sign(details, process.env.JWT_SECRET || "supersecrete");
  }
 
  public verifyToken(token: string): {

@@ -176,4 +176,26 @@ authRouter.post("/verify-video",  authValidation.verifyVideoValidation(), async 
     return errorResponse(res, 'an error occured, contact support', 500)
   }
 });
+
+
+authRouter.post(
+  "/verify-token-and-room",
+  authValidation.verifyTokenAndRoomoValidation(),
+  async (req: Request, res: Response) => {
+    try {
+      //service is being called here
+      const response = await authService.verifyRoomAndToken(req.body)
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400, response.data)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
 export default authRouter;

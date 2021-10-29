@@ -52,8 +52,7 @@ class MessageService extends BaseService {
     return this.save(Message, messageInstance)
   }
 
-  public async newSetOfMessages(authUser: jwtCred, msgDTO: IncomingMessage[]) {
-    const user_id = authUser.id
+  public async newSetOfMessages(msgDTO: IncomingMessage[]) {
     const new_messages = msgDTO
 
     ///for each messages --check if the room are the same
@@ -76,17 +75,6 @@ class MessageService extends BaseService {
 
     //check if the room exists on the db
     for (const msg of new_messages) {
-      //put the sender and receiver inside an array
-      const users = []
-      users.push(msg.sender, msg.receiver)
-      if (!users.includes(user_id)) {
-        return this.internalResponse(
-          false,
-          {},
-          400,
-          `User does not belong to ${msg.room_id}`
-        )
-      }
       const room_exists = await roomService.findRoomByIdAndRoomId(
         msg.room,
         msg.room_id,
