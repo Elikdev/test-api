@@ -82,7 +82,7 @@ class RequestService extends BaseService{
             // create a new transaction for user
             const transac = await transactionService.saveTransactionWithQueryRunner(queryRunner, {
                 user,
-                description: request_type + "Request",
+                description: request_type + " Request",
                 amount: parseFloat(`${rate_amount}`),
                 transaction_reference: AuthModule.generateRefCode(),
                 transaction_id: AuthModule.generateRefCode(),
@@ -124,10 +124,9 @@ class RequestService extends BaseService{
                 transaction: transac
             })
 
-            // set time to 72 hours from now, using 5 mins for testing
+            // set time to 72 hours from now 
             // 72 = 259200000 plus 1 hour cos server time is 1 hr behind
-            const in72hours = new Date(Date.now() + 3900000);
-            console.log(in72hours, 'ttt')
+            const in72hours = new Date(Date.now() + 262800000);
             
             // send mail notification to influencer/, text will be changed
             const message = compileEjs({ template: "update-template" })({
@@ -154,31 +153,27 @@ class RequestService extends BaseService{
                 if (cronFunctionRequest.status === "pending") {
                     // return money back to fan and remove from influencer
                     const x = rate_amount;
+                    const fan_cron_wallet = await walletService.findWalletByUserId(user_id)
+                    const influencer_cron_wallet = await walletService.findWalletByUserId(influencerId)
 
-                    getRepository(Wallet)
-                        .createQueryBuilder('wallet')
+                    await getConnection()
+                        .createQueryBuilder()
                         .update(Wallet)
-                        .whereInIds(fan_wallet.id)
-                        .set({ ledger_balance: () => {
-                            const dt = `${parseFloat('ledger_balance') + x}`
-                            // return 'ledger_balance + :x' 
-                            return dt
-                        }})
-                        .setParameter("x", x)
+                        .set({ 
+                            ledger_balance: `${parseFloat(fan_cron_wallet.ledger_balance) + x}`,
+                        })
+                        .where("id = :id", { id: fan_wallet.id })
                         .execute();
-    
-                    getRepository(Wallet)
-                        .createQueryBuilder('wallet')
+
+                    await getConnection()
+                        .createQueryBuilder()
                         .update(Wallet)
-                        .whereInIds(inflencer_tran_wallet.id)
-                        .set({ ledger_balance: () => {
-                            const dt = `${parseFloat('ledger_balance') - x}`
-                            // return 'ledger_balance - :x' 
-                            return dt
-                        }})
-                        .setParameter("x", x)
+                        .set({ 
+                            ledger_balance: `${parseFloat(influencer_cron_wallet.ledger_balance) - x}`,
+                        })
+                        .where("id = :id", { id: inflencer_tran_wallet.id })
                         .execute();
-    
+                    
                 }
             }
             scheduleRequestJobChecker(in72hours, cronFunParam)
