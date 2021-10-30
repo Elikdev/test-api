@@ -5,7 +5,7 @@ import { transactionService } from "../transactions/transaction.services";
 import { CreateRequestDto } from "./Dto/create-request.Dto";
 import {Requests} from './request.model'
 import { getRepository } from "typeorm"
-import { jwtCred } from "../../utils/enum"
+import { jwtCred, RequestStatus } from "../../utils/enum"
 import { userService } from "../user/user.services"
 import { influencerService } from "../influencer/influencer.services"
 import { walletService } from "../wallet/wallet.services"
@@ -13,6 +13,7 @@ import { AuthModule } from "../../utils/auth"
 import { Wallet } from "../wallet/wallet.model"
 import { sendEmail, compileEjs } from "../../helpers/mailer.helper"
 import { scheduleRequestJobChecker }from "../../helpers/cronjobs"
+import { roomService } from "../room/room.service"
 
 class RequestService extends BaseService{
     super:any
@@ -121,7 +122,8 @@ class RequestService extends BaseService{
                 fan_introduction,
                 shoutout_message,
                 status: "pending",
-                transaction: transac
+                transaction: transac,
+                rate: `${rate_amount}`
             })
 
             // set time to 72 hours from now 
@@ -192,37 +194,7 @@ class RequestService extends BaseService{
                 
     }
 
-      // NB: all notifications might not be mail but notifications boma would create
-        // cancel the request
-        // check if canceled already
-        // check how fb handles canceling of friend request  sent and linked in handles canceling connection requests
-        // check if i am actually the one that made request
-        // check if the request has already beenaccepted , if yes send error message
-        // check if the reuest has expired using created_aUser can not rate selft if yes, send error message or do nth
-        // if it has not accepted, cancel cron job and update users wallets , delete or update the request as canceled
-        // update the transaction or deleete it, remove from the influencerrequests array and fanrequests array
-        // cancel the cron job that will run to check the request
-
-        // accept the request
-        // cehck if tas already been accepted
-        // check how fb handles accepting of friend request and linked in handles accepting connection requests
-        // check if the reuest esists and  is for me,
-        // check if it has not expired,
-        // start transactions: update wallet update the request, update the transaction
-        // cancel cron job
-        // send mail notification to fan
-        // commit transaction
-
-        // reject the  request
-        // check if rejected already and send error
-        // check how fb handles reject of friend request and linked in handles sending connection requests
-        // state reason, etc.. cancel cron job and update wallet request and transcation
-
     // cancel the request by fan
-
-    // accept the request by influencer
-
-    // reject the  request by influencer
 
     public async getRequests(userId: number) {
         const [user_requests, count] = await getRepository(Requests).findAndCount({
@@ -255,7 +227,7 @@ class RequestService extends BaseService{
         if (user_requests.length <= 0) {
           return this.internalResponse(
             false,
-            {},
+            { total: 0, requests: [] },
             400,
             "No requests available yet"
           )
@@ -269,35 +241,143 @@ class RequestService extends BaseService{
         )
     }
 
-    public async updateRequest(updateRequestDto:DeepPartial<Requests>){
-        try{
-            const {id, ...updateDetails} = updateRequestDto
-            const requestToUpdate = await this.findOne(Requests, id)
-            if(!requestToUpdate){
-                throw new Error("Invalid request id")
-            }
-            this.schema(Requests).merge(requestToUpdate, updateDetails)
-            return await this.updateOne(Requests, requestToUpdate)
-        }catch(error){
-            throw error
-        }
-
+    public async updateRequest(
+        requestToUpdate: Requests,
+        updateFields: DeepPartial<Requests>,
+    ): Promise<Requests>   {
+        this.schema(Requests).merge(requestToUpdate, updateFields)
+        return await this.updateOne(Requests, requestToUpdate)
     }
 
-    public async respondToRequest(respondRequestDto:DeepPartial<Requests>){
-            const {id,influencer} = respondRequestDto
-            const requestInfluencer = await getRepository(Requests).findOne({
-                where: [
-                    {
-                        id
-                    }
-                ],
-                relations: ["influencer"]
+    // accept or decline the request by influencer
+    public async respondToRequest(
+        authUser: jwtCred, 
+        responseDTO: {
+            requestId
+            type
+            reason
+    }) {
+        const user_id = authUser.id;
+
+        const user_exists = await influencerService.findInfluencerById(user_id)
+        if (!user_exists) {
+          return this.internalResponse(false, {}, 400, "user not found")
+        }
+
+        const { requestId, type, reason } = responseDTO
+
+        const request = await this.findRequestWithId(requestId)
+        if (!request) {
+            return this.internalResponse(false, {}, 400, "Request doesn't exist")
+        }
+
+        if (request.status === RequestStatus.CANCELLED) {
+            return this.internalResponse(false, {}, 400, "Request cancelled by fan already")
+        }
+
+        // for rejecting requests by influencer
+        if (type === "decline") {
+            // check if its already declined
+            if (request.status === RequestStatus.REJECTED) {
+                return this.internalResponse(false, {}, 400, "Request declined already")
+            }
+            
+            // check if exists and is for the influencer
+            if (request.influencer.id != user_exists.id) {
+                return this.internalResponse(false, {}, 400, "Request not for you")
+            }
+        }
+
+        // for accepting requests by influencer
+        if (type === "accept") {
+            // check if its already accepted
+            if (request.status === RequestStatus.ACCEPTED) {
+                return this.internalResponse(false, {}, 400, "Request accepted already")
+            }
+            
+            // check if exists and is for the influencer
+            if (request.influencer.id != user_exists.id) {
+                return this.internalResponse(false, {}, 400, "Request not for you")
+            }
+
+            // check if already expired after 72 hours
+            if (new Date(request.created_at).getTime() + 262800000 < Date.now()) {
+                return this.internalResponse(false, {}, 400, "Request time has elaspsed")
+            }
+        }
+
+        // start transactions
+        const connection = getConnection()
+        const queryRunner = connection.createQueryRunner()
+
+        await queryRunner.connect()
+
+        await queryRunner.startTransaction()
+        try {
+            const fan_wallet = await queryRunner.manager.findOne(Wallet, {
+                where: [{ user: request.fan }]
             })
-             if(influencer !== requestInfluencer.influencer.id){
-                 throw new Error("this request does not belong to this influencer")
-             }
-             return await this.updateRequest(respondRequestDto)
+            const influencer_wallet = await queryRunner.manager.findOne(Wallet, {
+                where: [{ user: request.influencer }]
+            })
+            const fan_balance = 
+                type == "decline" ?
+                    parseFloat(fan_wallet.ledger_balance) + parseFloat(request.rate)
+                :   
+                    parseFloat(fan_wallet.wallet_balance) - parseFloat(request.rate)
+            const influencer_balance = 
+                type == "decline" ?
+                    parseFloat(influencer_wallet.ledger_balance) - parseFloat(request.rate)
+                :
+                    parseFloat(influencer_wallet.wallet_balance) + parseFloat(request.rate)
+      
+            await queryRunner.manager.update(
+                Wallet,
+                fan_wallet.id,
+                { 
+                    ledger_balance: type == "decline" ? fan_balance.toFixed(2) : fan_wallet.ledger_balance,
+                    wallet_balance: type == "accept" ? fan_balance.toFixed(2) : fan_wallet.wallet_balance,
+                }
+            )
+            await queryRunner.manager.update(
+                Wallet,
+                influencer_wallet.id,
+                { 
+                    ledger_balance: type == "decline" ? influencer_balance.toFixed(2) : influencer_wallet.ledger_balance,
+                    wallet_balance: type == "accept" ? influencer_balance.toFixed(2) : influencer_wallet.wallet_balance,
+                }
+            )
+
+            // update the request
+            const updatedRequest = await queryRunner.manager.update(
+                Requests, 
+                request.id, 
+                { 
+                    status: type == "decline" ? RequestStatus.REJECTED : RequestStatus.ACCEPTED,
+                    reason: type == "decline" && reason
+                }
+            )
+            await queryRunner.commitTransaction()
+
+            // create a room for both users
+            const room = await roomService.createRoom(request.fan, user_exists);
+
+            return this.internalResponse(
+                true,
+                { request: updatedRequest , room },
+                200,
+                `Request ${type == 'decline' ? 'declined' : 'accepted'} successfully`
+            )
+        } catch (error) {
+            await queryRunner.rollbackTransaction()
+            await queryRunner.release()
+            return this.internalResponse(
+              false,
+              {},
+              400,
+              "Request response not successful. Please try again"
+            )
+        }
     }
 
     public async saveRequestWithQueryRunner(queryRunner: QueryRunner, createRequestDto): Promise<Requests>{
@@ -311,8 +391,10 @@ class RequestService extends BaseService{
             where: {
                 id,
             },
+            relations: ["influencer", "fan"]
         })
     }
+
 }
 
 export const requestService = new RequestService()

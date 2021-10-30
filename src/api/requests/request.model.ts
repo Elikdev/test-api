@@ -20,6 +20,8 @@ export class Requests extends BaseModel{
     })
     request_delivery:string
 
+    @Column()
+    rate: string
 
     @Column()
     purpose:string; // same as occasion
