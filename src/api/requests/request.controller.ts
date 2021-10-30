@@ -45,5 +45,27 @@ requestRouter.post('/respond-to-request', verificationMiddleware.validateToken, 
     }
 })
 
+requestRouter.post('/view-requests', verificationMiddleware.validateToken,  async(req:Request, res:Response)=>{
+    try {
+        const authUser = (req as any).user
+
+        const response = await requestService.getAllRequestForAUser(authUser.id)
+    
+        if (!response.status) {
+            return errorResponse(res, response.message, 400)
+        }
+    
+        return successRes(res, response.data, response.message)
+    } catch(error) {
+        if (error?.email_failed) {
+            return errorResponse(
+              res,
+              "Error in sending email. Contact support for help",
+              400
+            )
+        }
+        return errorResponse(res, "an error occured, contact support", 500)
+    }
+})
 
 export default requestRouter;

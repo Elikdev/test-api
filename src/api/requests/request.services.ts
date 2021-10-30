@@ -192,11 +192,82 @@ class RequestService extends BaseService{
                 
     }
 
+      // NB: all notifications might not be mail but notifications boma would create
+        // cancel the request
+        // check if canceled already
+        // check how fb handles canceling of friend request  sent and linked in handles canceling connection requests
+        // check if i am actually the one that made request
+        // check if the request has already beenaccepted , if yes send error message
+        // check if the reuest has expired using created_aUser can not rate selft if yes, send error message or do nth
+        // if it has not accepted, cancel cron job and update users wallets , delete or update the request as canceled
+        // update the transaction or deleete it, remove from the influencerrequests array and fanrequests array
+        // cancel the cron job that will run to check the request
+
+        // accept the request
+        // cehck if tas already been accepted
+        // check how fb handles accepting of friend request and linked in handles accepting connection requests
+        // check if the reuest esists and  is for me,
+        // check if it has not expired,
+        // start transactions: update wallet update the request, update the transaction
+        // cancel cron job
+        // send mail notification to fan
+        // commit transaction
+
+        // reject the  request
+        // check if rejected already and send error
+        // check how fb handles reject of friend request and linked in handles sending connection requests
+        // state reason, etc.. cancel cron job and update wallet request and transcation
+
     // cancel the request by fan
 
     // accept the request by influencer
 
     // reject the  request by influencer
+
+    public async getRequests(userId: number) {
+        const [user_requests, count] = await getRepository(Requests).findAndCount({
+            where: [
+                { fan: userId },
+                { influencer: userId }
+            ],
+            relations: ["influencer", "fan"],
+            order: { created_at: "DESC" },
+        })
+
+        for (const request of user_requests) {
+            delete request.influencer.password
+            delete request.influencer?.email_verification
+            delete request.fan.password
+            delete request.fan?.email_verification
+        }
+    
+        return { user_requests, count }
+    }
+
+    // get all my requests
+    public async getAllRequestForAUser(user_id: number) {
+        const user_exists = await userService.findUserWithId(user_id)
+        if (!user_exists) {
+          return this.internalResponse(false, {}, 400, "user not found")
+        }
+    
+        const { user_requests, count } = await this.getRequests(user_id);
+        if (user_requests.length <= 0) {
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            "No requests available yet"
+          )
+        }
+    
+        return this.internalResponse(
+          true,
+          { total: count, requests: user_requests },
+          200,
+          "Requests retrieved"
+        )
+    }
 
     public async updateRequest(updateRequestDto:DeepPartial<Requests>){
         try{
