@@ -35,15 +35,59 @@ requestRouter.post('/new-request', verificationMiddleware.validateToken, request
     }
 })
 
-requestRouter.post('/respond-to-request', verificationMiddleware.validateToken, verificationMiddleware.checkCeleb, requestValidation.updateRequest(), async(req:Request, res:Response)=>{
-    try{
+requestRouter
+    .post(
+        '/respond-to-request/:requestId', 
+        verificationMiddleware.validateToken, 
+        verificationMiddleware.checkCeleb, 
+        requestValidation.updateRequest(), 
+        async (req: Request, res: Response) => {
+        try {
+            const authUser = (req as any).user
+            const response = await requestService.respondToRequest(
+                authUser,
+                { ...req.body, requestId: req.params.requestId }
+            )
+                
+            if (!response.status) {
+                return errorResponse(res, response.message, 400)
+            }
+
+            return successRes(res, response.data, response.message)
+        } catch(error) {
+            if (error?.email_failed) {
+                return errorResponse(
+                  res,
+                  "Error in sending email. Contact support for help",
+                  400
+                )
+            }
+            return errorResponse(res, "an error occured, contact support", 500)
+        }
+    }
+)
+
+requestRouter.post('/view-requests', verificationMiddleware.validateToken,  async(req:Request, res:Response)=>{
+    try {
         const authUser = (req as any).user
-        const response = await requestService.respondToRequest({influencer:authUser.id, ...req.body})
-        successRes(res, response)
-    }catch(error){
-        errorResponse(res, error.message, 404 )
+
+        const response = await requestService.getAllRequestForAUser(authUser.id)
+    
+        if (!response.status) {
+            return errorResponse(res, response.message, 400)
+        }
+    
+        return successRes(res, response.data, response.message)
+    } catch(error) {
+        if (error?.email_failed) {
+            return errorResponse(
+              res,
+              "Error in sending email. Contact support for help",
+              400
+            )
+        }
+        return errorResponse(res, "an error occured, contact support", 500)
     }
 })
-
 
 export default requestRouter;
