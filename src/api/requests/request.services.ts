@@ -249,6 +249,31 @@ class RequestService extends BaseService{
         return await this.updateOne(Requests, requestToUpdate)
     }
 
+            // NB: all notifications might not be mail but notifications boma would create
+        // cancel the request
+        // check if canceled already
+        // check how fb handles canceling of friend request  sent and linked in handles canceling connection requests
+        // check if i am actually the one that made request
+        // check if the request has already beenaccepted , if yes send error message
+        // check if the reuest has expired using created_aUser can not rate selft if yes, send error message or do nth
+        // if it has not accepted, cancel cron job and update users wallets , delete or update the request as canceled
+        // update the transaction or deleete it, remove from the influencerrequests array and fanrequests array
+        // cancel the cron job that will run to check the request
+
+        // accept the request
+        // cehck if tas already been accepted
+        // check if the reuest esists and  is for me,
+        // check if it has not expired,
+        // start transactions: update wallet update the request, update the transaction
+        // cancel cron job
+        // send mail notification to fan
+        // commit transaction
+
+        // reject the  request
+        // check if rejected already and send error
+        // check how fb handles reject of friend request and linked in handles sending connection requests
+        // state reason, etc.. cancel cron job and update wallet request and transcation
+
     // accept or decline the request by influencer
     public async respondToRequest(
         authUser: jwtCred, 
@@ -378,6 +403,96 @@ class RequestService extends BaseService{
               "Request response not successful. Please try again"
             )
         }
+    }
+
+    public async cancelRequest(authUser: jwtCred, requestId: number) {
+        const user_id = authUser.id;
+        const user_exists = await userService.findUserWithId(user_id)
+        if (!user_exists) {
+          return this.internalResponse(false, {}, 400, "user not found")
+        }
+    
+        const request = await this.findRequestWithId(requestId);
+        if (!request) {
+            return this.internalResponse(false, {}, 400, "Request doesn't exist")
+        }
+
+        // check if request has been cancelled already
+        if (request.status === RequestStatus.CANCELLED) {
+            return this.internalResponse(false, {}, 400, "Request has been cancelled already")
+        }
+    
+        // check if request was made by me
+        if (request.fan.id != user_exists.id) {
+            return this.internalResponse(false, {}, 400, "Can't cancel someone else's request")
+        }
+
+        // check if request has been accepted by influencer already
+        if (request.status === RequestStatus.ACCEPTED) {
+            return this.internalResponse(false, {}, 400, "Requests once accepted cannot be cancelled")
+        }
+
+        // start transactions
+        const connection = getConnection()
+        const queryRunner = connection.createQueryRunner()
+
+        await queryRunner.connect()
+
+        await queryRunner.startTransaction()
+
+        try {
+            const fan_wallet = await queryRunner.manager.findOne(Wallet, {
+                where: [{ user: request.fan }]
+            })
+            const influencer_wallet = await queryRunner.manager.findOne(Wallet, {
+                where: [{ user: request.influencer }]
+            })
+
+            const fan_ledger_balance = parseFloat(fan_wallet.ledger_balance) + parseFloat(request.rate)
+            const influencer_ledger_balance = parseFloat(influencer_wallet.ledger_balance) - parseFloat(request.rate)
+
+            await queryRunner.manager.update(
+                Wallet,
+                fan_wallet.id,
+                { 
+                    ledger_balance: fan_ledger_balance.toFixed(2)
+                }
+            )
+            await queryRunner.manager.update(
+                Wallet,
+                influencer_wallet.id,
+                { 
+                    ledger_balance: influencer_ledger_balance.toFixed(2)
+                }
+            )
+
+            // update the request
+            const updatedRequest = await queryRunner.manager.update(
+                Requests, 
+                request.id, 
+                { 
+                    status: RequestStatus.CANCELLED,
+                }
+            )
+            await queryRunner.commitTransaction()
+
+            return this.internalResponse(
+              true,
+              { },
+              200,
+              "Request cancelled"
+            )
+        } catch (error) {
+            await queryRunner.rollbackTransaction()
+            await queryRunner.release()
+            return this.internalResponse(
+              false,
+              {},
+              400,
+              "Request cancelation not successful. Please try again"
+            )
+        }
+
     }
 
     public async saveRequestWithQueryRunner(queryRunner: QueryRunner, createRequestDto): Promise<Requests>{
