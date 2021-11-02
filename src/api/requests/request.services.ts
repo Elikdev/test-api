@@ -407,6 +407,11 @@ class RequestService extends BaseService{
             return this.internalResponse(false, {}, 400, "Requests once accepted cannot be cancelled")
         }
 
+        // check if request has been declined by influencer already
+        if (request.status === RequestStatus.REJECTED) {
+            return this.internalResponse(false, {}, 400, "Request declined already")
+        }
+
         // start transactions
         const connection = getConnection()
         const queryRunner = connection.createQueryRunner()
@@ -442,7 +447,7 @@ class RequestService extends BaseService{
             )
 
             // update the request
-            const updatedRequest = await queryRunner.manager.update(
+            await queryRunner.manager.update(
                 Requests, 
                 request.id, 
                 { 
