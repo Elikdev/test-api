@@ -78,7 +78,7 @@ class InfluencerService extends BaseService {
         { full_name: Like(`%${search}%`) },
         { handle: Like(`%${search}%`) },
         { email: Like(`%${search}%`) },
-        { industry: Like(`%${search}%`) },
+        // { industry: Like(`%${search}%`) },
       ],
     })
     return influencer_list

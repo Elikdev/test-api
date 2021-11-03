@@ -63,10 +63,10 @@ class RoomService extends BaseService {
 
   public async createRoom(fan: User, influencer: Influencer) {
     const randDate = new Date().getTime()
-    const roomId = "room" + randDate + Math.random().toString(36).slice(2, 9);
+    const room_id = "room" + randDate + Math.random().toString(36).slice(2, 9);
 
     const new_room = await this.roomInstance(
-      roomId,
+      room_id,
       fan,
       influencer
     )
