@@ -99,7 +99,7 @@ requestRouter
         try {
             const authUser = (req as any).user
             const { requestId } = req.params
-            const response = await requestService.cancelRequest(authUser, requestId)
+            const response = await requestService.cancelRequest(authUser, Number(requestId))
                 
             if (!response.status) {
                 return errorResponse(res, response.message, 400)
