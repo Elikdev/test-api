@@ -45,6 +45,14 @@ class RequestValidation{
             }
         })
     }
+
+    public cancelRequest(){
+        return celebrate({
+            params: {
+                requestId: Joi.number().required(),
+            }
+        })
+    }
 }
 
 export const requestValidation = new RequestValidation()

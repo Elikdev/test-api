@@ -90,4 +90,33 @@ requestRouter.post('/view-requests', verificationMiddleware.validateToken,  asyn
     }
 })
 
+requestRouter
+    .post(
+        '/cancel-request/:requestId', 
+        verificationMiddleware.validateToken,
+        requestValidation.cancelRequest(), 
+        async (req: Request, res: Response) => {
+        try {
+            const authUser = (req as any).user
+            const { requestId } = req.params
+            const response = await requestService.cancelRequest(authUser, requestId)
+                
+            if (!response.status) {
+                return errorResponse(res, response.message, 400)
+            }
+
+            return successRes(res, response.data, response.message)
+        } catch(error) {
+            if (error?.email_failed) {
+                return errorResponse(
+                  res,
+                  "Error in sending email. Contact support for help",
+                  400
+                )
+            }
+            return errorResponse(res, "an error occured, contact support", 500)
+        }
+    }
+)
+
 export default requestRouter;
