@@ -143,8 +143,21 @@ class UserService extends BaseService{
     }
 
     public async aggregateUserDetails(id: number, account_type: string): Promise<User> {
-        const user_ralations= ["wallet", "transactions", "requests", "followers", "following", "industry", "influencer_requests", "fan_requests", "sent", "received"]
-        if (account_type === "celebrity") user_ralations.push("banks", "ratings");
+        const user_ralations = [
+            "wallet", 
+            "transactions", 
+            "requests", 
+            "followers", 
+            "following", 
+            "industry", 
+            "influencer_requests", 
+            "fan_requests", 
+            "sent", 
+            "received",
+            "fan_rooms"
+        ]
+        if (account_type === "celebrity") 
+            user_ralations.push("banks", "ratings", "influencer_rooms");
         const user = await this.findOne(User, {
             where: {
                 id
