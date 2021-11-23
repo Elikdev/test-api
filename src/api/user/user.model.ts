@@ -61,6 +61,9 @@ export class User extends BaseModel {
   @Column({ nullable: true })
   bio: string
 
+  @Column()
+  referred_by: number
+
   @Column({ type: "simple-json" })
   email_verification: {
     otp_verified: boolean

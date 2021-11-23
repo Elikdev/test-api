@@ -71,21 +71,16 @@ class VerificationMiddleware {
     next: NextFunction
   ) => {
     try {
-      //check the req_body
-      if (req.body?.account_type === "celebrity") {
-        //check the query field
-        if (req.query?.ref) {
-          const ref = (req.query as any).ref
-          const referrer = await influencerService.findInfluencerByRefCode(ref)
+      //check the query field
+      if (req.query?.ref) {
+        const ref = (req.query as any).ref
+        const referrer = await influencerService.findInfluencerByRefCode(ref)
 
-          if (referrer) {
-            (req as any).referrer = referrer.id
-            return next()
-          } else {
-            return errorResponse(res, "Invalid referral code", 400)
-          }
-        } else {
+        if (referrer) {
+          (req as any).referrer = referrer.id
           return next()
+        } else {
+          return errorResponse(res, "Invalid referral code", 400)
         }
       } else {
         return next()

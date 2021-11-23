@@ -30,4 +30,29 @@ influencerRouter.put('/set-rate', verificationMiddleware.validateToken, verifica
   }
 })
 
+influencerRouter.post('/get-all', verificationMiddleware.validateToken, async (req: Request, res: Response)=>{
+  try{
+    const authUser = (req as any).user
+
+    const page = parseInt((req.query as any).page) || 1
+    const limit = parseInt((req.query as any).limit) || 15
+
+    //service is being called here
+    const response = await influencerService.getAllInfluencers(authUser, {page, limit})
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400)
+    }
+
+    return successRes(res, response.data, response.message)
+  }catch(error){
+    console.log(error)
+    return errorResponse(res, "an error occured, contact support", 500)
+  }
+})
+
+
+
+
+
 export default influencerRouter
