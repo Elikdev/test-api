@@ -1,5 +1,7 @@
 import { BaseService } from "../../helpers/db.helper"
 import { Room } from "./room.model"
+import { User } from "../user/user.model"
+import { Influencer } from "../influencer/influencer.model"
 
 class RoomService extends BaseService {
   super: any
@@ -40,6 +42,37 @@ class RoomService extends BaseService {
       ],
     })
   }
+
+  public async roomInstance(
+    room_id: string,
+    user: User,
+    influencer: Influencer
+  ): Promise<Room> {
+    const new_room = new Room()
+
+    new_room.room_id = room_id
+    new_room.fan = user
+    new_room.influencer = influencer
+
+    return new_room
+  }
+
+  public async saveRoom(room: Room): Promise<Room> {
+    return await this.save(Room, room)
+  }
+
+  public async createRoom(fan: User, influencer: Influencer) {
+    const randDate = new Date().getTime()
+    const room_id = "room" + randDate + Math.random().toString(36).slice(2, 9);
+
+    const new_room = await this.roomInstance(
+      room_id,
+      fan,
+      influencer
+    )
+    return await this.saveRoom(new_room)
+  }
+
 }
 
 export const roomService = new RoomService()

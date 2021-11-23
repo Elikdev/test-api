@@ -58,7 +58,7 @@ class MessageService extends BaseService {
     ///for each messages --check if the room are the same
     //using filter
     const first_msg = new_messages[0]
-    let notInTheSamRoom = new_messages.filter(
+    const notInTheSamRoom = new_messages.filter(
       (msg) =>
         first_msg.room_id.toString() !== msg.room_id.toString() &&
         first_msg.room !== msg.room
@@ -95,7 +95,7 @@ class MessageService extends BaseService {
     }
 
     //saving the messages
-    let messages_saved = []
+    const messages_saved = []
     for (const save_msg of new_messages) {
       const new_msg = await this.newInstanceOfMessage(save_msg)
 

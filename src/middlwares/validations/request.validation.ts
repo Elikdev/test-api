@@ -32,11 +32,25 @@ class RequestValidation{
 
     public updateRequest(){
         return celebrate({
-            body:Joi.object({
-                id:Joi.number().required(),
-                status:Joi.valid(RequestStatus.ACCEPTED, RequestStatus.REJECTED).required(),
-                reason:Joi.string()
-            })
+            body: Joi.object({
+                type: Joi.valid("accept", "decline").required(),
+                reason: Joi.string().when("type", {
+                    is: Joi.exist().equal("decline"),
+                    then: Joi.string().required(),
+                    otherwise: Joi.optional()
+                })
+            }),
+            params: {
+                requestId: Joi.number().required(),
+            }
+        })
+    }
+
+    public cancelRequest(){
+        return celebrate({
+            params: {
+                requestId: Joi.number().required(),
+            }
         })
     }
 }

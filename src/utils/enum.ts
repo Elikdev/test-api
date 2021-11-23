@@ -94,7 +94,8 @@ export type Banks = Bank[];
 export enum RequestStatus {
     ACCEPTED = "accepted",
     REJECTED = "rejected",
-    PENDING = "pending"
+    PENDING = "pending",
+    CANCELLED = "cancelled"
 }
 
 export enum RequestType{
