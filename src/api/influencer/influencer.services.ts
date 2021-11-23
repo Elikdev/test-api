@@ -1,5 +1,8 @@
-import { DeepPartial, Like } from "typeorm";
+import { DeepPartial, getRepository, Like, Not, Equal } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
+import { jwtCred } from "../../utils/enum";
+import { User } from "../user/user.model";
+import { userService } from "../user/user.services";
 import { Influencer } from "./influencer.model";
 
 
@@ -105,6 +108,43 @@ class InfluencerService extends BaseService {
 
   }
 
+  public async getAllInfluencers(authUser:jwtCred, iDTO: {page: number,  limit: number}) {
+    const user_id = authUser.id;
+
+    const {page, limit} = iDTO
+    const offset = limit * (page - 1)
+
+    //find the user
+    const user_exists = await userService.findUserWithId(user_id)
+
+    if(!user_exists) {
+      return this.internalResponse(false, {}, 400, "Invalid user")
+    }
+
+    const [list, count] = await getRepository(Influencer).findAndCount({
+      where: {account_type: "celebrity", id: Not(Equal(user_id))},
+      skip: offset,
+      take: limit
+    })
+
+    if(list.length <= 0) {
+      return this.internalResponse(false, {}, 400, "There are no influencers on the platform")
+    }
+
+    for (const influencer of list) {
+      delete influencer.password
+      delete influencer.email_verification
+      delete influencer.is_admin_verified
+    }
+
+    const response_data = {
+      influencers: list,
+      total_number: count,
+      number_of_pages: Math.ceil(count / limit)
+    }
+
+    return this.internalResponse(true, response_data, 200, "Influencers retrieved")
+  }
 
 }
 
