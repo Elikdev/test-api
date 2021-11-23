@@ -7,7 +7,7 @@
     <title>Finza</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
       * {
         margin: 0;
@@ -16,12 +16,12 @@
       }
       body {
         background-color: #d8dbdb;
-        font-family: "Roboto", sans-serif;
-        font-size: 18px;
+        font-family: "Oxygen", sans-serif;
+        font-size: 22px; 
         max-width: 800px;
         margin: 0 auto;
         padding: 2%;
-        color: #21252A;
+        color: #0B0B0B;
       }
       #wrapper {
         background-color: #fff;
@@ -38,6 +38,10 @@
         max-width: 220px;
         margin: 4% 0 0 3%;
       }
+      .head-text{ 
+        font-weight: 700 !important;
+        margin-bottom: 8% !important;
+      }
       .greetings{
         text-transform: capitalize;
         font-size: 18px;
@@ -53,9 +57,10 @@
       }
       .p-text {
        margin-bottom: 3%;
-       font-size: 16px;
+       font-size: 18px;
        line-height: 21px;
-       color: #21252A;
+       color: #0B0B0B;
+       font-weight: 400;
       }
       .p-text-small{
         font-size: 12px;
@@ -66,23 +71,24 @@
         font-weight: 600;
       }
       .code-block{
-        text-align: center;
         margin-top: 4%;
       }
       .code {
-        margin: 0.7rem 0;
-        color: blue;
+        margin: 0.5rem 0;
+        color: #000000;
         letter-spacing: 1rem;
         font-size: 1.7rem;
         font-weight: 700;
       }
-      .content .p-text b a {
+      .content .p-text b a,
+      .footer .p-text a  {
         text-decoration: none;
         color: #274ff0;
         font-weight: 800;
       }
       .footer {
-        background-color: rgba(39, 126, 240, 0.05);
+        background-color: #E5E5E5;
+        color: #828282;
         padding-top: 6%;
         font-size: 11px;
         text-align: center !important;
@@ -106,8 +112,12 @@
         display: inline;
         margin-left: 1.5%;
       }
-      .social li a {
+      .social li a,
+      .footer .p-text a {
         text-decoration: none;
+      }
+      .footer .p-address {
+        margin-left: -2% !important;
       }
     </style>
   </head>
@@ -116,17 +126,18 @@
       <div class="header">
         <div id="logo">
           <img
-            src="https://res.cloudinary.com/jimrid/image/upload/v1631000514/zx2hrm16s54z6gzlsdto.png"
-            alt="Finza logo"
+            src="https://res.cloudinary.com/elik/image/upload/v1637690408/elikdev/bamiki-logo-email_vyuvqp.svg"
+            alt="Bamiki logo"
           />
         </div>
       </div>
       <div class="content">
+        <p class="p-text head-text">Your Verification Code</p>
         <h2
           id="content-name"
-          class="greetings"
+          class="p-text"
         >
-          Hello <%- name %>,
+          Hi <%- name %>,
         </h2>
         <p class="p-text">
           <span class="p-span">You requested for:</span>
@@ -136,12 +147,13 @@
         </p>
         
         <div class="code-block">
-          <p class="p-text" style="text-align: center; font-size: 22px !important;">Please enter the code below:</p>
+          <p class="p-text">Please enter the code below:</p>
           <p class="p-text">
             <div class="code">
               <span class="code__val"><%- code %></span>
             </div>
           </p>
+          <p class="p-text" style="margin-top: 3%;">This code is valid for 10 minutes</p>
         </div>
 
 
@@ -151,41 +163,40 @@
       </div>
       <div class="footer">
         <p class="p-text">
-          You are receiving this email because you made a transaction that
-          partners with Finza to provide invoicing and payment processing
-          <p class="p-text">Dallas,Texas</p>
-         <p class="p-text">Finza 2021</p>
+          If you have any questions, please visit our <a href="http://www.bamiki.com/faq" target="_blank">FAQ</a> page or <a href="http://www.bamiki.com/contact" target="_blank">Contact Us</a>. Our support Team is always available.
+          <p class="p-text p-address">Dallas, Texas</p>
+         <p class="p-text p-address">Bamiki 2021</p>
         </p>
-        <div class="callout">
+        <div class="callout p-address">
           <ul class="social">
             <li>
               <a
                 class="fab"
-                href="https://www.facebook.com/finzapay"
+                href="https://www.facebook.com/bamiki"
                 target="_blank"
                 ><img
-                  src="https://res.cloudinary.com/jimrid/image/upload/v1631000614/qukqvh2xxscx9hsiosck.png"
+                  src="https://res.cloudinary.com/elik/image/upload/v1637690407/elikdev/facebook-email_nmrojl.svg"
                   alt="fb icon"
               /></a>
             </li>
             <li>
               <a
                 class="fab"
-                href="https://www.instagram.com/finzapay"
+                href="https://www.instagram.com/bamiki"
                 target="_blank"
                 ><img
-                  src="https://res.cloudinary.com/jimrid/image/upload/v1631000755/amhuhudamk9yffsg8oja.png"
+                  src="https://res.cloudinary.com/elik/image/upload/v1637690407/elikdev/instagram_kkobjj.svg"
                   alt="ig icon"
               /></a>
             </li>
             <li>
               <a
                 class="fab"
-                href="https://www.twitter.com/finzapay"
+                href="https://www.twitter.com/bamiki"
                 target="_blank"
                 ><img
 
-                  src="https://res.cloudinary.com/jimrid/image/upload/v1631000766/pztompx89epjtwlbal5m.png"
+                  src="https://res.cloudinary.com/elik/image/upload/v1637690407/elikdev/twitter-email_ix1lbo.svg"
                   alt="twitter icon"
               /></a>
             </li>
