@@ -148,6 +148,28 @@ class InfluencerService extends BaseService {
     }
 
     return this.internalResponse(true, response_data, 200, "Influencers retrieved")
+  } 
+
+  public async getOneInfluncer(authUser: jwtCred, iDTO: {id: number}) {
+    const user_id = authUser.id;
+
+    const { id } = iDTO
+
+    const user_exists = await userService.findUserWithId(user_id)
+
+    if(!user_exists) {
+      return this.internalResponse(false, {}, 400, "invalid user")
+    }
+
+    const influncer_exist = await influencerService.findInfluencerById(id)
+
+    if(!influncer_exist) {
+      return this.internalResponse(false, {}, 400, "influencer does not exist")
+    }
+
+    const full_details = await userService.aggregateUserDetails(influncer_exist.id, influncer_exist.account_type)
+
+    return this.internalResponse(true, full_details, 200, "Influencer details retrieved")
   }
 
 }

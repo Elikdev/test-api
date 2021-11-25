@@ -8,7 +8,7 @@ import appRoutes from "./routes";
 const app = express();
 app.use(helmet());
 app.use(express.json());
-// app.use(cors({origin: 'http://localhost:3000' || process.env.ADMIN_FRONTEND}));
+// app.use(cors());
 
 appRoutes(app);
 
