@@ -131,14 +131,18 @@ class InfluencerService extends BaseService {
       return this.internalResponse(false, {}, 400, "There are no influencers on the platform")
     }
 
+    let list_full = []
+
     for (const influencer of list) {
       delete influencer.password
       delete influencer.email_verification
       delete influencer.is_admin_verified
+      const full_details = await userService.aggregateUserDetails(influencer.id, influencer.account_type)
+      list_full.push(full_details)
     }
 
     const response_data = {
-      influencers: list,
+      influencers: list_full,
       total_number: count,
       number_of_pages: Math.ceil(count / limit)
     }

@@ -15,6 +15,12 @@ class AuthUtils {
   return jwt.sign(details, process.env.JWT_SECRET || "supersecrete");
  }
 
+ public generateAccessToken(details: jwtCred, exp: number): string {
+   return jwt.sign(details, process.env.JWT_SECRET || "supersecrete", {
+     expiresIn: exp,
+   })
+ }
+
  public verifyToken(token: string): {
   verified: boolean;
   userDetails?: jwtCred;
