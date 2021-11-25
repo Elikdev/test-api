@@ -52,6 +52,32 @@ influencerRouter.post('/get-all', verificationMiddleware.validateToken, async (r
 })
 
 
+influencerRouter.post(
+  "/find-one/:id",
+  verificationMiddleware.validateToken,
+  influencerValidation.getOneInfluencerValidation(),
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user
+
+      const id =  parseInt(req.params.id as any)
+
+      //service is being called here
+      const response = await influencerService.getOneInfluncer(authUser, { id })
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
+
 
 
 
