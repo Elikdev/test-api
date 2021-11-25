@@ -11,6 +11,8 @@ import { influencerService } from "../influencer/influencer.services"
 import { walletService } from "../wallet/wallet.services"
 import { fanService } from "../fan/fan.services"
 import { roomService } from "../room/room.service";
+import { RefreshToken } from "./refreshToken.model";
+import {v4 as uuidv4} from "uuid"
 
 class AuthService extends BaseService {
 
@@ -416,13 +418,41 @@ class AuthService extends BaseService {
   const update_details = { last_login: new Date(Date.now()) }
   const result = await userService.updateUser(user_exists, update_details);
   const { password, ...data } = result
+  
+  let token: any
 
-  const token = AuthModule.generateJWT({
-    id: user_exists.id,
-    email: user_exists.email,
-    full_name: user_exists.full_name,
-    handle: user_exists.handle,
-  })
+  if (user_exists.role === "BAMIKI_ADMIN") {
+    const access = AuthModule.generateAccessToken(
+      {
+        id: user_exists.id,
+        email: user_exists.email,
+        full_name: user_exists.full_name,
+        handle: user_exists?.handle || "bamiki-admin",
+      },
+      300 //5mins
+    )
+
+    const refresh = uuidv4()
+
+    //save the refresh token or update the existing one
+    const token_saved = await this.createRefreshToken(user_exists, 604800000, refresh) //expires in 7 days
+
+    if(!token_saved) {
+      return this.internalResponse(false, {}, 400, "Error in saving admin's token")
+    }
+
+    token = {
+      refresh,
+      access,
+    }
+  } else {
+    token = AuthModule.generateJWT({
+      id: user_exists.id,
+      email: user_exists.email,
+      full_name: user_exists.full_name,
+      handle: user_exists.handle,
+    })
+  }
 
   // get data
   const userDetails = await userService.aggregateUserDetails(user_exists.id, user_exists.account_type);
@@ -591,6 +621,93 @@ class AuthService extends BaseService {
     }
 
     return this.internalResponse(true, {verified: true, user: user_exists.id}, 200, "Token and room verified")
+  }
+
+  public async createRefreshToken (user: any, expires: number, token: string) {
+    let expiry_time = new Date(Date.now() + expires)
+
+    //find if there is an existing one
+    const rt_exists = await this.findOne(RefreshToken, {
+      where: { user: user.id },
+    })
+
+    if (rt_exists) {
+      const update_fields = {
+        token: token,
+        expires_in: expiry_time,
+      }
+      const update_token = this.schema(RefreshToken).merge(
+        rt_exists,
+        update_fields
+      )
+      return await this.updateOne(RefreshToken, update_token)
+    } else {
+      const new_token = getRepository(RefreshToken).create({
+        token,
+        expires_in: expiry_time,
+        user,
+      })
+
+      return this.save(RefreshToken, new_token)
+    }
+  }
+
+  public async refreshToken (rtDTO: {token: string, userId: number}) {
+    const {token, userId} = rtDTO
+
+    if(!token || !userId) {
+      return this.internalResponse(false, {}, 400, "Both token and user id are required")
+    }
+
+    const token_exists = await this.findOne(RefreshToken, {
+      where: {token, user: userId}
+    })
+
+    if(!token_exists) {
+      return this.internalResponse(false, {}, 400, "Please make a new signin request")
+    }
+
+    if(token_exists.expires_in.getTime() < new Date().getTime()) {
+      return this.internalResponse(false, {}, 400, "Please make a new signin request")
+    }
+
+    const user_exists = await userService.findUserWithId(userId)
+    
+    if(!user_exists){
+      return this.internalResponse(false, {}, 400, "Please make a new signin request")
+    }
+
+    const access = AuthModule.generateAccessToken(
+      {
+        id: user_exists.id,
+        email: user_exists.email,
+        full_name: user_exists.full_name,
+        handle: user_exists?.handle || "bamiki-admin",
+      },
+      300 //5mins
+    )
+
+    const refresh = uuidv4()
+    
+    //update the token
+    const token_updated = await this.createRefreshToken(user_exists, 604800, refresh)
+
+    if(!token_updated) {
+      return this.internalResponse(false, {}, 400, "error in updating the admin token")
+    }
+
+    //remove password
+    const {password, email_verification, ...data} = user_exists
+
+    const response = {
+      userDetails: data,
+      token: {
+        refresh,
+        access
+      }
+    }
+
+    return this.internalResponse(true, response, 200, "Token refreshed")
   }
     
 }

@@ -15,6 +15,11 @@ export enum AccountType {
     CELEB = "celebrity"
 }
 
+export enum RoleType {
+    BAMIKI_ADMIN = "BAMIKI_ADMIN",
+    BAMIKI_USER = "BAMIKI_USER"
+}
+
 export enum ChannelType {
     EMAIL = "email",
     SMS = "sms",

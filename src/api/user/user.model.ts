@@ -14,9 +14,10 @@ import { Requests } from "../requests/request.model"
 import { Follow } from "../follow/follow.model"
 import { Wallet } from "../wallet/wallet.model"
 import { Industry } from "../industry/industry.model"
-import { AccountStatus } from "../../utils/enum"
+import { AccountStatus, RoleType } from "../../utils/enum"
 import { Room } from "../room/room.model"
 import { Message } from "../messages/messages.model"
+import { RefreshToken } from "../auth/refreshToken.model"
 
 @Entity({ name: "users" })
 @TableInheritance({ column: { type: "varchar", name: "type" } })
@@ -54,6 +55,13 @@ export class User extends BaseModel {
 
   @Column()
   account_type: string
+  
+  @Column({
+    default: RoleType.BAMIKI_USER,
+    type: "enum",
+    enum: RoleType,
+  })
+  role: string
 
   @Column({ nullable: true })
   profile_image: string
@@ -108,5 +116,7 @@ export class User extends BaseModel {
 
   @OneToMany(()=>Message, message=>message.receiver)
   received:Message[]
-  
+
+  @OneToOne(() =>RefreshToken, rfreshT => rfreshT.user )
+  refresh_token: RefreshToken
 }
