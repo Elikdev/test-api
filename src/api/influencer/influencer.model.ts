@@ -3,6 +3,7 @@ import { User } from "../user/user.model"
 import { Wallet } from "../wallet/wallet.model"
 import { Bank } from "../bank/bank.model"
 import { Rating } from "../ratings/ratings.model"
+import { ShoutOutVideos } from "../requests/shoutOut.model"
 
 @ChildEntity()
 export class Influencer extends User {
@@ -41,4 +42,7 @@ export class Influencer extends User {
 
   @Column()
   rate_shout_out:number
+
+  @OneToMany(() => ShoutOutVideos, (sov) => sov.influencer)
+  shout_out_videos: ShoutOutVideos[]
 }

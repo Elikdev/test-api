@@ -119,4 +119,89 @@ requestRouter
     }
 )
 
+
+requestRouter.post(
+  "/save-shout-out-video",
+  verificationMiddleware.validateToken,
+  requestValidation.saveShoutVideo(),
+  async (req: Request, res: Response) => {
+    try {
+      const response = await requestService.saveShoutOutVideos(req.body)
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
+requestRouter.post(
+    "/get-all-shout-out-videos",
+    verificationMiddleware.validateToken,
+    async (req: Request, res: Response) => {
+      try {
+        const response = await requestService.getAllShoutOutVideos()
+  
+        if (!response.status) {
+          return errorResponse(res, response.message, 400)
+        }
+  
+        return successRes(res, response.data, response.message)
+      } catch (error) {
+        console.log(error)
+        return errorResponse(res, "an error occured, contact support", 500)
+      }
+    }
+  )
+
+  requestRouter.post(
+    "/get-all-shout-out-videos-for-user",
+    verificationMiddleware.validateToken,
+    async (req: Request, res: Response) => {
+      try {
+        const authUser = (req as any).user
+        const response = await requestService.getAllShoutOutVideosForUser(
+          authUser
+        )
+
+        if (!response.status) {
+          return errorResponse(res, response.message, 400)
+        }
+
+        return successRes(res, response.data, response.message)
+      } catch (error) {
+        console.log(error)
+        return errorResponse(res, "an error occured, contact support", 500)
+      }
+    }
+  )
+
+  requestRouter.post(
+    "/get-all-shout-out-videos-for-an-influencer/:influencerId",
+    verificationMiddleware.validateToken,
+    requestValidation.getShoutOutByInfluencer(),
+    async (req: Request, res: Response) => {
+      try {
+        const { influencerId } = req.params
+        const response = await requestService.getAllShoutOutVideosByInfluencer(
+          Number(influencerId)
+        )
+
+        if (!response.status) {
+          return errorResponse(res, response.message, 400)
+        }
+
+        return successRes(res, response.data, response.message)
+      } catch (error) {
+        console.log(error)
+        return errorResponse(res, "an error occured, contact support", 500)
+      }
+    }
+  )
+
 export default requestRouter;
