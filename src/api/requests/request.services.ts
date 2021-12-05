@@ -14,6 +14,10 @@ import { Wallet } from "../wallet/wallet.model"
 import { sendEmail, compileEjs } from "../../helpers/mailer.helper"
 import { scheduleRequestJobChecker }from "../../helpers/cronjobs"
 import { roomService } from "../room/room.service"
+import { ShoutOutVideos } from "./shoutOut.model";
+import { Fan } from "../fan/fan.model"
+import { Influencer } from "../influencer/influencer.model"
+import { fanService } from "../fan/fan.services";
 
 class RequestService extends BaseService{
     super:any
@@ -488,6 +492,152 @@ class RequestService extends BaseService{
             },
             relations: ["influencer", "fan"]
         })
+    }
+
+    public async shoutOutVideoInstance(video_url: string,  request: Requests, fan: Fan, influencer: Influencer ) {
+        const new_shout_out = new ShoutOutVideos()
+
+        new_shout_out.video_url = video_url
+        new_shout_out.request = request
+        new_shout_out.fan = fan
+        new_shout_out.influencer = influencer
+
+        return new_shout_out
+    }
+
+    public async saveShoutOut(sov: ShoutOutVideos) {
+        const saved_shout_out = await this.save(ShoutOutVideos, sov)
+
+        return saved_shout_out
+    }
+
+    public async saveShoutOutVideos(SvDTO: {requestId: number, video_url: string}) {
+        const { requestId, video_url } = SvDTO
+
+        //check for the request if it exists
+        const request_exists = await this.findRequestWithId(requestId)
+
+        if(!request_exists) {
+            return this.internalResponse(false, {}, 400, "Request does not exist")
+        }
+
+        //check if the request is a shout out 
+        if(request_exists.request_type !== "shout out") {
+            return this.internalResponse(false, {}, 400, "Request type must be a shout out")
+        }
+
+        //get the fan and the influnecer Id from the request
+        const { fan, influencer } = request_exists
+
+        //find fan by id
+        const fan_exists = await fanService.findFanById(fan.id)
+
+        if(!fan_exists) {
+            return this.internalResponse(false, {}, 400, "Invalid request as fan does not exist")
+        }
+
+        //find influencer by id
+        const influencer_exists = await influencerService.findInfluencerById(influencer.id)
+
+        if(!influencer_exists) {
+            return this.internalResponse(false, {}, 400, "Invalid request as influencer does not esist")
+        }
+
+        //save the shout out video
+        const new_shout_out_video = await this.shoutOutVideoInstance(video_url, request_exists, fan_exists, influencer_exists)
+
+        const saved_shout_out_video = await this.saveShoutOut(new_shout_out_video) 
+
+        if(!saved_shout_out_video) {
+            return this.internalResponse(false, {}, 400, "Failed to save the shout out video")
+        }
+
+        const {fan:req_fan, influencer:req_influencer, ...requestData} = saved_shout_out_video.request
+        const {password, email_verification, ...influencerData} = saved_shout_out_video.influencer
+        const {password:fanPwrd, email_verification:fanEv, ...fanData} = saved_shout_out_video.fan
+
+        const response = {...saved_shout_out_video, request: requestData, fan: fanData, influencer: influencerData}
+
+        return this.internalResponse(true, response, 200, "Shout out video saved successfully")
+    }
+
+    public async getAllShoutOutVideos() {
+        const [soVideos, count] = await getRepository(ShoutOutVideos).findAndCount({
+            relations: ['request', "influencer", "fan" ]
+        }) 
+
+        if(soVideos.length <= 0) {
+            return this.internalResponse(false, {}, 400, "No shout out videos available")
+        }
+
+        for (const soVideo of soVideos) {
+            delete soVideo.request.fan
+            delete soVideo.request.influencer
+            delete soVideo.fan.password
+            delete soVideo.fan.email_verification
+            delete soVideo.influencer.password
+            delete soVideo.influencer.email_verification
+        }
+
+        return this.internalResponse(true, {soVideos, total: count}, 200, "Shout out videos retrieved")
+        
+    }
+
+    public async getAllShoutOutVideosForUser(authUser: jwtCred) {
+        const userId = authUser.id
+
+        const [soVideos, count] = await getRepository(ShoutOutVideos).findAndCount({
+            where: [
+                {fan: userId},
+                {influencer: userId}
+            ],
+            relations: ['request', "influencer", "fan" ]
+        }) 
+
+        if(soVideos.length <= 0) {
+            return this.internalResponse(false, {}, 400, "No shout out videos available")
+        }
+
+        for (const soVideo of soVideos) {
+            delete soVideo.request.fan
+            delete soVideo.request.influencer
+            delete soVideo.fan.password
+            delete soVideo.fan.email_verification
+            delete soVideo.influencer.password
+            delete soVideo.influencer.email_verification
+        }
+
+        return this.internalResponse(true, {soVideos, total: count}, 200, "Shout out videos retrieved")
+    }
+
+    public async getAllShoutOutVideosByInfluencer(influencerId: number) {
+
+        //if the influencer eists
+        const influencer_exists = await influencerService.findInfluencerById(influencerId)
+
+        if(!influencer_exists) {
+            return this.internalResponse(false, {}, 400, "Influencer does not exist")
+        }
+
+        const [soVideos, count] = await getRepository(ShoutOutVideos).findAndCount({
+            where: {influencer: influencer_exists.id},
+            relations: ['request', "influencer", "fan" ]
+        }) 
+
+        if(soVideos.length <= 0) {
+            return this.internalResponse(false, {}, 400, "No shout out videos available")
+        }
+
+        for (const soVideo of soVideos) {
+            delete soVideo.request.fan
+            delete soVideo.request.influencer
+            delete soVideo.fan.password
+            delete soVideo.fan.email_verification
+            delete soVideo.influencer.password
+            delete soVideo.influencer.email_verification
+        }
+
+        return this.internalResponse(true, {soVideos, total: count}, 200, "Shout out videos retrieved")
     }
 
 }

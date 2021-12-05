@@ -53,6 +53,23 @@ class RequestValidation{
             }
         })
     }
+
+    public saveShoutVideo(){
+        return celebrate({
+            body: Joi.object({
+                requestId: Joi.number().required(),
+                video_url: Joi.string().uri().required()
+            })
+        })
+    }
+
+    public getShoutOutByInfluencer(){
+        return celebrate({
+            params: {
+                influencerId: Joi.number().required(),
+            }
+        })
+    }
 }
 
 export const requestValidation = new RequestValidation()
