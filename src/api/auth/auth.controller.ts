@@ -214,4 +214,21 @@ authRouter.post("/refresh-token", async (req: Request, res: Response) => {
   }
 })
 
+authRouter.post("/set-to-admin/:userId", async (req: Request, res: Response) => {
+  try {
+    const {userId} = req.params
+    const response =  await authService.setToAdmin(Number(userId))
+
+    if (!response.status) {
+      return errorResponse(res, response.message, 400)
+    }
+
+    return successRes(res, response.data, response.message)
+
+  } catch (error) {
+    console.log(error)
+    return errorResponse(res, 'an error occured, contact support', 500)
+  }
+})
+
 export default authRouter;
