@@ -1,6 +1,6 @@
 import { getRepository } from "typeorm"
 import {BaseService} from "../../helpers/db.helper"
-import { AccountType } from '../../utils/enum';
+import { AccountType, RoleType } from '../../utils/enum';
 import {AuthModule} from "../../utils/auth"
 import {Fan} from "../fan/fan.model"
 import { User } from "../user/user.model"
@@ -708,6 +708,27 @@ class AuthService extends BaseService {
     }
 
     return this.internalResponse(true, response, 200, "Token refreshed")
+  }
+
+  public async setToAdmin (userId: number) {
+    const user_exists = await userService.findUserWithId(userId)
+
+    if(!user_exists) {
+      return this.internalResponse(false, {}, 400, "user does not exist")
+    }
+
+    //update user
+    const update_details = {
+      role: RoleType.BAMIKI_ADMIN
+    }
+
+    const user_updated = userService.updateUser(user_exists, update_details)
+
+    if(!user_updated) {
+      return this.internalResponse(false, {}, 400, "error in updating user")
+    }
+
+    return this.internalResponse(true, {}, 200, "User updated")
   }
     
 }
