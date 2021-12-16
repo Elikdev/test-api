@@ -10,6 +10,7 @@ import industryRouter from "./api/industry/industry.controller"
 import transactionRouter from "./api/transactions/transaction.controller";
 import tempRouter from "./api/temp/temp.controller";
 import messageRouter from "./api/messages/messages.controller";
+import adminRouter from "./api/admin/admin.controller";
 
 const apiPrefix = "/api/v1";
 
@@ -61,7 +62,11 @@ const routes = [
   {
     prefix: "message",
     name: messageRouter,
-  }
+  },
+  {
+    prefix: "admin",
+    name: adminRouter,
+  },
 ];
 
 export default (app: any) => {

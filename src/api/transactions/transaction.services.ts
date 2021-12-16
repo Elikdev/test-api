@@ -146,6 +146,12 @@ class TransactionService extends BaseService {
 
       return this.internalResponse(true, transaction, 200, "transaction found")
   }
+
+  public async getAllTransactions() {
+    const transactions = await getRepository(Transactions).find({
+      order: {created_at: "DESC"}
+    })
+  }
 }
 
 export const transactionService = new TransactionService()

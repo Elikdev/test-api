@@ -1,4 +1,4 @@
-import { getConnection } from "typeorm"
+import { getConnection, getRepository } from "typeorm"
 import { BaseService } from "../../helpers/db.helper"
 import { DeepPartial } from "typeorm"
 import { Wallet } from "./wallet.model"
@@ -201,6 +201,23 @@ class WalletService extends BaseService {
           ? data_received_msg
           : "Error in verifying payment. Try again later"
       )
+    }
+  }
+
+  public async allEarnings() {
+    const all_wallets = await getRepository(Wallet).find({})
+
+    let earnings: any;
+
+    if (all_wallets.length <= 0) {
+      return 0.0
+    } else {
+      const actual_wallets = all_wallets.filter((wallt) =>  wallt.wallet_balance !== null)
+       earnings = actual_wallets.reduce((acc, wallt) => {
+        return acc + parseFloat(wallt?.wallet_balance)
+      }, 0)
+
+      return earnings
     }
   }
 }

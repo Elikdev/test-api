@@ -2,7 +2,7 @@ import { DeepPartial } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import { User } from './user.model'
 import { getRepository, Like } from "typeorm"
-import { jwtCred } from "../../utils/enum"
+import { AccountType, jwtCred, RoleType } from "../../utils/enum"
 import { AuthModule } from "../../utils/auth"
 
 
@@ -186,6 +186,14 @@ class UserService extends BaseService{
 
         return `user with is ${id} deleted successfully`
         
+    }
+
+    public async findAllUsers(account_type: AccountType) {
+        const [users, count] = await getRepository(User).findAndCount({
+            where: {account_type: account_type, role: RoleType.BAMIKI_USER }
+        })
+
+        return count
     }
 
 }

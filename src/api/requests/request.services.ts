@@ -640,6 +640,18 @@ class RequestService extends BaseService{
         return this.internalResponse(true, {soVideos, total: count}, 200, "Shout out videos retrieved")
     }
 
+    public async allRequestsCount() {
+        const [list, count] = await getRepository(Requests).findAndCount({
+            order: {updated_at: "DESC"}
+        })
+
+        return {
+            list,
+            count
+        };
+
+    }
+
 }
 
 export const requestService = new RequestService()

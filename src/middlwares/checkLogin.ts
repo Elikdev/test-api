@@ -3,6 +3,7 @@ import { errorResponse } from "../helpers/response.helper";
 import { AuthModule } from "../utils/auth";
 import { userService } from "../api/user/user.services";
 import { influencerService } from "../api/influencer/influencer.services"
+import { RoleType } from "../utils/enum";
 
 class VerificationMiddleware {
   public validateToken = async (
@@ -10,42 +11,42 @@ class VerificationMiddleware {
     res: Response,
     next: NextFunction
   ) => {
-    const authHeader = req.headers.authorization;
-    let token: string;
-    if (!authHeader) return errorResponse(res, "Unauthorized", 401);
+    const authHeader = req.headers.authorization
+    let token: string
+    if (!authHeader) return errorResponse(res, "Unauthorized", 401)
 
     //separate the Bearer from the string if it exists
-    const separateBearer = authHeader.split(" ");
+    const separateBearer = authHeader.split(" ")
     if (separateBearer.includes("Bearer")) {
-      token = separateBearer[1];
+      token = separateBearer[1]
     } else {
-      token = authHeader;
+      token = authHeader
     }
 
     try {
-      const grantAccess = AuthModule.verifyToken(token);
-      const { userDetails, verified } = grantAccess;
+      const grantAccess = AuthModule.verifyToken(token)
+      const { userDetails, verified } = grantAccess
       if (!verified) {
-        return errorResponse(res, "Unauthorized", 401);
+        return errorResponse(res, "Unauthorized", 401)
       }
 
-      (req as any).user = await userService.getUserDetails(userDetails.id)
+      ;(req as any).user = await userService.getUserDetails(userDetails.id)
 
-      return next();
+      return next()
     } catch (err) {
       if (err?.name === "TokenExpiredError") {
-        return errorResponse(res, "Unauthorized. Token expired", 401);
+        return errorResponse(res, "Unauthorized. Token expired", 401)
       }
       if (err?.name === "JsonWebTokenError") {
-        return errorResponse(res, "Unauthorized. Invalid token format.", 401);
+        return errorResponse(res, "Unauthorized. Invalid token format.", 401)
       }
       return errorResponse(
         res,
         "Something went wrong, please try again later.",
         500
-      );
+      )
     }
-  };
+  }
 
   public checkUserType = async (
     userType: string,
@@ -53,7 +54,7 @@ class VerificationMiddleware {
     res: Response,
     next: NextFunction
   ) => {
-    const user = (req as any).user;
+    const user = (req as any).user
     if (user.account_type.toLowerCase() !== userType) {
       return errorResponse(
         res,
@@ -77,7 +78,7 @@ class VerificationMiddleware {
         const referrer = await influencerService.findInfluencerByRefCode(ref)
 
         if (referrer) {
-          (req as any).referrer = referrer.id
+          ;(req as any).referrer = referrer.id
           return next()
         } else {
           return errorResponse(res, "Invalid referral code", 400)
@@ -95,13 +96,34 @@ class VerificationMiddleware {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    await this.checkUserType("celebrity", req, res, next);
-  };
+    await this.checkUserType("celebrity", req, res, next)
+  }
 
-  public checkFan = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    await this.checkUserType("fan", req, res, next);
-  };
+  public checkFan = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    await this.checkUserType("fan", req, res, next)
+  }
 
+  public checkAdmin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const user = (req as any).user
+
+    if (user.role !== RoleType.BAMIKI_ADMIN) {
+      return errorResponse(
+        res,
+        "Unauthorized. Require higher permissions to perform action",
+        401
+      )
+    } else {
+      return next()
+    }
+  }
 }
 
 export const verificationMiddleware = new VerificationMiddleware();

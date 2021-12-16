@@ -172,6 +172,15 @@ class InfluencerService extends BaseService {
     return this.internalResponse(true, full_details, 200, "Influencer details retrieved")
   }
 
+  public async getInfluencerWithVerifications(admin_verified) {
+    const celebrities = await getRepository(Influencer).find({
+      where: {is_admin_verified: admin_verified},
+      order: {updated_at: "DESC"}
+    })
+
+    return celebrities;
+  }
+
 }
 
 export const influencerService = new InfluencerService()
