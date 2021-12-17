@@ -124,3 +124,15 @@ export type IncomingMessage = {
     created_at: Date;
     updated_at: Date;
    }
+
+export enum AdminCategory {
+    SUPER_ADMIN = "super admin",
+    SUB_ADMIN = "sub admin"
+}
+
+export enum Permissions {
+    VERIFY_INFLUENCERS = "verify influncers",
+    CHAT_SUPPORT = "chat support",
+    FREEZE_ACCOUNT = 'freeze accounts',
+    BLOCK_ACCOUNT = "block accounts"
+}

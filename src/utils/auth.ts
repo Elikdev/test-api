@@ -102,6 +102,15 @@ class AuthUtils {
 	}
   return ref
  }
+
+ public removeDetailsfromUserData(userData: any) {
+   for (const data of userData) {
+     delete data?.password,
+     delete data?.email_verification
+   }
+
+   return userData
+ }
 }
 
 export const AuthModule = new AuthUtils()

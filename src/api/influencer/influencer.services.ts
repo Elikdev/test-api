@@ -1,5 +1,6 @@
 import { DeepPartial, getRepository, Like, Not, Equal } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
+import { AuthModule } from "../../utils/auth";
 import { jwtCred } from "../../utils/enum";
 import { User } from "../user/user.model";
 import { userService } from "../user/user.services";
@@ -170,6 +171,21 @@ class InfluencerService extends BaseService {
     const full_details = await userService.aggregateUserDetails(influncer_exist.id, influncer_exist.account_type)
 
     return this.internalResponse(true, full_details, 200, "Influencer details retrieved")
+  }
+
+  public async getInfluencerWithVerifications(admin_verified) {
+    const celebrities = await getRepository(Influencer).find({
+      where: {is_admin_verified: admin_verified},
+      order: {updated_at: "DESC"}
+    })
+
+    let data = []
+
+    if(celebrities.length > 0) {
+      data = AuthModule.removeDetailsfromUserData(celebrities)
+    }
+
+    return data;
   }
 
 }

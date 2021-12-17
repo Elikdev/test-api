@@ -146,6 +146,22 @@ class TransactionService extends BaseService {
 
       return this.internalResponse(true, transaction, 200, "transaction found")
   }
+
+  public async getAllTransactions() {
+    const transactions = await getRepository(Transactions).find({
+      order: {created_at: "DESC"},
+      relations: ["request", "user"]
+    })
+
+    if(transactions.length > 0) {
+      for (const t of transactions) {
+        delete t.user.email_verification
+        delete t.user.password
+      }
+    }
+    
+    return transactions
+  }
 }
 
 export const transactionService = new TransactionService()
