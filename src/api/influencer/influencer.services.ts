@@ -1,5 +1,6 @@
 import { DeepPartial, getRepository, Like, Not, Equal } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
+import { AuthModule } from "../../utils/auth";
 import { jwtCred } from "../../utils/enum";
 import { User } from "../user/user.model";
 import { userService } from "../user/user.services";
@@ -178,7 +179,13 @@ class InfluencerService extends BaseService {
       order: {updated_at: "DESC"}
     })
 
-    return celebrities;
+    let data = []
+
+    if(celebrities.length > 0) {
+      data = AuthModule.removeDetailsfromUserData(celebrities)
+    }
+
+    return data;
   }
 
 }

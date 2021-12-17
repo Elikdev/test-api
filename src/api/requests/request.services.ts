@@ -642,9 +642,19 @@ class RequestService extends BaseService{
 
     public async allRequestsCount() {
         const [list, count] = await getRepository(Requests).findAndCount({
-            order: {updated_at: "DESC"}
+            order: {updated_at: "DESC"},
+            relations: ["fan", "influencer"]
         })
 
+        if(list.length > 0){
+           for (const req of list) {
+               delete req.fan.email_verification
+               delete req.influencer.email_verification
+               delete req.fan.password,
+               delete req.influencer.password
+           }
+        }
+       
         return {
             list,
             count

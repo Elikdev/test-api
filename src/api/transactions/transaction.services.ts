@@ -149,8 +149,18 @@ class TransactionService extends BaseService {
 
   public async getAllTransactions() {
     const transactions = await getRepository(Transactions).find({
-      order: {created_at: "DESC"}
+      order: {created_at: "DESC"},
+      relations: ["request", "user"]
     })
+
+    if(transactions.length > 0) {
+      for (const t of transactions) {
+        delete t.user.email_verification
+        delete t.user.password
+      }
+    }
+    
+    return transactions
   }
 }
 
