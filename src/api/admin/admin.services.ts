@@ -58,6 +58,45 @@ class AdminService extends BaseService {
 
   return this.internalResponse(true, response, 200, "Dashboard retrieved!")
  }
+
+
+ public async influencersContent() {
+  //influencers details
+  const {list: influencers, count} = await influencerService.getInfluencersForAdmin()
+
+  const {list: influencersReq, count: influencersReqCount} = await requestService.allRequestsCount()
+
+  const transactions = await transactionService.getAllTransactions()
+  
+  const response = {
+   influencers,
+   count,
+   influencers_requests: influencersReq,
+   influencers_req_count: influencersReqCount,
+   transactions
+  }
+
+  return this.internalResponse(true, response, 200, "influencers content retrieved!")
+ }
+
+ public async fansContent() {
+  //fan details
+  const {list: fans, count} = await fanService.getFansForAdmin()
+
+  const {list: fansReq, count: fansReqCount} = await requestService.allRequestsCount()
+
+  const transactions = await transactionService.getAllTransactions()
+
+  const response = {
+   fans,
+   count,
+   fans_request: fansReq,
+   fans_req_count: fansReqCount,
+   transactions
+  }
+
+  return this.internalResponse(true, response, 200, "fans content retrieved!")
+ }
 }
 
 

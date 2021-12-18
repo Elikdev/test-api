@@ -429,7 +429,7 @@ class AuthService extends BaseService {
         full_name: user_exists.full_name,
         handle: user_exists?.handle || "bamiki-admin",
       },
-      300 //5mins(300)
+      300000 //5mins(300)
     )
 
     const refresh = uuidv4()

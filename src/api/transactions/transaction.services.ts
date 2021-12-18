@@ -153,11 +153,26 @@ class TransactionService extends BaseService {
       relations: ["request", "user"]
     })
 
+    let each_request: any
+
     if(transactions.length > 0) {
       for (const t of transactions) {
         delete t.user.email_verification
         delete t.user.password
+
+      each_request =  await getRepository(Requests).findOne({
+          where: {id: t.request.id},
+          relations: ["fan", "influencer"]
+        })
+
+        delete each_request.fan.email_verification
+        delete each_request.fan.password
+        delete each_request.influencer.email_verification
+        delete each_request.influencer.password
+  
+        t.request = each_request
       }
+
     }
     
     return transactions
