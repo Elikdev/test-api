@@ -21,7 +21,7 @@ class InfluencerService extends BaseService {
     live_video: string,
     account_type: string,
     referral_code: string,
-    referred_by: any,
+    referred_by: any
   ) {
     const celeb = new Influencer()
     celeb.full_name = full_name
@@ -60,16 +60,15 @@ class InfluencerService extends BaseService {
   }
 
   public async findInfluencerById(id: number) {
-      const influencer = await this.getOne(Influencer, id)
-      return influencer
-   
+    const influencer = await this.getOne(Influencer, id)
+    return influencer
   }
 
   public async findInfluencerByRefCode(ref: any) {
     const user = await this.findOne(Influencer, {
       where: {
         referral_code: ref,
-        is_admin_verified: true
+        is_admin_verified: true,
       },
     })
 
@@ -88,48 +87,61 @@ class InfluencerService extends BaseService {
     return influencer_list
   }
 
-
-  public async setRate(type:string, amount:number, id:number){
-    try{
+  public async setRate(type: string, amount: number, id: number) {
+    try {
       const influencer = await this.findInfluencerById(id)
 
-      if(!influencer) {
-        return this.internalResponse(false, {}, 400, "Influencer does not exist")
+      if (!influencer) {
+        return this.internalResponse(
+          false,
+          {},
+          400,
+          "Influencer does not exist"
+        )
       }
-      
-      if(type === 'dm'){
-        return await this.updateInfluencer(influencer,{rate_dm:amount})
+
+      if (type === "dm") {
+        return await this.updateInfluencer(influencer, { rate_dm: amount })
       }
-      if(type === 'shoutout'){
-        return await this.updateInfluencer(influencer,{rate_shout_out:amount})
+      if (type === "shoutout") {
+        return await this.updateInfluencer(influencer, {
+          rate_shout_out: amount,
+        })
       }
-    }catch(error){
+    } catch (error) {
       throw error
     }
-
   }
 
-  public async getAllInfluencers(authUser:jwtCred, iDTO: {page: number,  limit: number}) {
-    const user_id = authUser.id;
+  public async getAllInfluencers(
+    authUser: jwtCred,
+    iDTO: { page: number; limit: number }
+  ) {
+    const user_id = authUser.id
 
-    const {page, limit} = iDTO
+    const { page, limit } = iDTO
     const offset = limit * (page - 1)
 
     //find the user
     const user_exists = await userService.findUserWithId(user_id)
 
-    if(!user_exists) {
+    if (!user_exists) {
       return this.internalResponse(false, {}, 400, "Invalid user")
     }
 
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where: {account_type: "celebrity", id: Not(Equal(user_id))},
+      where: { account_type: "celebrity", id: Not(Equal(user_id)) },
       skip: offset,
-      take: limit
+      take: limit,
     })
 
-    if(list.length <= 0) {
-      return this.internalResponse(false, {}, 400, "There are no influencers on the platform")
+    if (list.length <= 0) {
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "There are no influencers on the platform"
+      )
     }
 
     let list_full = []
@@ -138,65 +150,87 @@ class InfluencerService extends BaseService {
       delete influencer.password
       delete influencer.email_verification
       delete influencer.is_admin_verified
-      const full_details = await userService.aggregateUserDetails(influencer.id, influencer.account_type)
+      const full_details = await userService.aggregateUserDetails(
+        influencer.id,
+        influencer.account_type
+      )
       list_full.push(full_details)
     }
 
     const response_data = {
       influencers: list_full,
       total_number: count,
-      number_of_pages: Math.ceil(count / limit)
+      number_of_pages: Math.ceil(count / limit),
     }
 
-    return this.internalResponse(true, response_data, 200, "Influencers retrieved")
-  } 
+    return this.internalResponse(
+      true,
+      response_data,
+      200,
+      "Influencers retrieved"
+    )
+  }
 
-  public async getOneInfluncer(authUser: jwtCred, iDTO: {id: number}) {
-    const user_id = authUser.id;
+  public async getOneInfluncer(authUser: jwtCred, iDTO: { id: number }) {
+    const user_id = authUser.id
 
     const { id } = iDTO
 
     const user_exists = await userService.findUserWithId(user_id)
 
-    if(!user_exists) {
+    if (!user_exists) {
       return this.internalResponse(false, {}, 400, "invalid user")
     }
 
     const influncer_exist = await influencerService.findInfluencerById(id)
 
-    if(!influncer_exist) {
+    if (!influncer_exist) {
       return this.internalResponse(false, {}, 400, "influencer does not exist")
     }
 
-    const full_details = await userService.aggregateUserDetails(influncer_exist.id, influncer_exist.account_type)
+    const full_details = await userService.aggregateUserDetails(
+      influncer_exist.id,
+      influncer_exist.account_type
+    )
 
-    return this.internalResponse(true, full_details, 200, "Influencer details retrieved")
+    return this.internalResponse(
+      true,
+      full_details,
+      200,
+      "Influencer details retrieved"
+    )
   }
 
   public async getInfluencerWithVerifications(admin_verified) {
     const celebrities = await getRepository(Influencer).find({
-      where: {is_admin_verified: admin_verified},
-      order: {updated_at: "DESC"}
+      where: { is_admin_verified: admin_verified },
+      order: { updated_at: "DESC" },
     })
 
     let data = []
 
-    if(celebrities.length > 0) {
+    if (celebrities.length > 0) {
       data = AuthModule.removeDetailsfromUserData(celebrities)
     }
 
-    return data;
+    return data
   }
 
   public async getInfluencersForAdmin() {
     const [list, count] = await getRepository(User).findAndCount({
-      where: {account_type: AccountType.CELEB, role: RoleType.BAMIKI_USER},
-      order: {created_at: "DESC"},
-      relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
-    }) 
+      where: { account_type: AccountType.CELEB, role: RoleType.BAMIKI_USER },
+      order: { created_at: "DESC" },
+      relations: [
+        "requests",
+        "transactions",
+        "shout_out_videos",
+        "ratings",
+        "followers",
+        "wallet",
+      ],
+    })
 
-
-    if(list.length > 0) {
+    if (list.length > 0) {
       for (const influencer of list) {
         delete influencer.password
         delete influencer.email_verification
@@ -205,18 +239,28 @@ class InfluencerService extends BaseService {
 
     return {
       list,
-      count
+      count,
     }
   }
 
   public async getNewlyRegisteredInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where: {is_admin_verified: false, live_video_verification_status: LiveVideoVerificationStatus.PENDING},
-      order: {created_at: "DESC"},
-      relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
+      where: [
+        { is_admin_verified: false, role: RoleType.BAMIKI_USER },
+        { live_video_verification_status: LiveVideoVerificationStatus.PENDING, role: RoleType.BAMIKI_USER},
+      ],
+      order: { created_at: "DESC" },
+      relations: [
+        "requests",
+        "transactions",
+        "shout_out_videos",
+        "ratings",
+        "followers",
+        "wallet",
+      ],
     })
 
-    if(list.length > 0) {
+    if (list.length > 0) {
       for (const influencer of list) {
         delete influencer.password
         delete influencer.email_verification
@@ -225,18 +269,31 @@ class InfluencerService extends BaseService {
 
     return {
       list,
-      count
+      count,
     }
   }
 
   public async getUnverifiedInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where: {live_video_verification_status: LiveVideoVerificationStatus.DECLINED},
-      order: {updated_at: "DESC"},
-      relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
+      where: [
+        { is_admin_verified: false, role: RoleType.BAMIKI_USER },
+        {
+          live_video_verification_status: LiveVideoVerificationStatus.DECLINED,
+          role: RoleType.BAMIKI_USER
+        },
+      ],
+      order: { updated_at: "DESC" },
+      relations: [
+        "requests",
+        "transactions",
+        "shout_out_videos",
+        "ratings",
+        "followers",
+        "wallet",
+      ],
     })
 
-    if(list.length > 0) {
+    if (list.length > 0) {
       for (const influencer of list) {
         delete influencer.password
         delete influencer.email_verification
@@ -245,18 +302,31 @@ class InfluencerService extends BaseService {
 
     return {
       list,
-      count
+      count,
     }
   }
 
   public async getVerifiedInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where: {live_video_verification_status: LiveVideoVerificationStatus.VERIFIED},
-      order: {updated_at: "DESC"},
-      relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
+      where: [
+        { is_admin_verified: true , role: RoleType.BAMIKI_USER},
+        {
+          live_video_verification_status: LiveVideoVerificationStatus.VERIFIED,
+          role: RoleType.BAMIKI_USER
+        },
+      ],
+      order: { updated_at: "DESC" },
+      relations: [
+        "requests",
+        "transactions",
+        "shout_out_videos",
+        "ratings",
+        "followers",
+        "wallet",
+      ],
     })
 
-    if(list.length > 0) {
+    if (list.length > 0) {
       for (const influencer of list) {
         delete influencer.password
         delete influencer.email_verification
@@ -265,10 +335,9 @@ class InfluencerService extends BaseService {
 
     return {
       list,
-      count
+      count,
     }
   }
-
 }
 
 export const influencerService = new InfluencerService()
