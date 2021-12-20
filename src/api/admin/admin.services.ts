@@ -97,6 +97,26 @@ class AdminService extends BaseService {
 
   return this.internalResponse(true, response, 200, "fans content retrieved!")
  }
+
+ public async verificationContent() {
+  //verification content
+  const {list: new_influencers, count: new_influencers_count} = await influencerService.getNewlyRegisteredInfluencers()
+
+  const {list: verified_influencers, count: verified_influencers_count} =  await influencerService.getVerifiedInfluencers()
+
+  const {list: unverified_influencers, count: unverified_influencers_count} = await influencerService.getUnverifiedInfluencers()
+
+  const response = {
+   new_influencers,
+   new_influencers_count,
+   verified_influencers,
+   verified_influencers_count,
+   unverified_influencers,
+   unverified_influencers_count
+  }
+
+  return this.internalResponse(true, response, 200, "verification content retrieved!")
+ }
 }
 
 

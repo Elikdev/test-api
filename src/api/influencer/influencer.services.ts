@@ -1,7 +1,7 @@
 import { DeepPartial, getRepository, Like, Not, Equal } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import { AuthModule } from "../../utils/auth";
-import { AccountType, jwtCred, RoleType } from "../../utils/enum";
+import { AccountType, jwtCred, LiveVideoVerificationStatus, RoleType } from "../../utils/enum";
 import { User } from "../user/user.model";
 import { userService } from "../user/user.services";
 import { Influencer } from "./influencer.model";
@@ -195,6 +195,66 @@ class InfluencerService extends BaseService {
       relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
     }) 
 
+
+    if(list.length > 0) {
+      for (const influencer of list) {
+        delete influencer.password
+        delete influencer.email_verification
+      }
+    }
+
+    return {
+      list,
+      count
+    }
+  }
+
+  public async getNewlyRegisteredInfluencers() {
+    const [list, count] = await getRepository(Influencer).findAndCount({
+      where: {is_admin_verified: false, live_video_verification_status: LiveVideoVerificationStatus.PENDING},
+      order: {created_at: "DESC"},
+      relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
+    })
+
+    if(list.length > 0) {
+      for (const influencer of list) {
+        delete influencer.password
+        delete influencer.email_verification
+      }
+    }
+
+    return {
+      list,
+      count
+    }
+  }
+
+  public async getUnverifiedInfluencers() {
+    const [list, count] = await getRepository(Influencer).findAndCount({
+      where: {live_video_verification_status: LiveVideoVerificationStatus.DECLINED},
+      order: {updated_at: "DESC"},
+      relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
+    })
+
+    if(list.length > 0) {
+      for (const influencer of list) {
+        delete influencer.password
+        delete influencer.email_verification
+      }
+    }
+
+    return {
+      list,
+      count
+    }
+  }
+
+  public async getVerifiedInfluencers() {
+    const [list, count] = await getRepository(Influencer).findAndCount({
+      where: {live_video_verification_status: LiveVideoVerificationStatus.VERIFIED},
+      order: {updated_at: "DESC"},
+      relations: ["requests", "transactions", "shout_out_videos", "ratings", "followers", "wallet"]
+    })
 
     if(list.length > 0) {
       for (const influencer of list) {

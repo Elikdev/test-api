@@ -74,4 +74,26 @@ adminRouter.post(
   }
  )
 
+ adminRouter.post(
+  "/get-verification-content",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkAdmin,
+  async (req: Request, res: Response) => {
+    try {
+ 
+      //service is being called here
+      const response = await adminService.verificationContent()
+ 
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+ 
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+ )
+
 export default adminRouter
