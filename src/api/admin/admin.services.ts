@@ -58,6 +58,65 @@ class AdminService extends BaseService {
 
   return this.internalResponse(true, response, 200, "Dashboard retrieved!")
  }
+
+
+ public async influencersContent() {
+  //influencers details
+  const {list: influencers, count} = await influencerService.getInfluencersForAdmin()
+
+  const {list: influencersReq, count: influencersReqCount} = await requestService.allRequestsCount()
+
+  const transactions = await transactionService.getAllTransactions()
+  
+  const response = {
+   influencers,
+   count,
+   influencers_requests: influencersReq,
+   influencers_req_count: influencersReqCount,
+   transactions
+  }
+
+  return this.internalResponse(true, response, 200, "influencers content retrieved!")
+ }
+
+ public async fansContent() {
+  //fan details
+  const {list: fans, count} = await fanService.getFansForAdmin()
+
+  const {list: fansReq, count: fansReqCount} = await requestService.allRequestsCount()
+
+  const transactions = await transactionService.getAllTransactions()
+
+  const response = {
+   fans,
+   count,
+   fans_request: fansReq,
+   fans_req_count: fansReqCount,
+   transactions
+  }
+
+  return this.internalResponse(true, response, 200, "fans content retrieved!")
+ }
+
+ public async verificationContent() {
+  //verification content
+  const {list: new_influencers, count: new_influencers_count} = await influencerService.getNewlyRegisteredInfluencers()
+
+  const {list: verified_influencers, count: verified_influencers_count} =  await influencerService.getVerifiedInfluencers()
+
+  const {list: unverified_influencers, count: unverified_influencers_count} = await influencerService.getUnverifiedInfluencers()
+
+  const response = {
+   new_influencers,
+   new_influencers_count,
+   verified_influencers,
+   verified_influencers_count,
+   unverified_influencers,
+   unverified_influencers_count
+  }
+
+  return this.internalResponse(true, response, 200, "verification content retrieved!")
+ }
 }
 
 

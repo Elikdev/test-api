@@ -1,4 +1,7 @@
+import { getRepository } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
+import { AccountType, RoleType } from "../../utils/enum";
+import { User } from "../user/user.model";
 import { Fan } from "./fan.model";
 
 class FanService extends BaseService {
@@ -32,6 +35,28 @@ class FanService extends BaseService {
 
   public async findFanById(id: number) {
     return await this.findOne(Fan, { where: { id } })
+  }
+
+  
+  public async getFansForAdmin() {
+    const [list, count] = await getRepository(User).findAndCount({
+      where: {account_type: AccountType.FAN, role: RoleType.BAMIKI_USER},
+      order: {created_at: "DESC"},
+      relations: ["requests", "transactions", "following", "wallet"]
+    }) 
+
+
+    if(list.length > 0) {
+      for (const fan of list) {
+        delete fan.password
+        delete fan.email_verification
+      }
+    }
+
+    return {
+      list,
+      count
+    }
   }
 }
 

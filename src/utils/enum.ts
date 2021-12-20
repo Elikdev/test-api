@@ -136,3 +136,9 @@ export enum Permissions {
     FREEZE_ACCOUNT = 'freeze accounts',
     BLOCK_ACCOUNT = "block accounts"
 }
+
+export enum LiveVideoVerificationStatus {
+    PENDING = "pending",
+    VERIFIED = "verified",
+    DECLINED = "declined"
+}

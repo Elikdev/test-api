@@ -4,6 +4,7 @@ import { Wallet } from "../wallet/wallet.model"
 import { Bank } from "../bank/bank.model"
 import { Rating } from "../ratings/ratings.model"
 import { ShoutOutVideos } from "../requests/shoutOut.model"
+import { LiveVideoVerificationStatus } from "../../utils/enum"
 
 @ChildEntity()
 export class Influencer extends User {
@@ -15,6 +16,9 @@ export class Influencer extends User {
 
   @Column({ default: false })
   is_admin_verified: boolean
+
+  @Column({type: "enum", enum: LiveVideoVerificationStatus, default: LiveVideoVerificationStatus.PENDING})
+  live_video_verification_status: LiveVideoVerificationStatus
 
   @Column()
   referral_code: string
