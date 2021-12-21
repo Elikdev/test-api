@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express"
 import { successRes, errorResponse } from "../../helpers/response.helper"
 import { verificationMiddleware } from "../../middlwares/checkLogin"
 import {adminService} from "./admin.services"
+import { adminValidation } from "../../middlwares/validations/admin.validations"
 
 const adminRouter = Router()
 
@@ -83,6 +84,29 @@ adminRouter.post(
  
       //service is being called here
       const response = await adminService.verificationContent()
+ 
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+ 
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+ )
+
+ adminRouter.post(
+  "/verify-live-video",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkAdmin,
+  adminValidation.verifyLiveVideoRules(),
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user
+      //service is being called here
+      const response = await adminService.verifyLiveVideoForInfluencer(authUser, req.body)
  
       if (!response.status) {
         return errorResponse(res, response.message, 400)

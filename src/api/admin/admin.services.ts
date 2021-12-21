@@ -2,7 +2,7 @@ import {Admin} from "./admin.model"
 import { BaseService } from "../../helpers/db.helper"
 import { fanService } from "../fan/fan.services"
 import { userService } from "../user/user.services"
-import { AccountType } from "../../utils/enum"
+import { AccountType, jwtCred, LiveVideoVerificationStatus } from "../../utils/enum"
 import { authService } from "../auth/auth.services"
 import { requestService } from "../requests/request.services"
 import { walletService } from "../wallet/wallet.services"
@@ -116,6 +116,40 @@ class AdminService extends BaseService {
   }
 
   return this.internalResponse(true, response, 200, "verification content retrieved!")
+ }
+
+ public async verifyLiveVideoForInfluencer(authUser: jwtCred, verifyDTO: {verify_video: LiveVideoVerificationStatus, influencerId: number}) {
+  const {verify_video, influencerId} = verifyDTO
+
+  const influencer_exists = await influencerService.findInfluencerById(influencerId)
+
+  if(!influencer_exists){
+   return this.internalResponse(false, {}, 400, "Influencer does not exist")
+  }
+
+  if(influencer_exists.live_video_verification_status === LiveVideoVerificationStatus.VERIFIED  && verify_video === LiveVideoVerificationStatus.VERIFIED){ 
+   return this.internalResponse(false, {}, 400, "Influencer's video has been verified initally")
+  }
+
+  if(influencer_exists.live_video_verification_status === LiveVideoVerificationStatus.DECLINED && verify_video === LiveVideoVerificationStatus.DECLINED) {
+   return this.internalResponse(false, {}, 400, "Influencer's video has been declined initailly")
+  }
+
+  const update_details = {
+   live_video_verification_status: verify_video
+  }
+
+  //update the user
+  const result  = await influencerService.updateInfluencer(influencer_exists, update_details)
+
+  if(!result) {
+   return this.internalResponse(false, {}, 400, "failed to update user")
+  }
+
+  delete result.password
+  delete result.email_verification
+
+  return this.internalResponse(true, result, 200, "Influencer video status updated!")
  }
 }
 
