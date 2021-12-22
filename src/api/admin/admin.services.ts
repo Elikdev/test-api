@@ -122,6 +122,7 @@ class AdminService extends BaseService {
   const {verify_video, influencerId} = verifyDTO
 
   const influencer_exists = await influencerService.findInfluencerById(influencerId)
+  let is_admin_verified
 
   if(!influencer_exists){
    return this.internalResponse(false, {}, 400, "Influencer does not exist")
@@ -135,8 +136,17 @@ class AdminService extends BaseService {
    return this.internalResponse(false, {}, 400, "Influencer's video has been declined initailly")
   }
 
+  if(verify_video === LiveVideoVerificationStatus.DECLINED) {
+   is_admin_verified = false
+  }
+
+  if(verify_video === LiveVideoVerificationStatus.VERIFIED){
+   is_admin_verified = true
+  }
+
   const update_details = {
-   live_video_verification_status: verify_video
+   live_video_verification_status: verify_video,
+   is_admin_verified: is_admin_verified
   }
 
   //update the user

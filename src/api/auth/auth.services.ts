@@ -668,6 +668,7 @@ class AuthService extends BaseService {
     }
 
     if(new Date(token_exists.expires_in) < new Date(Date.now())) {
+      console.log("what's going on here?")
       return this.internalResponse(false, {}, 400, "Please make a new signin request")
     }
 
