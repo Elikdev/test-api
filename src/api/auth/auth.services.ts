@@ -435,7 +435,7 @@ class AuthService extends BaseService {
     const refresh = uuidv4()
 
     //save the refresh token or update the existing one
-    const token_saved = await this.createRefreshToken(user_exists, 604800000, refresh) //expires in 7 days
+    const token_saved = await this.createRefreshToken(user_exists, 604800000, refresh) //expires in 7 days --  604800000
 
     if(!token_saved) {
       return this.internalResponse(false, {}, 400, "Error in saving admin's token")
@@ -667,7 +667,7 @@ class AuthService extends BaseService {
       return this.internalResponse(false, {}, 400, "Please make a new signin request")
     }
 
-    if(token_exists.expires_in.getTime() < new Date().getTime()) {
+    if(new Date(token_exists.expires_in) < new Date(Date.now())) {
       return this.internalResponse(false, {}, 400, "Please make a new signin request")
     }
 
@@ -690,7 +690,7 @@ class AuthService extends BaseService {
     const refresh = uuidv4()
     
     //update the token
-    const token_updated = await this.createRefreshToken(user_exists, 604800, refresh)
+    const token_updated = await this.createRefreshToken(user_exists,  604800000, refresh) // 7 days --  604800000
 
     if(!token_updated) {
       return this.internalResponse(false, {}, 400, "error in updating the admin token")
