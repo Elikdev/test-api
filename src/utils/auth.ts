@@ -111,6 +111,16 @@ class AuthUtils {
 
    return userData
  }
+
+ public generateUniqueCode(length = 8) {
+  const uniqueid = Math.round((Math.random() * 10) * Math.round(Date.now())).toString(36) //max-length == 9 or 8
+	let ref = ""
+	
+	for (let i = 0; i < length; i++) {
+		ref += uniqueid[i]
+	}
+  return ref
+ }
 }
 
 export const AuthModule = new AuthUtils()

@@ -131,7 +131,7 @@ export enum AdminCategory {
 }
 
 export enum Permissions {
-    VERIFY_INFLUENCERS = "verify influncers",
+    VERIFY_INFLUENCERS = "verify influencers",
     CHAT_SUPPORT = "chat support",
     FREEZE_ACCOUNT = 'freeze accounts',
     BLOCK_ACCOUNT = "block accounts"
@@ -141,4 +141,10 @@ export enum LiveVideoVerificationStatus {
     PENDING = "pending",
     VERIFIED = "verified",
     DECLINED = "declined"
+}
+
+export enum transactionSettingsType {
+    TRANSACTION_FEE = "transaction_fee",
+    EXPRESS_TIMELINE = "express_timeline",
+    STANDARD_TIMELINE = "standard_timeline"
 }
