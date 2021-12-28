@@ -55,7 +55,7 @@ export class User extends BaseModel {
 
   @Column()
   account_type: string
-  
+
   @Column({
     default: RoleType.BAMIKI_USER,
     type: "enum",
@@ -111,12 +111,12 @@ export class User extends BaseModel {
   @JoinColumn()
   industry: Industry
 
-  @OneToMany(()=>Message, message=>message.sender)
-  sent:Message[]
+  @OneToMany(() => Message, (message) => message.sender)
+  sent: Message[]
 
-  @OneToMany(()=>Message, message=>message.receiver)
-  received:Message[]
+  @OneToMany(() => Message, (message) => message.receiver)
+  received: Message[]
 
-  @OneToOne(() =>RefreshToken, rfreshT => rfreshT.user )
+  @OneToOne(() => RefreshToken, (rfreshT) => rfreshT.user)
   refresh_token: RefreshToken
 }

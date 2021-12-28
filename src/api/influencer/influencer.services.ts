@@ -245,10 +245,10 @@ class InfluencerService extends BaseService {
 
   public async getNewlyRegisteredInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where: [
-        { is_admin_verified: false, role: RoleType.BAMIKI_USER },
-        { live_video_verification_status: LiveVideoVerificationStatus.PENDING, role: RoleType.BAMIKI_USER},
-      ],
+      where: {
+        live_video_verification_status: LiveVideoVerificationStatus.PENDING,  
+        is_admin_verified: false, role: RoleType.BAMIKI_USER
+      },
       order: { created_at: "DESC" },
       relations: [
         "requests",
@@ -275,13 +275,12 @@ class InfluencerService extends BaseService {
 
   public async getUnverifiedInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where: [
-        { is_admin_verified: false, role: RoleType.BAMIKI_USER },
+      where:
         {
           live_video_verification_status: LiveVideoVerificationStatus.DECLINED,
+          is_admin_verified: false, 
           role: RoleType.BAMIKI_USER
         },
-      ],
       order: { updated_at: "DESC" },
       relations: [
         "requests",
@@ -308,13 +307,11 @@ class InfluencerService extends BaseService {
 
   public async getVerifiedInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where: [
-        { is_admin_verified: true , role: RoleType.BAMIKI_USER},
-        {
+      where: {
           live_video_verification_status: LiveVideoVerificationStatus.VERIFIED,
+          is_admin_verified: true,
           role: RoleType.BAMIKI_USER
-        },
-      ],
+      },
       order: { updated_at: "DESC" },
       relations: [
         "requests",

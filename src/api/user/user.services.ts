@@ -190,7 +190,7 @@ class UserService extends BaseService{
 
     public async findAllUsers(account_type: AccountType) {
         const [users, count] = await getRepository(User).findAndCount({
-            where: {account_type: account_type, role: RoleType.BAMIKI_USER }
+            where: {account_type: account_type, role: RoleType.BAMIKI_USER}
         })
 
         return count

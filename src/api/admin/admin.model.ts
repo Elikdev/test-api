@@ -1,23 +1,23 @@
-import { Column, Entity, ManyToOne, JoinColumn } from "typeorm"
+import { Column, Entity, ChildEntity, ManyToOne, JoinColumn, ColumnTypeUndefinedError } from "typeorm"
 import { BaseModel } from "../../helpers/db.helper"
 import {AdminCategory} from "../../utils/enum"
+import { User } from "../user/user.model"
 
 
-@Entity({ name: "bank" })
-export class Admin extends BaseModel {
- @Column()
- name: string
-
- @Column()
- email: string
-
+@ChildEntity()
+export class Admin extends User {
  @Column({
   type: "enum",
-  enum: AdminCategory,
-  default: AdminCategory.SUPER_ADMIN
+  enum: AdminCategory
  })
  admin_category: AdminCategory
 
  @Column({type: "json"})
- permissions: []
+ permissions: string[]
+
+ @Column({ default: false })
+ blocked: boolean
+
+ @Column({ default: false })
+ deleted: boolean
 }
