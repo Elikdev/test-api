@@ -423,17 +423,17 @@ class AuthService extends BaseService {
   let token: any
 
   if (user_exists.role === "BAMIKI_ADMIN") {
-    const admin_exists =  await getRepository(Admin).findOne({
-      where: {id: user_exists.id}
-    })
+    // const admin_exists =  await getRepository(Admin).findOne({
+    //   where: {id: user_exists.id}
+    // })
 
-    if(!admin_exists) {
-      return this.internalResponse(false, {}, 400, "The email entered is not registered as an admin")
-    }
+    // if(!admin_exists) {
+    //   return this.internalResponse(false, {}, 400, "The email entered is not registered as an admin")
+    // }
 
-    if(admin_exists.blocked || admin_exists.deleted) {
-      return this.internalResponse(false, {}, 400, "This admin has been denied access due to a deleted or blocked account")
-    }
+    // if(admin_exists.blocked || admin_exists.deleted) {
+    //   return this.internalResponse(false, {}, 400, "This admin has been denied access due to a deleted or blocked account")
+    // }
 
     const access = AuthModule.generateAccessToken(
       {
