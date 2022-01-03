@@ -677,6 +677,7 @@ class AuthService extends BaseService {
     })
 
     if(!token_exists) {
+      console.log("what's going on here? --- token not exist")
       return this.internalResponse(false, {}, 400, "Please make a new signin request")
     }
 
