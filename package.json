@@ -11,10 +11,7 @@
       "lint": "npx eslint . --fix --ext .ts",
       "typeorm": "ts-node  ./node_modules/typeorm/cli.js"
    },
-   "engines": {
-      "node": "14.x",
-      "npm": "7.x"
-   },
+  
    "keywords": [
       "",
       "backend"
