@@ -7,14 +7,14 @@ if (process.env.NODE_ENV === "production") {
 	dotenv.config({ path: ".env.local" })
 }
 
-// const extra =
-// 	process.env.NODE_ENV === "production"
-// 		? {
-// 				ssl: {
-// 					rejectUnauthorized: false,
-// 				},
-// 		  }
-// 		: {}
+const extra =
+	process.env.NODE_ENV === "production"
+		? {
+				ssl: {
+					rejectUnauthorized: false,
+				},
+		  }
+		: {}
 
 module.exports = {
 	type: "postgres",
@@ -32,8 +32,5 @@ module.exports = {
 		migrationsDir: "src/db/migration",
 		subscribersDir: "src/subscriber",
 	},
-	ssl: {
-		rejectUnauthorized: false,
-	},
-	// extra,
+	extra,
 }
