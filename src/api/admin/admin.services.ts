@@ -407,18 +407,18 @@ class AdminService extends BaseService {
 
     email = email.toLowerCase()
     password = AuthModule.hashPassWord(password)
-    //check if the email exists
-    const admin_exists = await this.findOne(Admin, {
-      where: { email },
-    })
 
-    if (admin_exists) {
-      return this.internalResponse(
-        false,
-        {},
-        400,
-        "Admin with the same email exists already"
-      )
+    if (email !== admin.email) {
+      //check if the email exists
+      const admin_exists = await this.findOne(User, {
+        where: { email },
+      })
+
+      if (admin_exists) {
+        return this.internalResponse(false, {}, 400, "Email exists already")
+      }
+    } else {
+      email = admin.email
     }
 
     //update the admin profile
