@@ -3,9 +3,11 @@ import { successRes, errorResponse } from "../../helpers/response.helper"
 import { verificationMiddleware } from "../../middlwares/checkLogin"
 import {adminService} from "./admin.services"
 import { adminValidation } from "../../middlwares/validations/admin.validations"
+import multerHelper from "../../middlwares/multerHelper"
 
 const adminRouter = Router()
 
+const campaignUpload = multerHelper.single("recipient_file")
 
 
 adminRouter.post(
@@ -249,6 +251,35 @@ adminRouter.post(
 
       //service is being called here
       const response = await adminService.getTransactionSettings()
+ 
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+ 
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+ )
+
+ adminRouter.post(
+  "/new-email-campaign",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkAdmin,
+  campaignUpload,
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user      
+
+      const recipient_file = req.file
+
+      if(!recipient_file) {
+        return errorResponse(res, "Upload a file to proceed", 400)
+      }
+      //service is being called here
+      const response = await adminService.newEmailCampaign(authUser, {...req.body, recipient_file})
  
       if (!response.status) {
         return errorResponse(res, response.message, 400)
