@@ -19,7 +19,11 @@ import { getRepository } from "typeorm"
 import { User } from "../user/user.model"
 import { Settings } from "./settings.model"
 import { AuthModule } from "../../utils/auth"
-import { String } from "aws-sdk/clients/appstream"
+import {extname} from "path"
+import { Readable } from "stream"
+import readXlsxFile from "read-excel-file/node"
+import csv2 from "csvtojson"
+import * as fs from "fs"
 
 class AdminService extends BaseService {
   public async adminDashboard() {
@@ -525,6 +529,44 @@ class AdminService extends BaseService {
     }
 
     return this.internalResponse(true, settings[0], 200, "Settings retrieved!")
+  }
+
+  public async newEmailCampaign(authUser:jwtCred, adminDTO: {campaign_name: string; sender: string; message: any; recipient_file: any}) {
+    const {campaign_name, sender, message, recipient_file} = adminDTO
+
+    if(extname(recipient_file?.originalname) === ".xlsx") {
+      /* tslint:disable-next-line: no-string-literal */
+      const stream = Readable["from"](recipient_file.buffer) 
+      const  files = await readXlsxFile(stream)
+
+      files.shift()
+
+      let recipient_files = []
+
+      files.forEach((row) => {
+        let recipient_file = {
+          fullName: row[1],
+          email: row[2]
+        }
+        recipient_files.push(recipient_file)
+      })
+      return this.internalResponse(true, recipient_files, 200, "File is in excel format")
+    }
+
+    if(extname(recipient_file?.originalname) === ".csv") {
+      let csv_rows = []
+      let actual_rows = []
+      /* tslint:disable-next-line: no-string-literal */
+      const stream = Readable["from"](recipient_file.buffer) 
+
+      const data_csv = await csv2().fromStream(stream)
+
+
+      return this.internalResponse(true, data_csv, 200, "file is in csv")
+      
+    } 
+
+    return this.internalResponse(false, {}, 400, "file should be in excel or csv format")
   }
 
 }
