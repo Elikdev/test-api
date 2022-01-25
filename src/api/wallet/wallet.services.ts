@@ -129,8 +129,8 @@ class WalletService extends BaseService {
       if (
         data_received_data.tx_ref != transaction_reference ||
         data_received_data.status != "successful" ||
-        data_received_data.currency != currency ||
-        amount >= parseFloat(data_received_data.amount)
+        data_received_data.currency != currency 
+        /*|| amount >= parseFloat(data_received_data.amount) */
       ) {
         return this.internalResponse(
           false,
