@@ -207,7 +207,9 @@ class WalletService extends BaseService {
   public async getWalletForUser(authUser: jwtCred) {
     const user_id = authUser.id
 
-    const user_wallet  = this.findWalletByUserId(user_id)
+    const user_wallet  = await this.findWalletByUserId(user_id)
+
+    console.log(user_wallet)
 
     if(!user_wallet) {
       return this.internalResponse(false, {}, 400, "Wallet not found")
