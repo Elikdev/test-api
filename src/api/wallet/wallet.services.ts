@@ -209,7 +209,6 @@ class WalletService extends BaseService {
 
     const user_wallet  = await this.findWalletByUserId(user_id)
 
-    console.log(user_wallet)
 
     if(!user_wallet) {
       return this.internalResponse(false, {}, 400, "Wallet not found")
