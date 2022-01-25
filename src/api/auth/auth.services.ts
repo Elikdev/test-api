@@ -387,17 +387,17 @@ class AuthService extends BaseService {
     return this.internalResponse(false, { email: user_exists.email }, 401, "The email that you entered has not been verified")
   }
 
-  if (user_exists.account_type === "celebrity") {
-    const influencer = await influencerService.findInfluencerWithEmail(emailToLower)
-    // send back the email for client to redirect to video upload screen
-    if (!influencer?.is_admin_verified && influencer?.live_video == null ) {
-      return this.internalResponse(false, { email: user_exists.email }, 401, "Video verification required")
-    }
+  // if (user_exists.account_type === "celebrity") {
+  //   const influencer = await influencerService.findInfluencerWithEmail(emailToLower)
+  //   // send back the email for client to redirect to video upload screen
+  //   if (!influencer?.is_admin_verified && influencer?.live_video == null ) {
+  //     return this.internalResponse(false, { email: user_exists.email }, 401, "Video verification required")
+  //   }
 
-    if (user_exists.account_type === "celebrity" && !influencer?.is_admin_verified && influencer?.live_video != null ) {
-      return this.internalResponse(false, { email: user_exists.email }, 401, "Your account is awaiting approval")
-    }
-  }
+  //   if (user_exists.account_type === "celebrity" && !influencer?.is_admin_verified && influencer?.live_video != null ) {
+  //     return this.internalResponse(false, { email: user_exists.email }, 401, "Your account is awaiting approval")
+  //   }
+  // }
 
 
   // add this and update the usertable with migration

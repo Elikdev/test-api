@@ -3,7 +3,7 @@ import { BaseService } from "../../helpers/db.helper";
 import {Transactions} from './transaction.model'
 import {Requests} from '../requests/request.model'
 import { CreateTransactionsDto} from "./Dto/transaction.Dto";
-import { jwtCred } from "../../utils/enum";
+import { AccountType, jwtCred } from "../../utils/enum";
 import { userService } from "../user/user.services";
 
 
@@ -172,6 +172,25 @@ class TransactionService extends BaseService {
         delete each_request?.influencer.password
   
         t.request = each_request
+      } else {
+        delete t.request
+        let request
+        if(t.user.account_type === AccountType.CELEB) {
+           request = {
+            influencer: {full_name: t.user.full_name},
+            fan: {full_name: "Bamiki Wallet"},
+            request_type: "Fund wallet"
+          }
+        } else if (t.user.account_type === AccountType.FAN) {
+          request = {
+            influencer: {full_name: "Bamiki Wallet"},
+            fan: {full_name: t.user.full_name},
+            request_type: "Fund wallet"
+          }
+        } else {
+          request = {}
+        }
+        t["request"] = request;
       }
 
       }
