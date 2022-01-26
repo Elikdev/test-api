@@ -36,4 +36,27 @@ ratingRouter.post(
     }
   }
 )
+
+ratingRouter.post(
+  "/all-ratings/:influencerId",
+  verificationMiddleware.validateToken,
+  ratingValidation.getAllReviewsValidation(),
+  async (req: Request, res: Response) => {
+    try {
+      const influencerId = parseInt((req.params as any).influencerId)
+
+      //service is being called here
+      const response = await ratingService.allReviewsForInfluencer(influencerId)
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
 export default ratingRouter
