@@ -21,7 +21,7 @@ class RatingService extends BaseService {
 
     new_rating.rating = rating
     new_rating.review_message = review_message
-    new_rating.request_type = request_type 
+    new_rating.request_type = request_type
     new_rating.user = user
     new_rating.influencer = influencer
 
@@ -216,6 +216,26 @@ class RatingService extends BaseService {
     }
 
     return this.internalResponse(true, newRating, 200, "Rating saved")
+  }
+
+  public async allReviewsForInfluencer(influencerId: number) {
+    const reviews = await this.findAllInfluencerRating(influencerId)
+
+    if (reviews.length <= 0) {
+      return this.internalResponse(
+        false,
+        { reviews: [] },
+        400,
+        "No reviews/rating available yet"
+      )
+    }
+
+    return this.internalResponse(
+      true,
+      reviews,
+      200,
+      "All reviews/ratings retrieved!"
+    )
   }
 }
 

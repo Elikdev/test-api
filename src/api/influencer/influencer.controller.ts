@@ -34,8 +34,8 @@ influencerRouter.post('/get-all', verificationMiddleware.validateToken, async (r
   try{
     const authUser = (req as any).user
 
-    const page = parseInt((req.query as any).page) || 1
-    const limit = parseInt((req.query as any).limit) || 15
+    const page = req.query.page ? parseInt((req.query as any).page) : 1
+    const limit = req.query.limit ? parseInt((req.query as any).limit) : 15
 
     //service is being called here
     const response = await influencerService.getAllInfluencers(authUser, {page, limit})

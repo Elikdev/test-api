@@ -15,6 +15,14 @@ class RatingValidation {
       })
     });
   }
+
+  public getAllReviewsValidation() {
+    return celebrate({
+      params: {
+        influencerId: Joi.number().required(),
+      }
+    });
+  }
 }
 
 export const ratingValidation = new RatingValidation();
