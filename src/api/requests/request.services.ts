@@ -363,14 +363,20 @@ class RequestService extends BaseService{
                     reason: type == "decline" && reason
                 }
             )
+            const resUpdatedRequest = await queryRunner.manager.findOne(Requests, {where: {id: request.id}})
             await queryRunner.commitTransaction()
 
             // create a room for both users
             const room = await roomService.createRoom(request.fan, user_exists);
 
+            delete room.fan.password
+            delete room.fan.email_verification
+            delete room.influencer.password
+            delete room.influencer.email_verification
+
             return this.internalResponse(
                 true,
-                { request: updatedRequest , room },
+                { request: resUpdatedRequest , room },
                 200,
                 `Request ${type == 'decline' ? 'declined' : 'accepted'} successfully`
             )
