@@ -146,7 +146,8 @@ export enum LiveVideoVerificationStatus {
 export enum transactionSettingsType {
     TRANSACTION_FEE = "transaction_fee",
     EXPRESS_TIMELINE = "express_timeline",
-    STANDARD_TIMELINE = "standard_timeline"
+    STANDARD_TIMELINE = "standard_timeline",
+    EXPRESS_FEE = "express_fee"
 }
 
 export enum searchFieldType {

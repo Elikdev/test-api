@@ -12,4 +12,7 @@ export class Settings extends BaseModel {
 
  @Column()
  express_delivery_time: number
+
+ @Column()
+ express_delivery_fee: number
 }
