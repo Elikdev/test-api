@@ -221,7 +221,8 @@ class InfluencerService extends BaseService {
       where: { account_type: AccountType.CELEB, role: RoleType.BAMIKI_USER },
       order: { created_at: "DESC" },
       relations: [
-        "requests",
+        "influencer_requests",
+        "fan_requests",
         "transactions",
         "shout_out_videos",
         "ratings",
