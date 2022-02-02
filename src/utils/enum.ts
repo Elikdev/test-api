@@ -148,3 +148,9 @@ export enum transactionSettingsType {
     EXPRESS_TIMELINE = "express_timeline",
     STANDARD_TIMELINE = "standard_timeline"
 }
+
+export enum searchFieldType {
+    FAN = "fan",
+    INFLUENCER = "influencer",
+    VERIFICATION = "verification"
+}

@@ -196,6 +196,21 @@ class UserService extends BaseService{
         return count
     }
 
+    public async findAllVerifiedUsers() {
+        const [users, count] = await getRepository(User).findAndCount({
+            where: {is_verified: true, role: RoleType.BAMIKI_USER}
+        })
+
+        if(users.length >= 0) {
+            for (const user of users) {
+                delete user.password
+                delete user.email_verification
+            }
+        }
+        
+        return {count, users}
+    }
+
 }
 
 export const userService = new UserService()

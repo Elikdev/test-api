@@ -293,4 +293,59 @@ adminRouter.post(
   }
  )
 
+ 
+ adminRouter.post(
+  "/new-sms-campaign",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkAdmin,
+  campaignUpload,
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user      
+
+      const recipient_file = req.file
+
+      if(!recipient_file) {
+        return errorResponse(res, "Upload a file to proceed", 400)
+      }
+      //service is being called here
+      const response = await adminService.newEmailCampaign(authUser, {...req.body, recipient_file})
+ 
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+ 
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+ )
+
+
+ adminRouter.post(
+  "/search-filter",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      let  {field, value, filter, page, limit} = req.query as any     
+
+      page = parseInt(page) || 1
+      limit = parseInt(limit) || 25
+      //service is being called here
+      const response = await adminService.searchAndFilter({field, value, filter, page, limit})
+ 
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+ 
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+ )
 export default adminRouter
