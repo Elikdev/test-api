@@ -200,16 +200,20 @@ class AuthService extends BaseService {
           const influencer_exists = await influencerService.findInfluencerById(user_exists.id)
 
           const infl_update_details = {
+            is_verified: true,
             is_admin_verified: true,
+            email_verification: {otp_verifed: false, otp_code: null, expires_in: null},
             live_video_verification_status: LiveVideoVerificationStatus.VERIFIED
           }
 
           this.schema(Influencer).merge(influencer_exists, infl_update_details)
           await this.updateOne(Influencer, influencer_exists)
-        }
-        this.schema(User).merge(user_exists, update_details)
+        } else {
+          this.schema(User).merge(user_exists, update_details)
       
-        await this.updateOne(User, user_exists)
+          await this.updateOne(User, user_exists)
+        }
+
       
         
         return this.internalResponse(true, {}, 200, "OTP verified")
