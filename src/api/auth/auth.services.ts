@@ -1,6 +1,6 @@
 import { getRepository } from "typeorm"
 import {BaseService} from "../../helpers/db.helper"
-import { AccountType, RoleType } from '../../utils/enum';
+import { AccountType, LiveVideoVerificationStatus, RoleType } from '../../utils/enum';
 import {AuthModule} from "../../utils/auth"
 import {Fan} from "../fan/fan.model"
 import { User } from "../user/user.model"
@@ -196,6 +196,17 @@ class AuthService extends BaseService {
           email_verification: {otp_verifed: false, otp_code: null, expires_in: null}
         }
       
+        if(user_exists.account_type === AccountType.CELEB) {
+          const influencer_exists = await influencerService.findInfluencerById(user_exists.id)
+
+          const infl_update_details = {
+            is_admin_verified: true,
+            live_video_verification_status: LiveVideoVerificationStatus.VERIFIED
+          }
+
+          this.schema(Influencer).merge(influencer_exists, infl_update_details)
+          await this.updateOne(Influencer, influencer_exists)
+        }
         this.schema(User).merge(user_exists, update_details)
       
         await this.updateOne(User, user_exists)

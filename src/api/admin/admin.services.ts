@@ -8,6 +8,7 @@ import {
   jwtCred,
   LiveVideoVerificationStatus,
   RoleType,
+  searchFieldType,
   transactionSettingsType,
 } from "../../utils/enum"
 import { authService } from "../auth/auth.services"
@@ -15,7 +16,7 @@ import { requestService } from "../requests/request.services"
 import { walletService } from "../wallet/wallet.services"
 import { influencerService } from "../influencer/influencer.services"
 import { transactionService } from "../transactions/transaction.services"
-import { getRepository } from "typeorm"
+import { getRepository, Like, MoreThanOrEqual } from "typeorm"
 import { User } from "../user/user.model"
 import { Settings } from "./settings.model"
 import { AuthModule } from "../../utils/auth"
@@ -24,6 +25,9 @@ import { Readable } from "stream"
 import readXlsxFile from "read-excel-file/node"
 import csv2 from "csvtojson"
 import * as fs from "fs"
+import moment from "moment"
+import { Influencer } from "../influencer/influencer.model"
+import { compileEjs, sendEmail } from "../../helpers/mailer.helper"
 
 class AdminService extends BaseService {
   public async adminDashboard() {
@@ -236,7 +240,7 @@ class AdminService extends BaseService {
   public async getAllAdmins() {
     const [list, count] = await getRepository(User).findAndCount({
       where: { role: RoleType.BAMIKI_ADMIN },
-      order: {created_at: "DESC"}
+      order: { created_at: "DESC" },
     })
 
     for (const admin of list) {
@@ -513,31 +517,35 @@ class AdminService extends BaseService {
       )
     }
 
-    return this.internalResponse(
-      true,
-      {},
-      200,
-      "Admin updated successfully!"
-    )
+    return this.internalResponse(true, {}, 200, "Admin updated successfully!")
   }
 
   public async getTransactionSettings() {
     const settings = await getRepository(Settings).find({})
-    
-    if(settings.length < 0) {
+
+    if (settings.length < 0) {
       return this.internalResponse(false, {}, 400, "No settings found!")
     }
 
     return this.internalResponse(true, settings[0], 200, "Settings retrieved!")
   }
 
-  public async newEmailCampaign(authUser:jwtCred, adminDTO: {campaign_name: string; sender: string; message: any; recipient_file: any}) {
-    const {campaign_name, sender, message, recipient_file} = adminDTO
+  public async newEmailCampaign(
+    authUser: jwtCred,
+    adminDTO: {
+      campaign_name: string
+      sender: string
+      message: any,
+      schedule: boolean,
+      recipient_file: any
+    }
+  ) {
+    const { campaign_name, sender, message, schedule, recipient_file } = adminDTO
 
-    if(extname(recipient_file?.originalname) === ".xlsx") {
+    if (extname(recipient_file?.originalname) === ".xlsx") {
       /* tslint:disable-next-line: no-string-literal */
-      const stream = Readable["from"](recipient_file.buffer) 
-      const  files = await readXlsxFile(stream)
+      const stream = Readable["from"](recipient_file.buffer)
+      const files = await readXlsxFile(stream)
 
       files.shift()
 
@@ -546,29 +554,341 @@ class AdminService extends BaseService {
       files.forEach((row) => {
         let recipient_file = {
           fullName: row[1],
-          email: row[2]
+          email: row[2],
         }
         recipient_files.push(recipient_file)
       })
-      return this.internalResponse(true, recipient_files, 200, "File is in excel format")
+      return this.internalResponse(
+        true,
+        recipient_files,
+        200,
+        "File is in excel format"
+      )
     }
 
-    if(extname(recipient_file?.originalname) === ".csv") {
+    if (extname(recipient_file?.originalname) === ".csv") {
       let csv_rows = []
       let actual_rows = []
       /* tslint:disable-next-line: no-string-literal */
-      const stream = Readable["from"](recipient_file.buffer) 
+      const stream = Readable["from"](recipient_file.buffer)
 
       const data_csv = await csv2().fromStream(stream)
 
+      //get all the registered users
+    const {users} = await userService.findAllVerifiedUsers()
 
-      return this.internalResponse(true, data_csv, 200, "file is in csv")
-      
-    } 
+    if(users.length <= 0) {
+      return this.internalResponse(false, {}, 400, "No users found on the platform")
+    }
 
-    return this.internalResponse(false, {}, 400, "file should be in excel or csv format")
+    for (const user of users) {
+      const htmlMessage = compileEjs({template: "campaign-template"})({
+        name: `${
+          Array.isArray(user.full_name.split(" "))
+            ? user.full_name.split(" ")[0]
+            : user.full_name
+        }`,
+        message: message
+      })
+
+      const email_sent = await sendEmail({
+        html: htmlMessage,
+        subject: campaign_name,
+        to: user.email.toLowerCase()
+      })
+
+      if(!email_sent) {
+        return this.internalResponse(false, {email: user.email}, 400, "Error in sending mail to this particular email")
+      }
+      //save to db
+    }
+ 
+    //save to db
+
+      return this.internalResponse(true, data_csv, 200, "Emails were sent successfully!")
+    }
+
+    
+
+    return this.internalResponse(
+      false,
+      {},
+      400,
+      "file should be in excel or csv format"
+    )
   }
 
+  public async newSmsCampaign(
+    authUser: jwtCred,
+    adminDTO: {
+      campaign_name: string
+      sender: string
+      message: any
+      schedule: Boolean,
+      recipient_file: any
+    }
+  ) {
+    const { campaign_name, sender, message, recipient_file } = adminDTO
+
+    if (extname(recipient_file?.originalname) === ".xlsx") {
+      /* tslint:disable-next-line: no-string-literal */
+      const stream = Readable["from"](recipient_file.buffer)
+      const files = await readXlsxFile(stream)
+
+      files.shift() 
+
+      let recipient_files = []
+
+      files.forEach((row) => {
+        let recipient_file = {
+          fullName: row[1],
+          email: row[2],
+        }
+        recipient_files.push(recipient_file)
+      })
+      return this.internalResponse(
+        true,
+        recipient_files,
+        200,
+        "File is in excel format"
+      )
+    }
+
+    if (extname(recipient_file?.originalname) === ".csv") {
+      /* tslint:disable-next-line: no-string-literal */
+      const stream = Readable["from"](recipient_file.buffer)
+
+      const data_csv = await csv2().fromStream(stream)
+
+      return this.internalResponse(true, data_csv, 200, "file is in csv")
+    }
+
+    return this.internalResponse(
+      false,
+      {},
+      400,
+      "file should be in excel or csv format"
+    )
+  }
+
+  public async searchAndFilter(searchDTO: {
+    field: searchFieldType
+    value: string
+    filter: string
+    page: number
+    limit: number
+  }) {
+    const { field, value, filter, page, limit } = searchDTO
+    let queryOptions = {}
+    let results = { count: 0, result: [] }
+    const offset = (page - 1) * limit
+
+    //by default is to search for users
+    if (!field && !value) {
+      queryOptions = {
+        is_verified: true,
+        role: RoleType.BAMIKI_USER,
+      }
+
+      const [list, count] = await getRepository(User).findAndCount({
+        where: queryOptions,
+        skip: offset,
+        take: limit,
+        order: { created_at: "DESC" },
+      })
+
+      if (count > 0) {
+        for (const res of list) {
+          delete res.password
+          delete res.email_verification
+        }
+        results.count = count
+        results.result = list
+      }
+    } else if (field === searchFieldType.FAN) {
+      queryOptions = {
+        is_verified: true,
+        account_type: AccountType.FAN,
+      }
+      let res_list = []
+      let res_count = 0
+      //by default filter is by name
+      if (filter === "request") {
+        const { list, count } = await requestService.allRequestsCount()
+        if (count > 0) {
+          const filter_value = list.find(
+            (req) => req.fan.full_name.toLowerCase() === value.toLowerCase()
+          )
+          if (filter_value) {
+            res_list.push(filter_value)
+            res_count = 1
+          }
+        }
+      } else if (filter === "date") {
+        if(moment(value).isValid() === false) {
+          return this.internalResponse(false, {}, 400, "Date must be in format YYYY-MM-DD")
+        }
+        const start_date = moment(value).startOf("day")
+        
+        const [list, count] = await getRepository(User).findAndCount({
+          where: {
+            created_at: MoreThanOrEqual(start_date),
+            ...queryOptions,
+          },
+          order: { created_at: "DESC" },
+          skip: offset,
+          take: limit,
+        })
+        res_list = list
+        res_count = count
+      } else {
+        const [list, count] = await getRepository(User).findAndCount({
+          where: [
+            { full_name: Like(`%${value}%`), ...queryOptions },
+            { handle: Like(`%${value}%`), ...queryOptions },
+          ],
+          order: { full_name: "ASC" },
+          skip: offset,
+          take: limit,
+        })
+
+        res_list = list
+        res_count = count
+      }
+
+      if (res_count > 0) {
+        for (const res of res_list) {
+          delete res?.email_verification
+          delete res?.password
+        }
+      }
+      results.result = res_list
+      results.count = res_count
+    } else if (field === searchFieldType.INFLUENCER) {
+      queryOptions = {
+        is_verified: true,
+        account_type: AccountType.CELEB,
+      }
+      let res_list = []
+      let res_count = 0
+      //by default filter is by name
+      if (filter === "request") {
+        const { list, count } = await requestService.allRequestsCount()
+        if (count > 0) {
+          const filter_value = list.find(
+            (req) =>
+              req.influencer.full_name.toLowerCase() === value.toLowerCase()
+          )
+          if (filter_value) {
+            res_list.push(filter_value)
+            res_count = 1
+          }
+        }
+      } else if (filter === "date") {
+        if(moment(value).isValid() === false) {
+          return this.internalResponse(false, {}, 400, "Date must be in format YYYY-MM-DD")
+        }
+        const start_date = moment(value).startOf("day")
+        const [list, count] = await getRepository(User).findAndCount({
+          where: {
+            created_at: MoreThanOrEqual(start_date),
+            ...queryOptions,
+          },
+          order: { created_at: "DESC" },
+          skip: offset,
+          take: limit,
+        })
+        res_list = list
+        res_count = count
+      } else {
+        const [list, count] = await getRepository(User).findAndCount({
+          where: [
+            { full_name: Like(`%${value}%`), ...queryOptions },
+            { handle: Like(`%${value}%`), ...queryOptions },
+          ],
+          order: { full_name: "ASC" },
+          skip: offset,
+          take: limit,
+        })
+
+        res_list = list
+        res_count = count
+      }
+
+      if (res_count > 0) {
+        for (const res of res_list) {
+          delete res?.email_verification
+          delete res?.password
+        }
+      }
+      results.result = res_list
+      results.count = res_count
+    } else if (field === searchFieldType.VERIFICATION) {
+      queryOptions = {
+        account_type: AccountType.CELEB,
+      }
+      let res_list = []
+      let res_count = 0
+      //by default filter is by name
+      if (filter === "request") {
+        const [list, count] = await getRepository(Influencer).findAndCount({
+          where: {
+            is_admin_verified: false,
+            full_name: Like(`%${value}%`),
+          },
+          order: { created_at: "DESC" },
+          skip: offset,
+          take: limit,
+        })
+        res_list = list
+        res_count = count
+      } else if (filter === "date") {
+        if(moment(value).isValid() === false) {
+          return this.internalResponse(false, {}, 400, "Date must be in format YYYY-MM-DD")
+        }
+        const start_date = moment(value).startOf("day")
+        const [list, count] = await getRepository(User).findAndCount({
+          where: {
+            created_at: MoreThanOrEqual(start_date),
+            ...queryOptions,
+          },
+          order: { created_at: "DESC" },
+          skip: offset,
+          take: limit,
+        })
+        res_list = list
+        res_count = count
+      } else {
+        const [list, count] = await getRepository(User).findAndCount({
+          where: [
+            { full_name: Like(`%${value}%`), ...queryOptions },
+            { handle: Like(`%${value}%`), ...queryOptions },
+          ],
+          order: { full_name: "ASC" },
+          skip: offset,
+          take: limit,
+        })
+
+        res_list = list
+        res_count = count
+      }
+
+      if (res_count > 0) {
+        for (const res of res_list) {
+          delete res?.email_verification
+          delete res?.password
+        }
+      }
+      results.result = res_list
+      results.count = res_count
+    }
+
+    if(results.result.length <= 0) {
+      return this.internalResponse(false, {}, 400, "No results found")
+    }
+
+    return this.internalResponse(true, results, 200, "Results found")
+  }
 }
 
 export const adminService = new AdminService()

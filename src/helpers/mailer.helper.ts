@@ -22,6 +22,7 @@ const opts: any = {
 const templates = {
   "code-template": "code-template.ejs",
   "update-template": "update-template.ejs",
+  "campaign-template": "campaign-template.ejs",
 };
 
 const transport = createTransport(opts);
