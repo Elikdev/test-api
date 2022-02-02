@@ -42,7 +42,7 @@ class FanService extends BaseService {
     const [list, count] = await getRepository(User).findAndCount({
       where: {account_type: AccountType.FAN, role: RoleType.BAMIKI_USER},
       order: {created_at: "DESC"},
-      relations: ["requests", "transactions", "following", "wallet"]
+      relations: ["fan_requests", "transactions", "following", "wallet"]
     }) 
 
 
