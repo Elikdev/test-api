@@ -282,6 +282,10 @@ class AdminService extends BaseService {
         new_settings.standard_delivery_time = value
       }
 
+      if(type === transactionSettingsType.EXPRESS_FEE) {
+        new_settings.express_delivery_fee = value
+      }
+
       //save the settings
       response = await this.save(Settings, new_settings)
     } else {
@@ -303,6 +307,12 @@ class AdminService extends BaseService {
       if (type === transactionSettingsType.STANDARD_TIMELINE) {
         update_details = {
           standard_delivery_time: value,
+        }
+      }
+
+      if (type === transactionSettingsType.EXPRESS_FEE) {
+        update_details = {
+          express_delivery_fee: value,
         }
       }
 
