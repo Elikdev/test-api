@@ -371,12 +371,15 @@ class AdminService extends BaseService {
       where: [{ email }, { phone_number }],
     })
 
-    if (admin_exists) {
+    const admin_exists_as_users = await this.findOne(User, {
+      where: [{email}, {phone_number}]
+    })
+    if (admin_exists || admin_exists_as_users) {
       return this.internalResponse(
         false,
         {},
         400,
-        "Admin with the same email or phone number exists already"
+        "Admin/User with the same email or phone number exists already"
       )
     }
 
