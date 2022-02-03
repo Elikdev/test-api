@@ -16,7 +16,7 @@ import { requestService } from "../requests/request.services"
 import { walletService } from "../wallet/wallet.services"
 import { influencerService } from "../influencer/influencer.services"
 import { transactionService } from "../transactions/transaction.services"
-import { getRepository, Like, MoreThanOrEqual } from "typeorm"
+import { getRepository, Like, ILike, MoreThanOrEqual } from "typeorm"
 import { User } from "../user/user.model"
 import { Settings } from "./settings.model"
 import { AuthModule } from "../../utils/auth"
@@ -555,80 +555,77 @@ class AdminService extends BaseService {
   ) {
     const { campaign_name, sender, message, schedule, recipient_file } = adminDTO
 
-    if (extname(recipient_file?.originalname) === ".xlsx") {
-      /* tslint:disable-next-line: no-string-literal */
-      const stream = Readable["from"](recipient_file.buffer)
-      const files = await readXlsxFile(stream)
+    // if (extname(recipient_file?.originalname) === ".xlsx") {
+    //   /* tslint:disable-next-line: no-string-literal */
+    //   const stream = Readable["from"](recipient_file.buffer)
+    //   const files = await readXlsxFile(stream)
 
-      files.shift()
+    //   files.shift()
 
-      let recipient_files = []
+    //   let recipient_files = []
 
-      files.forEach((row) => {
-        let recipient_file = {
-          fullName: row[1],
-          email: row[2],
-        }
-        recipient_files.push(recipient_file)
-      })
-      return this.internalResponse(
-        true,
-        recipient_files,
-        200,
-        "File is in excel format"
-      )
+    //   files.forEach((row) => {
+    //     let recipient_file = {
+    //       fullName: row[1],
+    //       email: row[2],
+    //     }
+    //     recipient_files.push(recipient_file)
+    //   })
+    //   return this.internalResponse(
+    //     true,
+    //     recipient_files,
+    //     200,
+    //     "File is in excel format"
+    //   )
+    // }
+
+    // if (extname(recipient_file?.originalname) === ".csv") {
+    //   let csv_rows = []
+    //   let actual_rows = []
+    //   /* tslint:disable-next-line: no-string-literal */
+    //   const stream = Readable["from"](recipient_file.buffer)
+
+    //   const data_csv = await csv2().fromStream(stream)
+    // }
+
+    if(schedule) {
+      return this.internalResponse(false, {}, 400, "Sorry! Schedule email functionality still in progress...")
     }
 
-    if (extname(recipient_file?.originalname) === ".csv") {
-      let csv_rows = []
-      let actual_rows = []
-      /* tslint:disable-next-line: no-string-literal */
-      const stream = Readable["from"](recipient_file.buffer)
 
-      const data_csv = await csv2().fromStream(stream)
+          //get all the registered users
+          const {users} = await userService.findAllVerifiedUsers()
 
-      //get all the registered users
-    const {users} = await userService.findAllVerifiedUsers()
+          if(users.length <= 0) {
+            return this.internalResponse(false, {}, 400, "No users found on the platform")
+          }
+      
+          for (const user of users) {
+            const htmlMessage = compileEjs({template: "campaign-template"})({
+              name: `${
+                Array.isArray(user.full_name.split(" "))
+                  ? user.full_name.split(" ")[0]
+                  : user.full_name
+              }`,
+              message: message
+            })
+      
+            const email_sent = await sendEmail({
+              html: htmlMessage,
+              subject: campaign_name,
+              to: user.email.toLowerCase()
+            })
+      
+            if(!email_sent) {
+              return this.internalResponse(false, {email: user.email}, 400, "Error in sending mail to this particular email")
+            }
+            //save to db
+          }
+       
+          //save to db
+      
+            return this.internalResponse(true, {}, 200, "Emails were sent successfully!")
 
-    if(users.length <= 0) {
-      return this.internalResponse(false, {}, 400, "No users found on the platform")
-    }
-
-    for (const user of users) {
-      const htmlMessage = compileEjs({template: "campaign-template"})({
-        name: `${
-          Array.isArray(user.full_name.split(" "))
-            ? user.full_name.split(" ")[0]
-            : user.full_name
-        }`,
-        message: message
-      })
-
-      const email_sent = await sendEmail({
-        html: htmlMessage,
-        subject: campaign_name,
-        to: user.email.toLowerCase()
-      })
-
-      if(!email_sent) {
-        return this.internalResponse(false, {email: user.email}, 400, "Error in sending mail to this particular email")
-      }
-      //save to db
-    }
- 
-    //save to db
-
-      return this.internalResponse(true, data_csv, 200, "Emails were sent successfully!")
-    }
-
-    
-
-    return this.internalResponse(
-      false,
-      {},
-      400,
-      "file should be in excel or csv format"
-    )
   }
 
   public async newSmsCampaign(
@@ -643,44 +640,44 @@ class AdminService extends BaseService {
   ) {
     const { campaign_name, sender, message, recipient_file } = adminDTO
 
-    if (extname(recipient_file?.originalname) === ".xlsx") {
-      /* tslint:disable-next-line: no-string-literal */
-      const stream = Readable["from"](recipient_file.buffer)
-      const files = await readXlsxFile(stream)
+    // if (extname(recipient_file?.originalname) === ".xlsx") {
+    //   /* tslint:disable-next-line: no-string-literal */
+    //   const stream = Readable["from"](recipient_file.buffer)
+    //   const files = await readXlsxFile(stream)
 
-      files.shift() 
+    //   files.shift() 
 
-      let recipient_files = []
+    //   let recipient_files = []
 
-      files.forEach((row) => {
-        let recipient_file = {
-          fullName: row[1],
-          email: row[2],
-        }
-        recipient_files.push(recipient_file)
-      })
-      return this.internalResponse(
-        true,
-        recipient_files,
-        200,
-        "File is in excel format"
-      )
-    }
+    //   files.forEach((row) => {
+    //     let recipient_file = {
+    //       fullName: row[1],
+    //       email: row[2],
+    //     }
+    //     recipient_files.push(recipient_file)
+    //   })
+    //   return this.internalResponse(
+    //     true,
+    //     recipient_files,
+    //     200,
+    //     "File is in excel format"
+    //   )
+    // }
 
-    if (extname(recipient_file?.originalname) === ".csv") {
-      /* tslint:disable-next-line: no-string-literal */
-      const stream = Readable["from"](recipient_file.buffer)
+    // if (extname(recipient_file?.originalname) === ".csv") {
+    //   /* tslint:disable-next-line: no-string-literal */
+    //   const stream = Readable["from"](recipient_file.buffer)
 
-      const data_csv = await csv2().fromStream(stream)
+    //   const data_csv = await csv2().fromStream(stream)
 
-      return this.internalResponse(true, data_csv, 200, "file is in csv")
-    }
+    //   return this.internalResponse(true, data_csv, 200, "file is in csv")
+    // }
 
     return this.internalResponse(
       false,
       {},
       400,
-      "file should be in excel or csv format"
+      "Functionality is in progress! Sorry for the delay"
     )
   }
 
@@ -757,8 +754,8 @@ class AdminService extends BaseService {
       } else {
         const [list, count] = await getRepository(User).findAndCount({
           where: [
-            { full_name: Like(`%${value}%`), ...queryOptions },
-            { handle: Like(`%${value}%`), ...queryOptions },
+            { full_name: ILike(`%${value}%`), ...queryOptions },
+            { handle: ILike(`%${value}%`), ...queryOptions },
           ],
           order: { full_name: "ASC" },
           skip: offset,
@@ -816,8 +813,8 @@ class AdminService extends BaseService {
       } else {
         const [list, count] = await getRepository(User).findAndCount({
           where: [
-            { full_name: Like(`%${value}%`), ...queryOptions },
-            { handle: Like(`%${value}%`), ...queryOptions },
+            { full_name: ILike(`%${value}%`), ...queryOptions },
+            { handle: ILike(`%${value}%`), ...queryOptions },
           ],
           order: { full_name: "ASC" },
           skip: offset,
