@@ -16,7 +16,7 @@ import { requestService } from "../requests/request.services"
 import { walletService } from "../wallet/wallet.services"
 import { influencerService } from "../influencer/influencer.services"
 import { transactionService } from "../transactions/transaction.services"
-import { getRepository, Like, MoreThanOrEqual } from "typeorm"
+import { getRepository, Like, ILike, MoreThanOrEqual } from "typeorm"
 import { User } from "../user/user.model"
 import { Settings } from "./settings.model"
 import { AuthModule } from "../../utils/auth"
@@ -757,8 +757,8 @@ class AdminService extends BaseService {
       } else {
         const [list, count] = await getRepository(User).findAndCount({
           where: [
-            { full_name: Like(`%${value}%`), ...queryOptions },
-            { handle: Like(`%${value}%`), ...queryOptions },
+            { full_name: ILike(`%${value}%`), ...queryOptions },
+            { handle: ILike(`%${value}%`), ...queryOptions },
           ],
           order: { full_name: "ASC" },
           skip: offset,
@@ -816,8 +816,8 @@ class AdminService extends BaseService {
       } else {
         const [list, count] = await getRepository(User).findAndCount({
           where: [
-            { full_name: Like(`%${value}%`), ...queryOptions },
-            { handle: Like(`%${value}%`), ...queryOptions },
+            { full_name: ILike(`%${value}%`), ...queryOptions },
+            { handle: ILike(`%${value}%`), ...queryOptions },
           ],
           order: { full_name: "ASC" },
           skip: offset,
