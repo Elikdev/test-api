@@ -745,7 +745,7 @@ class AdminService extends BaseService {
             created_at: MoreThanOrEqual(start_date),
             ...queryOptions,
           },
-          order: { created_at: "DESC" },
+          order: { created_at: "ASC" },
           skip: offset,
           take: limit,
         })
@@ -804,7 +804,7 @@ class AdminService extends BaseService {
             created_at: MoreThanOrEqual(start_date),
             ...queryOptions,
           },
-          order: { created_at: "DESC" },
+          order: { created_at: "ASC" },
           skip: offset,
           take: limit,
         })
@@ -862,7 +862,7 @@ class AdminService extends BaseService {
             created_at: MoreThanOrEqual(start_date),
             ...queryOptions,
           },
-          order: { created_at: "DESC" },
+          order: { created_at: "ASC" },
           skip: offset,
           take: limit,
         })
