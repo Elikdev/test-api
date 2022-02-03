@@ -268,16 +268,16 @@ adminRouter.post(
   "/new-email-campaign",
   verificationMiddleware.validateToken,
   verificationMiddleware.checkAdmin,
-  campaignUpload,
+  // campaignUpload,
   async (req: Request, res: Response) => {
     try {
       const authUser = (req as any).user      
 
       const recipient_file = req.file
 
-      if(!recipient_file) {
-        return errorResponse(res, "Upload a file to proceed", 400)
-      }
+      // if(!recipient_file) {
+      //   return errorResponse(res, "Upload a file to proceed", 400)
+      // }
       //service is being called here
       const response = await adminService.newEmailCampaign(authUser, {...req.body, recipient_file})
  
@@ -298,16 +298,16 @@ adminRouter.post(
   "/new-sms-campaign",
   verificationMiddleware.validateToken,
   verificationMiddleware.checkAdmin,
-  campaignUpload,
+  // campaignUpload,
   async (req: Request, res: Response) => {
     try {
       const authUser = (req as any).user      
 
       const recipient_file = req.file
 
-      if(!recipient_file) {
-        return errorResponse(res, "Upload a file to proceed", 400)
-      }
+      // if(!recipient_file) {
+      //   return errorResponse(res, "Upload a file to proceed", 400)
+      // }
       //service is being called here
       const response = await adminService.newEmailCampaign(authUser, {...req.body, recipient_file})
  
