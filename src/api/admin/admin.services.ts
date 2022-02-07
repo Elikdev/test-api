@@ -588,10 +588,9 @@ class AdminService extends BaseService {
     //   const data_csv = await csv2().fromStream(stream)
     // }
 
-    if(schedule) {
+    if(schedule === true) {
       return this.internalResponse(false, {}, 400, "Sorry! Schedule email functionality still in progress...")
     }
-
 
           //get all the registered users
           const {users} = await userService.findAllVerifiedUsers()
