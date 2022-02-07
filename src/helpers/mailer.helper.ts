@@ -4,19 +4,52 @@ import * as path from "path";
 import { createTransport } from "nodemailer";
 import { minify } from "html-minifier";
 
+const dotenv = require("dotenv")
+
+if (process.env.NODE_ENV === "production") {
+	dotenv.config()
+} else {
+	dotenv.config({ path: ".env.local" })
+}
+
 const rootPath = path.join(__dirname, "..", "templates/");
 
-const opts: any = {
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    type: "OAuth2",
-    user: "support@bamiki.com",
-    serviceClient: process.env.CLIENT_ID,
-    privateKey: process.env.PRIVATE_KEY,
-  },
-};
+let opts: any
+
+if(process.env.NODE_ENV === "production") {
+  opts = {
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        type: "OAuth2",
+        user: "support@bamiki.com",
+        serviceClient: process.env.CLIENT_ID,
+        privateKey: process.env.PRIVATE_KEY,
+      },
+    };
+} else {
+  opts = {
+    service: "Gmail",
+    port: 465,
+    auth: {
+      user: process.env.EMAIL_ADDRESS,
+      pass: process.env.EMAIL_PASSWORD,
+     },
+  };
+}
+
+// const opts: any = {
+//   host: "smtp.gmail.com",
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     type: "OAuth2",
+//     user: "support@bamiki.com",
+//     serviceClient: process.env.CLIENT_ID,
+//     privateKey: process.env.PRIVATE_KEY,
+//   },
+// };
 
 // all templates here and can be easily used
 const templates = {
