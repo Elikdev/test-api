@@ -77,6 +77,75 @@ influencerRouter.post(
   }
 )
 
+influencerRouter.post(
+  "/new-influencers",
+  verificationMiddleware.validateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user
+
+      let {page, limit} = req.query as any
+
+      page = parseInt(page) || 1
+      limit = parseInt(limit) || 10
+
+      //service is being called here
+      const response = await influencerService.getNewInfluencers({page, limit})
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
+influencerRouter.post(
+  "/featured-influencers",
+  verificationMiddleware.validateToken,
+  async (req: Request, res: Response) => {
+    try {
+
+      //service is being called here
+      const response = await influencerService.getFeaturedInfluencers()
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
+influencerRouter.post(
+  "/spotlight-influencers",
+  verificationMiddleware.validateToken,
+  async (req: Request, res: Response) => {
+    try {
+
+      //service is being called here
+      const response = await influencerService.getSpotlight()
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
 
 
 
