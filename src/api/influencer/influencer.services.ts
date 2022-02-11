@@ -1,4 +1,5 @@
-import { DeepPartial, getRepository, Like, Not, Equal } from "typeorm";
+import moment from "moment";
+import { DeepPartial, getRepository, Like, Not, Equal, MoreThanOrEqual, getManager, getConnection } from "typeorm";
 import { BaseService } from "../../helpers/db.helper";
 import { AuthModule } from "../../utils/auth";
 import { AccountType, jwtCred, LiveVideoVerificationStatus, RoleType } from "../../utils/enum";
@@ -337,7 +338,77 @@ class InfluencerService extends BaseService {
     }
   }
 
-  
+  public async getNewInfluencers(iDTO: { page: number, limit: number }) {
+
+    const {page, limit} = iDTO
+    const offset = (page - 1) * limit 
+    
+    //use momnet to grab the sstart of the month
+    const startMonth  = moment().startOf("month")
+    const [list, count] = await getRepository(User).findAndCount({
+      where: {account_type: AccountType.CELEB, created_at: MoreThanOrEqual(startMonth), is_verified: true},
+      order: {created_at: "DESC"},
+      relations: [
+        "influencer_requests",
+        "fan_requests",
+        "transactions",
+        "shout_out_videos",
+        "ratings",
+        "followers",
+        "wallet",
+      ], 
+      take: limit,
+      skip: offset
+    })
+
+    if (list.length > 0) {
+      for (const influencer of list) {
+        delete influencer.password
+        delete influencer.email_verification
+      }
+    }
+
+    return this.internalResponse(true, {list, count}, 200, "New influencers retrieved!")
+  }
+
+  public async getFeaturedInfluencers() {
+    //get the influencers from the featured influencers
+    //choose the best influencers with the highest rating
+    const [list, count] = await getRepository(Influencer).findAndCount({
+      where: {is_verified: true, average_rating: MoreThanOrEqual("3.5")},
+      order: {average_rating: "DESC"},
+      relations: [
+        "influencer_requests",
+        "fan_requests",
+        "transactions",
+        "shout_out_videos",
+        "ratings",
+        "followers",
+        "wallet",
+      ],
+      take: 10
+    })
+    //if no influencers, choose the ones 
+    //display them as featured
+    if (list.length > 0) {
+      for (const influencer of list) {
+        delete influencer.password
+        delete influencer.email_verification
+        delete influencer.wallet
+        delete influencer.fan_requests
+        delete influencer.influencer_requests
+        delete influencer.transactions
+      }
+    }
+
+    return this.internalResponse(true, {influencers: list, count}, 200, "Featured influencers retrieved!")
+  }
+
+  public async getSpotlight() {
+    const query = await getConnection().createQueryBuilder().select("*").from(Influencer, "influencers").orderBy("RANDOM()").limit(6).execute()
+
+    return this.internalResponse(true, query, 200, "Worked!")
+  }
 }
 
 export const influencerService = new InfluencerService()
