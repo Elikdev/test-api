@@ -18,6 +18,7 @@ import { AccountStatus, RoleType } from "../../utils/enum"
 import { Room } from "../room/room.model"
 import { Message } from "../messages/messages.model"
 import { RefreshToken } from "../auth/refreshToken.model"
+import { Campaign } from "../admin/campaign.model"
 
 @Entity({ name: "users" })
 @TableInheritance({ column: { type: "varchar", name: "type" } })
@@ -119,4 +120,7 @@ export class User extends BaseModel {
 
   @OneToOne(() => RefreshToken, (rfreshT) => rfreshT.user)
   refresh_token: RefreshToken
+  
+  @OneToMany(() => Campaign, camp => camp.user)
+  campaigns: Campaign[]
 }
