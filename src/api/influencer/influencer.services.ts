@@ -1,12 +1,26 @@
-import moment from "moment";
-import { DeepPartial, getRepository, Like, Not, Equal, MoreThanOrEqual, getManager, getConnection } from "typeorm";
-import { BaseService } from "../../helpers/db.helper";
-import { AuthModule } from "../../utils/auth";
-import { AccountType, jwtCred, LiveVideoVerificationStatus, RoleType } from "../../utils/enum";
-import { User } from "../user/user.model";
-import { userService } from "../user/user.services";
-import { Influencer } from "./influencer.model";
-
+import moment from "moment"
+import {
+  DeepPartial,
+  getRepository,
+  Like,
+  Not,
+  Equal,
+  MoreThanOrEqual,
+  getManager,
+  getConnection,
+} from "typeorm"
+import { BaseService } from "../../helpers/db.helper"
+import { AuthModule } from "../../utils/auth"
+import {
+  AccountType,
+  jwtCred,
+  LiveVideoVerificationStatus,
+  RoleType,
+} from "../../utils/enum"
+import { User } from "../user/user.model"
+import { userService } from "../user/user.services"
+import { Influencer } from "./influencer.model"
+import { redisClient } from "../../index"
 
 class InfluencerService extends BaseService {
   super: any
@@ -248,8 +262,9 @@ class InfluencerService extends BaseService {
   public async getNewlyRegisteredInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
       where: {
-        live_video_verification_status: LiveVideoVerificationStatus.PENDING,  
-        is_admin_verified: false, role: RoleType.BAMIKI_USER
+        live_video_verification_status: LiveVideoVerificationStatus.PENDING,
+        is_admin_verified: false,
+        role: RoleType.BAMIKI_USER,
       },
       order: { created_at: "DESC" },
       relations: [
@@ -277,12 +292,11 @@ class InfluencerService extends BaseService {
 
   public async getUnverifiedInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
-      where:
-        {
-          live_video_verification_status: LiveVideoVerificationStatus.DECLINED,
-          is_admin_verified: false, 
-          role: RoleType.BAMIKI_USER
-        },
+      where: {
+        live_video_verification_status: LiveVideoVerificationStatus.DECLINED,
+        is_admin_verified: false,
+        role: RoleType.BAMIKI_USER,
+      },
       order: { updated_at: "DESC" },
       relations: [
         "requests",
@@ -310,9 +324,9 @@ class InfluencerService extends BaseService {
   public async getVerifiedInfluencers() {
     const [list, count] = await getRepository(Influencer).findAndCount({
       where: {
-          live_video_verification_status: LiveVideoVerificationStatus.VERIFIED,
-          is_admin_verified: true,
-          role: RoleType.BAMIKI_USER
+        live_video_verification_status: LiveVideoVerificationStatus.VERIFIED,
+        is_admin_verified: true,
+        role: RoleType.BAMIKI_USER,
       },
       order: { updated_at: "DESC" },
       relations: [
@@ -338,45 +352,21 @@ class InfluencerService extends BaseService {
     }
   }
 
-  public async getNewInfluencers(iDTO: { page: number, limit: number }) {
+  public async getNewInfluencers(iDTO: { page: number; limit: number }, authUser:jwtCred) {
+    const { page, limit } = iDTO
+    const offset = (page - 1) * limit
+    const { id } = authUser
 
-    const {page, limit} = iDTO
-    const offset = (page - 1) * limit 
-    
     //use momnet to grab the sstart of the month
-    const startMonth  = moment().startOf("month")
+    const startMonth = moment().startOf("month")
     const [list, count] = await getRepository(User).findAndCount({
-      where: {account_type: AccountType.CELEB, created_at: MoreThanOrEqual(startMonth), is_verified: true},
-      order: {created_at: "DESC"},
-      relations: [
-        "influencer_requests",
-        "fan_requests",
-        "transactions",
-        "shout_out_videos",
-        "ratings",
-        "followers",
-        "wallet",
-      ], 
-      take: limit,
-      skip: offset
-    })
-
-    if (list.length > 0) {
-      for (const influencer of list) {
-        delete influencer.password
-        delete influencer.email_verification
-      }
-    }
-
-    return this.internalResponse(true, {list, count}, 200, "New influencers retrieved!")
-  }
-
-  public async getFeaturedInfluencers() {
-    //get the influencers from the featured influencers
-    //choose the best influencers with the highest rating
-    const [list, count] = await getRepository(Influencer).findAndCount({
-      where: {is_verified: true, average_rating: MoreThanOrEqual("3.5")},
-      order: {average_rating: "DESC"},
+      where: {
+        account_type: AccountType.CELEB,
+        created_at: MoreThanOrEqual(startMonth),
+        is_verified: true,
+        id: Not(Equal(id))
+      },
+      order: { created_at: "DESC" },
       relations: [
         "influencer_requests",
         "fan_requests",
@@ -386,28 +376,167 @@ class InfluencerService extends BaseService {
         "followers",
         "wallet",
       ],
-      take: 10
+      take: limit,
+      skip: offset,
     })
-    //if no influencers, choose the ones 
-    //display them as featured
+
     if (list.length > 0) {
       for (const influencer of list) {
         delete influencer.password
         delete influencer.email_verification
-        delete influencer.wallet
-        delete influencer.fan_requests
-        delete influencer.influencer_requests
-        delete influencer.transactions
       }
     }
 
-    return this.internalResponse(true, {influencers: list, count}, 200, "Featured influencers retrieved!")
+    return this.internalResponse(
+      true,
+      { list, count },
+      200,
+      "New influencers retrieved!"
+    )
   }
 
-  public async getSpotlight() {
-    const query = await getConnection().createQueryBuilder().select("*").from(Influencer, "influencers").orderBy("RANDOM()").limit(6).execute()
+  public async getFeaturedInfluencers(authUser: jwtCred) {
+    const { id } = authUser
+    //get the influencers from the featured influencers
+    let results = []
+    //choose the best influencers with the highest rating
+    if (results.length <= 0) {
+      const [list, count] = await getRepository(Influencer).findAndCount({
+        where: {
+          is_verified: true,
+          average_rating: MoreThanOrEqual("3.5"),
+          id: Not(Equal(id)),
+        },
+        order: { average_rating: "DESC" },
+        relations: [
+          "influencer_requests",
+          "fan_requests",
+          "transactions",
+          "shout_out_videos",
+          "ratings",
+          "followers",
+          "wallet",
+        ],
+        take: 10,
+      })
 
-    return this.internalResponse(true, query, 200, "Worked!")
+      results = list
+    }
+
+    let total_length: any
+
+    if (results.length < 10) {
+      const [list, count] = await getRepository(Influencer).findAndCount({
+        where: { is_verified: true, id: Not(Equal(id)) },
+        relations: [
+          "influencer_requests",
+          "fan_requests",
+          "transactions",
+          "ratings",
+          "followers",
+          "wallet",
+        ],
+      })
+
+      //sort the fan that has the highest number of requests
+      list.sort((a, b) =>
+        a.influencer_requests.length > b.influencer_requests.length
+          ? -1
+          : b.influencer_requests.length > a.influencer_requests.length
+          ? 1
+          : 0
+      )
+
+      //push to results
+      for (const infl of list) {
+        results.push(infl)
+
+        if (results.length === 10) {
+          break
+        }
+      }
+      total_length = results.length
+    }
+
+    if (total_length < 10) {
+      const query = await getConnection()
+        .createQueryBuilder()
+        .select("*")
+        .from(Influencer, "influencers")
+        .where(`NOT("id" = ${id})`)
+        .orderBy("RANDOM()")
+        .limit(6)
+        .execute()
+
+      for (const infl of query) {
+        results?.push(infl)
+
+        if (results?.length === 10) {
+          break
+        }
+      }
+    }
+    //display them as featured
+    if (results.length > 0) {
+      //remove duplicates
+      results = results.filter(
+        (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+      )
+
+      for (const influencer of results) {
+        delete influencer?.password
+        delete influencer?.email_verification
+        delete influencer?.wallet
+        delete influencer?.fan_requests
+        delete influencer?.influencer_requests
+        delete influencer?.transactions
+      }
+    }
+
+    return this.internalResponse(
+      true,
+      results,
+      200,
+      "Featured influencers retrieved!"
+    )
+  }
+
+  public async getSpotlight(authUser: jwtCred) {
+    const { id } = authUser
+
+    let rest
+
+    //check if the redis has it
+    const results = await redisClient.get("spotlights")
+    if (results == null) {
+      const query = await getConnection()
+        .createQueryBuilder()
+        .select("*")
+        .from(Influencer, "influencers")
+        .where(`NOT("id" = ${id})`)
+        .orderBy("RANDOM()")
+        .limit(6)
+        .execute()
+
+      if (query.length > 0) {
+        for (const q of query) {
+          delete q.password
+          delete q.email_verification
+          delete q.wallet
+          delete q.fan_requestss
+          delete q.influencer_requests
+          delete q.transactions
+        }
+
+        await redisClient.SETEX("spotlights", 604800, JSON.stringify(query))
+        rest = query
+      }
+    } else {
+      console.log("fetching from redis")
+      rest = JSON.parse(results)
+    }
+
+    return this.internalResponse(true, rest, 200, "spotlights retrieved!")
   }
 }
 

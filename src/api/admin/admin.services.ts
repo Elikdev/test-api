@@ -5,6 +5,8 @@ import { userService } from "../user/user.services"
 import {
   AccountType,
   AdminCategory,
+  campaignStatus,
+  campaignType,
   jwtCred,
   LiveVideoVerificationStatus,
   RoleType,
@@ -16,7 +18,7 @@ import { requestService } from "../requests/request.services"
 import { walletService } from "../wallet/wallet.services"
 import { influencerService } from "../influencer/influencer.services"
 import { transactionService } from "../transactions/transaction.services"
-import { getRepository, Like, ILike, MoreThanOrEqual } from "typeorm"
+import { getRepository, Like, ILike, MoreThanOrEqual, getConnection } from "typeorm"
 import { User } from "../user/user.model"
 import { Settings } from "./settings.model"
 import { AuthModule } from "../../utils/auth"
@@ -28,6 +30,8 @@ import * as fs from "fs"
 import moment from "moment"
 import { Influencer } from "../influencer/influencer.model"
 import { compileEjs, sendEmail } from "../../helpers/mailer.helper"
+import { Campaign } from "./campaign.model"
+import { scheduleRequestJobChecker } from "../../helpers/cronjobs"
 
 class AdminService extends BaseService {
   public async adminDashboard() {
@@ -282,7 +286,7 @@ class AdminService extends BaseService {
         new_settings.standard_delivery_time = value
       }
 
-      if(type === transactionSettingsType.EXPRESS_FEE) {
+      if (type === transactionSettingsType.EXPRESS_FEE) {
         new_settings.express_delivery_fee = value
       }
 
@@ -372,7 +376,7 @@ class AdminService extends BaseService {
     })
 
     const admin_exists_as_users = await this.findOne(User, {
-      where: [{email}, {phone_number}]
+      where: [{ email }, { phone_number }],
     })
     if (admin_exists || admin_exists_as_users) {
       return this.internalResponse(
@@ -548,12 +552,20 @@ class AdminService extends BaseService {
     adminDTO: {
       campaign_name: string
       sender: string
-      message: any,
-      schedule: boolean,
+      message: any
+      schedule: boolean
       recipient_file: any
+      schedule_date: any
     }
   ) {
-    const { campaign_name, sender, message, schedule, recipient_file } = adminDTO
+    const {
+      campaign_name,
+      sender,
+      message,
+      schedule,
+      recipient_file,
+      schedule_date,
+    } = adminDTO
 
     // if (extname(recipient_file?.originalname) === ".xlsx") {
     //   /* tslint:disable-next-line: no-string-literal */
@@ -588,43 +600,170 @@ class AdminService extends BaseService {
     //   const data_csv = await csv2().fromStream(stream)
     // }
 
-    if(schedule === true) {
-      return this.internalResponse(false, {}, 400, "Sorry! Schedule email functionality still in progress...")
-    }
+    //start transaction
+    const connection = getConnection()
+    const queryRunner = connection.createQueryRunner()
 
-          //get all the registered users
-          const {users} = await userService.findAllVerifiedUsers()
+    await queryRunner.connect()
 
-          if(users.length <= 0) {
-            return this.internalResponse(false, {}, 400, "No users found on the platform")
+    await queryRunner.startTransaction()
+
+    try {
+      //get all the registered users
+      const { users } = await userService.findAllVerifiedUsers()
+
+      if (users.length <= 0) {
+        return this.internalResponse(
+          false,
+          {},
+          400,
+          "No users found on the platform"
+        )
+      }
+      if (schedule) {
+        //save to db
+        for (const user of users) {
+          const newCampaign = queryRunner.manager.create(Campaign, {
+            campaign_name: campaign_name,
+            sender: sender,
+            status: campaignStatus.SCHEDULED,
+            user: user,
+            text: message,
+            type: campaignType.EMAIL,
+          })
+
+          const campaign_saved = await queryRunner.manager.save(newCampaign)
+
+          if (!campaign_saved) {
+            await queryRunner.rollbackTransaction()
+            await queryRunner.release()
+            return this.internalResponse(
+              false,
+              {},
+              400,
+              "Error in sending out campaigns"
+            )
           }
-      
+        }
+
+        await queryRunner.commitTransaction()
+
+        // create function for scheduled job
+        const scheduledFunct = async () => {
+          //get all the registered users
+          const { users } = await userService.findAllVerifiedUsers()
+
           for (const user of users) {
-            const htmlMessage = compileEjs({template: "campaign-template"})({
+            const htmlMessage = compileEjs({ template: "campaign-template" })({
               name: `${
                 Array.isArray(user.full_name.split(" "))
                   ? user.full_name.split(" ")[0]
                   : user.full_name
               }`,
-              message: message
+              message: message,
             })
-      
+
             const email_sent = await sendEmail({
               html: htmlMessage,
               subject: campaign_name,
-              to: user.email.toLowerCase()
+              to: user.email.toLowerCase(),
             })
-      
-            if(!email_sent) {
-              return this.internalResponse(false, {email: user.email}, 400, "Error in sending mail to this particular email")
-            }
-            //save to db
-          }
-       
-          //save to db
-      
-            return this.internalResponse(true, {}, 200, "Emails were sent successfully!")
 
+            if (email_sent) {
+              const campaign = await this.findOne(Campaign, {
+                where: { user: user.id, campaign_name },
+              })
+
+              if (campaign.status === campaignStatus.SCHEDULED) {
+                await getConnection()
+                  .createQueryBuilder()
+                  .update(Campaign)
+                  .set({ status: campaignStatus.DELIVERED })
+                  .where("id = :id", { id: campaign.id })
+                  .execute()
+              }
+            }
+          }
+        }
+
+        scheduleRequestJobChecker(schedule_date, scheduledFunct)
+
+        return this.internalResponse(
+          true,
+          {},
+          200,
+          "Your email camapaign has been scheduled successfully"
+        )
+      }
+
+      for (const user of users) {
+        const htmlMessage = compileEjs({ template: "campaign-template" })({
+          name: `${
+            Array.isArray(user.full_name.split(" "))
+              ? user.full_name.split(" ")[0]
+              : user.full_name
+          }`,
+          message: message,
+        })
+
+        const email_sent = await sendEmail({
+          html: htmlMessage,
+          subject: campaign_name,
+          to: user.email.toLowerCase(),
+        })
+
+        if (!email_sent) {
+          return this.internalResponse(
+            false,
+            { email: user.email },
+            400,
+            "Error in sending mail to this particular email"
+          )
+        }
+
+        //save to db
+        const newCampaign = queryRunner.manager.create(Campaign, {
+          campaign_name: campaign_name,
+          sender: sender,
+          status: campaignStatus.DELIVERED,
+          user: user,
+          text: message,
+          type: campaignType.EMAIL,
+        })
+
+        const email_saved = await queryRunner.manager.save(newCampaign)
+
+        if (!email_saved) {
+          await queryRunner.rollbackTransaction()
+          await queryRunner.release()
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            "A campaign was not saved"
+          )
+        }
+      }
+
+      await queryRunner.commitTransaction()
+
+      return this.internalResponse(
+        true,
+        {},
+        200,
+        "Emails were sent successfully!"
+      )
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+      await queryRunner.release()
+
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "Request not successful. Please try again"
+      )
+    }
   }
 
   public async newSmsCampaign(
@@ -633,18 +772,26 @@ class AdminService extends BaseService {
       campaign_name: string
       sender: string
       message: any
-      schedule: Boolean,
+      schedule: Boolean
       recipient_file: any
+      schedule_date: any
     }
   ) {
-    const { campaign_name, sender, message, recipient_file } = adminDTO
+    const {
+      campaign_name,
+      sender,
+      message,
+      recipient_file,
+      schedule,
+      schedule_date,
+    } = adminDTO
 
     // if (extname(recipient_file?.originalname) === ".xlsx") {
     //   /* tslint:disable-next-line: no-string-literal */
     //   const stream = Readable["from"](recipient_file.buffer)
     //   const files = await readXlsxFile(stream)
 
-    //   files.shift() 
+    //   files.shift()
 
     //   let recipient_files = []
 
@@ -672,12 +819,142 @@ class AdminService extends BaseService {
     //   return this.internalResponse(true, data_csv, 200, "file is in csv")
     // }
 
-    return this.internalResponse(
-      false,
-      {},
-      400,
-      "Functionality is in progress! Sorry for the delay"
-    )
+    //start transaction
+    const connection = getConnection()
+    const queryRunner = connection.createQueryRunner()
+
+    await queryRunner.connect()
+
+    await queryRunner.startTransaction()
+
+    try {
+      //get all the registered users
+      const { users } = await userService.findAllVerifiedUsers()
+
+      if (users.length <= 0) {
+        return this.internalResponse(
+          false,
+          {},
+          400,
+          "No users found on the platform"
+        )
+      }
+
+      
+      if (schedule) {
+        //save to db
+        for (const user of users) {
+          const newCampaign = queryRunner.manager.create(Campaign, {
+            campaign_name: campaign_name,
+            sender: sender,
+            status: campaignStatus.SCHEDULED,
+            user: user,
+            text: message,
+            type: campaignType.SMS,
+          })
+
+          const campaign_saved = await queryRunner.manager.save(newCampaign)
+
+          if (!campaign_saved) {
+            await queryRunner.rollbackTransaction()
+            await queryRunner.release()
+            return this.internalResponse(
+              false,
+              {},
+              400,
+              "Error in sending out campaigns"
+            )
+          }
+        }
+
+        await queryRunner.commitTransaction()
+
+        // create function for scheduled job
+        const scheduledFunct = async () => {
+          //get all the registered users
+          const { users } = await userService.findAllVerifiedUsers()
+
+          for (const user of users) {
+            const sms_sent = false
+
+            if (sms_sent) {
+              const campaign = await this.findOne(Campaign, {
+                where: { user: user.id, campaign_name },
+              })
+
+              if (campaign.status === campaignStatus.SCHEDULED) {
+                await getConnection()
+                  .createQueryBuilder()
+                  .update(Campaign)
+                  .set({ status: campaignStatus.DELIVERED })
+                  .where("id = :id", { id: campaign.id })
+                  .execute()
+              }
+            }
+          }
+        }
+
+        scheduleRequestJobChecker(schedule_date, scheduledFunct)
+
+        return this.internalResponse(
+          true,
+          {},
+          200,
+          "Your email camapaign has been scheduled successfully"
+        )
+      }
+
+      for (const user of users) {
+        //twilio bulk sms comes in here
+        const sms_sent = false
+
+        if (!sms_sent) {
+          return this.internalResponse(
+            false,
+            { phone_number: user.phone_number },
+            400,
+            "Error in sending sms to phone number"
+          )
+        }
+
+        //save to db
+        const newCampaign = queryRunner.manager.create(Campaign, {
+          campaign_name: campaign_name,
+          sender: sender,
+          status: campaignStatus.DELIVERED,
+          user: user,
+          text: message,
+          type: campaignType.SMS,
+        })
+
+        const sms_saved = await queryRunner.manager.save(newCampaign)
+
+        if (!sms_saved) {
+          await queryRunner.rollbackTransaction()
+          await queryRunner.release()
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            "A campaign was not saved"
+          )
+        }
+      }
+
+      await queryRunner.commitTransaction()
+
+      return this.internalResponse(true, {}, 200, "Sms were sent successfully!")
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+      await queryRunner.release()
+
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "Request not successful. Please try again"
+      )
+    }
   }
 
   public async searchAndFilter(searchDTO: {
@@ -734,11 +1011,16 @@ class AdminService extends BaseService {
           }
         }
       } else if (filter === "date") {
-        if(moment(value).isValid() === false) {
-          return this.internalResponse(false, {}, 400, "Date must be in format YYYY-MM-DD")
+        if (moment(value).isValid() === false) {
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            "Date must be in format YYYY-MM-DD"
+          )
         }
         const start_date = moment(value).startOf("day")
-        
+
         const [list, count] = await getRepository(User).findAndCount({
           where: {
             created_at: MoreThanOrEqual(start_date),
@@ -794,8 +1076,13 @@ class AdminService extends BaseService {
           }
         }
       } else if (filter === "date") {
-        if(moment(value).isValid() === false) {
-          return this.internalResponse(false, {}, 400, "Date must be in format YYYY-MM-DD")
+        if (moment(value).isValid() === false) {
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            "Date must be in format YYYY-MM-DD"
+          )
         }
         const start_date = moment(value).startOf("day")
         const [list, count] = await getRepository(User).findAndCount({
@@ -852,8 +1139,13 @@ class AdminService extends BaseService {
         res_list = list
         res_count = count
       } else if (filter === "date") {
-        if(moment(value).isValid() === false) {
-          return this.internalResponse(false, {}, 400, "Date must be in format YYYY-MM-DD")
+        if (moment(value).isValid() === false) {
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            "Date must be in format YYYY-MM-DD"
+          )
         }
         const start_date = moment(value).startOf("day")
         const [list, count] = await getRepository(User).findAndCount({
@@ -892,7 +1184,7 @@ class AdminService extends BaseService {
       results.count = res_count
     }
 
-    if(results.result.length <= 0) {
+    if (results.result.length <= 0) {
       return this.internalResponse(false, {}, 400, "No results found")
     }
 

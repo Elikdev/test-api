@@ -155,3 +155,13 @@ export enum searchFieldType {
     INFLUENCER = "influencer",
     VERIFICATION = "verification"
 }
+
+export enum campaignType {
+    EMAIL = "email",
+    SMS = "sms"
+}
+
+export enum campaignStatus {
+    DELIVERED = "delivered",
+    SCHEDULED = "scheduled"
+}

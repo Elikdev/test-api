@@ -90,7 +90,7 @@ influencerRouter.post(
       limit = parseInt(limit) || 10
 
       //service is being called here
-      const response = await influencerService.getNewInfluencers({page, limit})
+      const response = await influencerService.getNewInfluencers({page, limit}, authUser)
 
       if (!response.status) {
         return errorResponse(res, response.message, 400)
@@ -109,9 +109,9 @@ influencerRouter.post(
   verificationMiddleware.validateToken,
   async (req: Request, res: Response) => {
     try {
-
+      const authUser = (req as any).user
       //service is being called here
-      const response = await influencerService.getFeaturedInfluencers()
+      const response = await influencerService.getFeaturedInfluencers(authUser)
 
       if (!response.status) {
         return errorResponse(res, response.message, 400)
@@ -131,8 +131,9 @@ influencerRouter.post(
   async (req: Request, res: Response) => {
     try {
 
+      const authUser = (req as any).user
       //service is being called here
-      const response = await influencerService.getSpotlight()
+      const response = await influencerService.getSpotlight(authUser)
 
       if (!response.status) {
         return errorResponse(res, response.message, 400)
