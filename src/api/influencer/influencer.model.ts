@@ -35,6 +35,16 @@ export class Influencer extends User {
   @Column()
   average_rating: string
 
+  @Column()
+  transaction_pin: string
+
+  @Column({ type: "simple-json" })
+  withdrawal_verification: {
+    otp_verified: boolean
+    otp_code: string
+    expires_in: string
+  }
+
   @OneToMany(() => Bank, (bank) => bank.user)
   banks: Bank[]
 

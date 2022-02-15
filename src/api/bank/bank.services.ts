@@ -134,12 +134,14 @@ class BankService extends BaseService {
     account_name: string,
     account_number: string,
     bank_name: string,
+    bank_code: string,
     user: Influencer
   ) {
     const bank = new Bank()
     bank.account_name = account_name
     bank.account_number = account_number
     bank.bank_name = bank_name
+    bank.bank_code = bank_code
     bank.user = user
 
     return bank
@@ -151,7 +153,7 @@ class BankService extends BaseService {
 
   public async addBankDetails(
     authUser: jwtCred,
-    bankDTO: { account_name: string; account_number: string; bank_name: string }
+    bankDTO: { account_name: string; account_number: string; bank_name: string, bank_code: string}
   ) {
     //get the user
     const user_id = authUser.id
@@ -172,11 +174,12 @@ class BankService extends BaseService {
     }
 
     //add the bank details
-    const { account_name, account_number, bank_name } = bankDTO
+    const { account_name, account_number, bank_name, bank_code} = bankDTO
     const bank = await this.BankDetailsInstance(
       account_name.toLowerCase(),
       account_number,
       bank_name.toLowerCase(),
+      bank_code,
       influencer
     )
 

@@ -128,6 +128,94 @@ class InfluencerService extends BaseService {
     }
   }
 
+  public async setTransactionPin(authUser: jwtCred, setPinDTO:{pin: string; confirm_pin: string}){
+    const user_id = authUser.id
+
+    const influencer = await this.findInfluencerById(user_id)
+
+    if(!influencer){
+      return this.internalResponse(false, {}, 400, "Influencer not found")
+    }
+
+    //check if user has set his transaction pin
+    if(influencer.transaction_pin){
+      return this.internalResponse(false, {}, 400, "Transaction pin has been set initially set")
+    }
+
+    //hash transaction pin
+    let {pin, confirm_pin} = setPinDTO
+
+    pin = AuthModule.hashPassWord(pin)
+
+    const update_details = {
+      transaction_pin: pin
+    }
+
+    const influencer_update = await this.updateInfluencer(influencer, update_details)
+
+    if(!influencer_update) {
+      return this.internalResponse(false, {}, 400, "Error in updating user")
+    }
+
+    return this.internalResponse(true, {}, 200, "Transaction pin set successfully")
+  }
+
+  public async changeTransactionPin(
+    authUser: jwtCred, 
+    setPinDTO: {old_pin: string; new_pin: string; confirm_pin: string }
+  ) {
+    const user_id = authUser.id
+
+    const influencer = await this.findInfluencerById(user_id)
+
+    if (!influencer) {
+      return this.internalResponse(false, {}, 400, "influencer not found")
+    }
+
+    let { old_pin, new_pin, confirm_pin } = setPinDTO
+
+    //verify the old_pin
+    if (!old_pin) {
+      return this.internalResponse(false, {}, 400, "Enter your old_pin")
+    }
+
+    const pin_verified = AuthModule.compareHash(
+      old_pin,
+      influencer.transaction_pin
+    )
+
+    if (!pin_verified) {
+      return this.internalResponse(false, {}, 400, "Pin incorrect")
+    }
+
+    if (pin_verified && !new_pin && !confirm_pin) {
+      return this.internalResponse(false, {}, 400, "Enter your new_pin")
+    }
+
+    //hash pin
+    new_pin = AuthModule.hashPassWord(new_pin)
+
+    const update_details = {
+      transaction_pin: new_pin,
+    }
+
+    const influencer_update = await this.updateInfluencer(
+      influencer,
+      update_details
+    )
+
+    if (!influencer_update) {
+      return this.internalResponse(false, {}, 400, "Error in updating user")
+    }
+
+    return this.internalResponse(
+      true,
+      {},
+      200,
+      "Transaction pin set successfully"
+    )
+  }
+
   public async getAllInfluencers(
     authUser: jwtCred,
     iDTO: { page: number; limit: number }

@@ -13,6 +13,9 @@ export class Bank extends BaseModel {
   @Column()
   bank_name: string
 
+  @Column()
+  bank_code: string
+
   @ManyToOne(() => Influencer, (influencer) => influencer.banks, {
     onDelete: "CASCADE",
   })

@@ -16,6 +16,7 @@ class BankValidation {
         account_number: Joi.string().min(10).required(),
         bank_name: Joi.string().required(),
         account_name: Joi.string().required(),
+        bank_code: Joi.string().required()
       },
     })
   }

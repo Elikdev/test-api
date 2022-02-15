@@ -1,6 +1,6 @@
 import { celebrate } from "celebrate";
 import Joi from "joi";
-import { LiveVideoVerificationStatus } from "../../utils/enum";
+import { campaignType, LiveVideoVerificationStatus } from "../../utils/enum";
 
 class AdminValidation {
   public verifyLiveVideoRules() {
@@ -26,6 +26,17 @@ class AdminValidation {
           "activate",
           "delete",
           "restore"
+        ).required(),
+      },
+    })
+  }
+
+  public getCampaignsRules() {
+    return celebrate({
+      query: {
+        type: Joi.valid(
+          campaignType.EMAIL,
+          campaignType.SMS
         ).required(),
       },
     })
