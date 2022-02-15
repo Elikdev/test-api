@@ -1190,6 +1190,24 @@ class AdminService extends BaseService {
 
     return this.internalResponse(true, results, 200, "Results found")
   }
+
+  public async getCampaigns(cDTO: {type: string}) {
+    const {type} = cDTO
+    const campaigns = await getRepository(Campaign).find({
+      where: {type},
+      relations: ["user"]
+    })
+
+    if(campaigns.length > 0) {
+      for (const campaign of campaigns) {
+        delete campaign.user.email_verification
+        delete campaign.user.password
+      }
+    }
+
+
+    return this.internalResponse(true, campaigns, 200, "campaigns")
+  }
 }
 
 export const adminService = new AdminService()

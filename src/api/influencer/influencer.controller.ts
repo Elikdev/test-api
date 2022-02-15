@@ -3,6 +3,7 @@ import { successRes, errorResponse } from "../../helpers/response.helper"
 import { influencerService } from "./influencer.services"
 import { verificationMiddleware } from "../../middlwares/checkLogin"
 import { influencerValidation } from "../../middlwares/validations/influencer.validation"
+import { userValidation } from "../../middlwares/validations/user.validation"
 
 const influencerRouter = Router()
 
@@ -29,6 +30,60 @@ influencerRouter.put('/set-rate', verificationMiddleware.validateToken, verifica
     errorResponse(res, error.message)
   }
 })
+
+influencerRouter.post(
+  "/set-pin",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkCeleb,
+  userValidation.setPinValidation(),
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user
+
+      //service is being called here
+      const response = await influencerService.setTransactionPin(
+        authUser,
+        req.body
+      )
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
+influencerRouter.post(
+  "/change-pin",
+  verificationMiddleware.validateToken,
+  verificationMiddleware.checkCeleb,
+  userValidation.changePinValidation(),
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user
+
+      //service is being called here
+      const response = await influencerService.changeTransactionPin(
+        authUser,
+        req.body
+      )
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
 
 influencerRouter.post('/get-all', verificationMiddleware.validateToken, async (req: Request, res: Response)=>{
   try{
