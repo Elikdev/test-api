@@ -620,7 +620,7 @@ class AdminService extends BaseService {
           "No users found on the platform"
         )
       }
-      if (schedule) {
+      if (schedule === true) {
         //save to db
         for (const user of users) {
           const newCampaign = queryRunner.manager.create(Campaign, {
@@ -841,7 +841,7 @@ class AdminService extends BaseService {
       }
 
       
-      if (schedule) {
+      if (schedule === true) {
         //save to db
         for (const user of users) {
           const newCampaign = queryRunner.manager.create(Campaign, {
