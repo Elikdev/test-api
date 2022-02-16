@@ -410,6 +410,19 @@ class AdminService extends BaseService {
 
     delete new_admin_saved.password
 
+    // // send mail to user that its received
+    const message = compileEjs({ template: "update-template" })({
+      body: `You have been given an admin role on the Bamiki platform.
+      `,
+      name: `${Array.isArray(new_admin.full_name.split(" ")) ? new_admin.full_name.split(" ")[0] : new_admin.full_name}`,
+    });
+
+    await sendEmail({
+      html: message,
+      subject: "Added as an Admin",
+      to: new_admin.email,
+    });
+
     return this.internalResponse(
       true,
       new_admin_saved,
@@ -553,19 +566,11 @@ class AdminService extends BaseService {
       campaign_name: string
       sender: string
       message: any
-      schedule: boolean
+      schedule: any
       recipient_file: any
       schedule_date: any
     }
   ) {
-    const {
-      campaign_name,
-      sender,
-      message,
-      schedule,
-      recipient_file,
-      schedule_date,
-    } = adminDTO
 
     // if (extname(recipient_file?.originalname) === ".xlsx") {
     //   /* tslint:disable-next-line: no-string-literal */
@@ -609,6 +614,14 @@ class AdminService extends BaseService {
     await queryRunner.startTransaction()
 
     try {
+      const {
+        campaign_name,
+        sender,
+        message,
+        schedule,
+        recipient_file,
+        schedule_date,
+      } = adminDTO
       //get all the registered users
       const { users } = await userService.findAllVerifiedUsers()
 
@@ -619,40 +632,8 @@ class AdminService extends BaseService {
           400,
           "No users found on the platform"
         )
-      }
-      if (schedule === true) {
-        //save to db
-        for (const user of users) {
-          const newCampaign = queryRunner.manager.create(Campaign, {
-            campaign_name: campaign_name,
-            sender: sender,
-            status: campaignStatus.SCHEDULED,
-            user: user,
-            text: message,
-            type: campaignType.EMAIL,
-          })
-
-          const campaign_saved = await queryRunner.manager.save(newCampaign)
-
-          if (!campaign_saved) {
-            await queryRunner.rollbackTransaction()
-            await queryRunner.release()
-            return this.internalResponse(
-              false,
-              {},
-              400,
-              "Error in sending out campaigns"
-            )
-          }
-        }
-
-        await queryRunner.commitTransaction()
-
-        // create function for scheduled job
-        const scheduledFunct = async () => {
-          //get all the registered users
-          const { users } = await userService.findAllVerifiedUsers()
-
+      } else {
+        if (schedule === "no") {
           for (const user of users) {
             const htmlMessage = compileEjs({ template: "campaign-template" })({
               name: `${
@@ -662,97 +643,132 @@ class AdminService extends BaseService {
               }`,
               message: message,
             })
-
+    
             const email_sent = await sendEmail({
               html: htmlMessage,
               subject: campaign_name,
               to: user.email.toLowerCase(),
             })
-
-            if (email_sent) {
-              const campaign = await this.findOne(Campaign, {
-                where: { user: user.id, campaign_name },
+    
+            if (!email_sent) {
+              return this.internalResponse(
+                false,
+                { email: user.email },
+                400,
+                "Error in sending mail to this particular email"
+              )
+            }
+    
+            //save to db
+            const newCampaign = queryRunner.manager.create(Campaign, {
+              campaign_name: campaign_name,
+              sender: sender,
+              status: campaignStatus.DELIVERED,
+              user: user,
+              text: message,
+              type: campaignType.EMAIL,
+            })
+    
+            const email_saved = await queryRunner.manager.save(newCampaign)
+    
+            if (!email_saved) {
+              await queryRunner.rollbackTransaction()
+              await queryRunner.release()
+              return this.internalResponse(
+                false,
+                {},
+                400,
+                "A campaign was not saved"
+              )
+            }
+          }
+    
+          await queryRunner.commitTransaction()
+    
+          return this.internalResponse(
+            true,
+            {},
+            200,
+            "Emails were sent successfully!"
+          )
+        } else {
+          //save to db
+          for (const user of users) {
+            const newCampaign = queryRunner.manager.create(Campaign, {
+              campaign_name: campaign_name,
+              sender: sender,
+              status: campaignStatus.SCHEDULED,
+              user: user,
+              text: message,
+              type: campaignType.EMAIL,
+            })
+  
+            const campaign_saved = await queryRunner.manager.save(newCampaign)
+  
+            if (!campaign_saved) {
+              await queryRunner.rollbackTransaction()
+              await queryRunner.release()
+              return this.internalResponse(
+                false,
+                {},
+                400,
+                "Error in sending out campaigns"
+              )
+            }
+          }
+  
+          await queryRunner.commitTransaction()
+  
+          // create function for scheduled job
+          const scheduledFunct = async () => {
+            //get all the registered users
+            const { users } = await userService.findAllVerifiedUsers()
+  
+            for (const user of users) {
+              const htmlMessage = compileEjs({ template: "campaign-template" })({
+                name: `${
+                  Array.isArray(user.full_name.split(" "))
+                    ? user.full_name.split(" ")[0]
+                    : user.full_name
+                }`,
+                message: message,
               })
-
-              if (campaign.status === campaignStatus.SCHEDULED) {
-                await getConnection()
-                  .createQueryBuilder()
-                  .update(Campaign)
-                  .set({ status: campaignStatus.DELIVERED })
-                  .where("id = :id", { id: campaign.id })
-                  .execute()
+  
+              const email_sent = await sendEmail({
+                html: htmlMessage,
+                subject: campaign_name,
+                to: user.email.toLowerCase(),
+              })
+  
+              if (email_sent) {
+                const campaign = await this.findOne(Campaign, {
+                  where: { user: user.id, campaign_name },
+                })
+  
+                if (campaign.status === campaignStatus.SCHEDULED) {
+                  await getConnection()
+                    .createQueryBuilder()
+                    .update(Campaign)
+                    .set({ status: campaignStatus.DELIVERED })
+                    .where("id = :id", { id: campaign.id })
+                    .execute()
+                }
               }
             }
           }
-        }
-
-        scheduleRequestJobChecker(schedule_date, scheduledFunct)
-
-        return this.internalResponse(
-          true,
-          {},
-          200,
-          "Your email camapaign has been scheduled successfully"
-        )
-      }
-
-      for (const user of users) {
-        const htmlMessage = compileEjs({ template: "campaign-template" })({
-          name: `${
-            Array.isArray(user.full_name.split(" "))
-              ? user.full_name.split(" ")[0]
-              : user.full_name
-          }`,
-          message: message,
-        })
-
-        const email_sent = await sendEmail({
-          html: htmlMessage,
-          subject: campaign_name,
-          to: user.email.toLowerCase(),
-        })
-
-        if (!email_sent) {
+  
+          scheduleRequestJobChecker(schedule_date, scheduledFunct)
+  
           return this.internalResponse(
-            false,
-            { email: user.email },
-            400,
-            "Error in sending mail to this particular email"
-          )
-        }
-
-        //save to db
-        const newCampaign = queryRunner.manager.create(Campaign, {
-          campaign_name: campaign_name,
-          sender: sender,
-          status: campaignStatus.DELIVERED,
-          user: user,
-          text: message,
-          type: campaignType.EMAIL,
-        })
-
-        const email_saved = await queryRunner.manager.save(newCampaign)
-
-        if (!email_saved) {
-          await queryRunner.rollbackTransaction()
-          await queryRunner.release()
-          return this.internalResponse(
-            false,
+            true,
             {},
-            400,
-            "A campaign was not saved"
+            200,
+            "Your email camapaign has been scheduled successfully"
           )
         }
       }
 
-      await queryRunner.commitTransaction()
 
-      return this.internalResponse(
-        true,
-        {},
-        200,
-        "Emails were sent successfully!"
-      )
     } catch (error) {
       await queryRunner.rollbackTransaction()
       await queryRunner.release()
