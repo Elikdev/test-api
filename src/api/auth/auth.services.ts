@@ -692,17 +692,17 @@ class AuthService extends BaseService {
     })
 
     if(!token_exists) {
-      return this.internalResponse(false, {}, 400, "Please make a new signin request")
+      return this.internalResponse(false, {}, 400, "Please make a new signin request because token does not exist")
     }
 
     if(new Date(token_exists.expires_in) < new Date(Date.now())) {
-      return this.internalResponse(false, {}, 400, "Please make a new signin request")
+      return this.internalResponse(false, {}, 400, "Please make a new signin request because token has expired")
     }
 
     const user_exists = await userService.findUserWithId(userId)
     
     if(!user_exists){
-      return this.internalResponse(false, {}, 400, "Please make a new signin request")
+      return this.internalResponse(false, {}, 400, "Please make a new signin request because user does not exist")
     }
 
     const access = AuthModule.generateAccessToken(
