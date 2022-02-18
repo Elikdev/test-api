@@ -18,7 +18,7 @@ import { requestService } from "../requests/request.services"
 import { walletService } from "../wallet/wallet.services"
 import { influencerService } from "../influencer/influencer.services"
 import { transactionService } from "../transactions/transaction.services"
-import { getRepository, Like, ILike, MoreThanOrEqual, getConnection } from "typeorm"
+import { getRepository, Like, ILike, MoreThanOrEqual, getConnection, Any } from "typeorm"
 import { User } from "../user/user.model"
 import { Settings } from "./settings.model"
 import { AuthModule } from "../../utils/auth"
@@ -1224,6 +1224,23 @@ class AdminService extends BaseService {
 
     return this.internalResponse(true, campaigns, 200, "campaigns")
   }
+
+  public async findAdminBasedOnIds(aDTO: {id_1: number, id_2: number}){
+    const {id_1, id_2} = aDTO
+    const admin = await getRepository(Admin).findOne({
+      where: {id: Any([id_1, id_2])}
+    })
+    
+    if(!admin){
+      return this.internalResponse(false, {}, 400, "Admin does not exist in both ids")
+    }
+
+    delete admin.password
+    delete admin.email_verification
+
+    return this.internalResponse(true, admin, 200, "Admin found!")
+  }
+
 }
 
 export const adminService = new AdminService()
