@@ -698,7 +698,7 @@ class AuthService extends BaseService {
     }
 
     const token_exists = await this.findOne(RefreshToken, {
-      where: {token, user: userId}
+      where: {user: userId}
     })
 
     if(!token_exists) {

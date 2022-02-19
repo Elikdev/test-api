@@ -156,7 +156,8 @@ class RoomService extends BaseService {
   public async getRoomAdminExistsIn() {
     const rooms = await getRepository(Room).find({
       where: {room_id: ILike("%room-admin%")},
-      relations: ['conversations', 'fan', 'influencer']
+      relations: ['conversations', 'fan', 'influencer'],
+      order: {updated_at: "DESC"}
     })
 
     if(rooms.length <= 0) {

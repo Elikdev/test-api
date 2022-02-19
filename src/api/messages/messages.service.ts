@@ -1,3 +1,4 @@
+import { getRepository } from "typeorm"
 import {BaseService} from "../../helpers/db.helper"
 import {jwtCred, IncomingMessage} from "../../utils/enum"
 import {roomService} from "../room/room.service"
@@ -153,6 +154,26 @@ class MessageService extends BaseService {
       "All messages have been saved"
     )
   }
+
+  public async getMessagesInARoom(room_id: any) {
+    const messages = await getRepository(Message).find({
+      where: {room_id},
+      relations: ["sender", "receiver"]
+    })
+
+    if(messages.length > 0) {
+      for (const msg of messages) {
+        delete msg.sender.email_verification
+        delete msg.sender.password
+        delete msg.receiver.password
+        delete msg.receiver.email_verification
+      }
+    }
+
+    return this.internalResponse(true, messages, 200, "messages")
+  }
+
+
 }
 
 export const messageService = new MessageService()
