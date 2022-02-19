@@ -11,6 +11,7 @@ import transactionRouter from "./api/transactions/transaction.controller";
 import tempRouter from "./api/temp/temp.controller";
 import messageRouter from "./api/messages/messages.controller";
 import adminRouter from "./api/admin/admin.controller";
+import roomRouter from "./api/room/room.controller";
 
 const apiPrefix = "/api/v1";
 
@@ -67,6 +68,10 @@ const routes = [
     prefix: "admin",
     name: adminRouter,
   },
+  {
+    prefix: "room",
+    name: roomRouter
+  }
 ];
 
 export default (app: any) => {

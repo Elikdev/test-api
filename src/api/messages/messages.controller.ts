@@ -32,4 +32,30 @@ messageRouter.post(
   }
 )
 
+messageRouter.post(
+  "/messages-by-roomid",
+  verificationMiddleware.validateToken,
+  async (req: Request, res: Response) => {
+    try {
+
+      const room_id = (req.body as any).room_id
+
+      if(!room_id) {
+        return errorResponse(res,  "room_id is required", 400)
+      }
+      //service is being called 
+      const response = await messageService.getMessagesInARoom(room_id)
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400, response.data)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
 export default messageRouter

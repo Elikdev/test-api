@@ -625,8 +625,8 @@ class AuthService extends BaseService {
     return this.internalResponse(true, { data: result }, 200, "Account approved")
   }
 
-  public async verifyRoomAndToken(sDTO: {room_id: string, token: string}) {
-    const { room_id, token } = sDTO
+  public async verifyRoomAndToken(sDTO: {room_id: string, token: string, refreshToken: string}) {
+    const { room_id, token, refreshToken } = sDTO
     //verify the token 
     const {verified, userDetails} = AuthModule.verifyToken(token)
 
@@ -641,7 +641,17 @@ class AuthService extends BaseService {
       return this.internalResponse(false, {}, 400, "User does not exist")
     }
 
-    // get the room 
+    if(user_exists.role === RoleType.BAMIKI_ADMIN) {
+      const room_exists_for_admin = await roomService.getRoombyRoomIdOnly(room_id)
+
+      if(!room_exists_for_admin) {
+        return this.internalResponse(false, {}, 400, `Room_id ${room_id} does not exist for user`)
+      }
+      return this.internalResponse(true, {verified: true, user: user_exists.id}, 200, "Token and room verified")
+    }
+
+
+    // get the room for basic users
     const room_exists = await roomService.findRoomByRoomId(room_id, user_exists.id)
 
     if(!room_exists){
@@ -688,7 +698,7 @@ class AuthService extends BaseService {
     }
 
     const token_exists = await this.findOne(RefreshToken, {
-      where: {token, user: userId}
+      where: {user: userId}
     })
 
     if(!token_exists) {

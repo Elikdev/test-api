@@ -371,4 +371,35 @@ adminRouter.post(
     }
   }
  )
+
+ adminRouter.post(
+   "/find-admin",
+   verificationMiddleware.validateToken,
+   verificationMiddleware.checkAdmin,
+   async (req: Request, res: Response) => {
+     try {
+       const id_1 = (req.body as any).id_1
+       const id_2 = (req.body as any).id_2
+
+       if (!id_1 || !id_2) {
+         return errorResponse(res, "2 valid Ids are required", 400)
+       }
+       //service is being called here
+       const response = await adminService.findAdminBasedOnIds({
+         id_1: parseInt(id_1),
+         id_2: parseInt(id_2),
+       })
+
+       if (!response.status) {
+         return errorResponse(res, response.message, 400)
+       }
+
+       return successRes(res, response.data, response.message)
+     } catch (error) {
+       console.log(error)
+       return errorResponse(res, "an error occured, contact support", 500)
+     }
+   }
+ )
+
 export default adminRouter

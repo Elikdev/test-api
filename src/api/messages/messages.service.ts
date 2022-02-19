@@ -1,3 +1,4 @@
+import { getRepository } from "typeorm"
 import {BaseService} from "../../helpers/db.helper"
 import {jwtCred, IncomingMessage} from "../../utils/enum"
 import {roomService} from "../room/room.service"
@@ -54,44 +55,60 @@ class MessageService extends BaseService {
 
   public async newSetOfMessages(msgDTO: IncomingMessage[]) {
     const new_messages = msgDTO
-
     ///for each messages --check if the room are the same
     //using filter
     const first_msg = new_messages[0]
-    const notInTheSamRoom = new_messages.filter(
-      (msg) =>
-        first_msg.room_id.toString() !== msg.room_id.toString() &&
-        first_msg.room !== msg.room
-    )
+    // const notInTheSamRoom = new_messages.filter(
+    //   (msg) =>
+    //     first_msg.room_id.toString() !== msg.room_id.toString() &&
+    //     first_msg.room !== msg.room
+    // )
 
-    if (notInTheSamRoom.length >= 1) {
-      return this.internalResponse(
-        false,
-        {},
-        400,
-        "incoming messages must be with the same room_id"
-      )
-    }
+    // if (notInTheSamRoom.length >= 1) {
+    //   return this.internalResponse(
+    //     false,
+    //     {},
+    //     400,
+    //     "incoming messages must be with the same room_id"
+    //   )
+    // }
 
     //check if the room exists on the db
     for (const msg of new_messages) {
-      const room_exists = await roomService.findRoomByIdAndRoomId(
-        msg.room,
-        msg.room_id,
-        msg.sender,
-        msg.receiver
-      )
 
-      if (!room_exists) {
-        return this.internalResponse(
-          false,
-          { sender: msg.sender, receiver: msg.receiver },
-          400,
-          `${msg.room_id} does not exist for both sender and receiver`
+      //perform action for admin here
+      if (msg.room_id?.split("-")[1] === "admin") {
+        const room_exists_for_admin = await roomService.getRoombyRoomIdOnly(
+          msg.room_id
         )
+
+        if (!room_exists_for_admin) {
+          return this.internalResponse(
+            false,
+            {},
+            400,
+            `${msg.room_id} does not exist for both sender and receiver`
+          )
+        }
       } else {
-        break
+        const room_exists = await roomService.findRoomByIdAndRoomId(
+          msg.room,
+          msg.room_id,
+          msg.sender,
+          msg.receiver
+        )
+  
+        if (!room_exists) {
+          return this.internalResponse(
+            false,
+            { sender: msg.sender, receiver: msg.receiver },
+            400,
+            `${msg.room_id} does not exist for both sender and receiver`
+          )
+        }
       }
+
+
     }
 
     //saving the messages
@@ -137,6 +154,26 @@ class MessageService extends BaseService {
       "All messages have been saved"
     )
   }
+
+  public async getMessagesInARoom(room_id: any) {
+    const messages = await getRepository(Message).find({
+      where: {room_id},
+      relations: ["sender", "receiver"]
+    })
+
+    if(messages.length > 0) {
+      for (const msg of messages) {
+        delete msg.sender.email_verification
+        delete msg.sender.password
+        delete msg.receiver.password
+        delete msg.receiver.email_verification
+      }
+    }
+
+    return this.internalResponse(true, messages, 200, "messages")
+  }
+
+
 }
 
 export const messageService = new MessageService()
