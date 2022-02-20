@@ -19,7 +19,7 @@ requestRouter.post('/new-request', verificationMiddleware.validateToken, request
         const response = await requestService.createRequest(authUser, req.body)
     
           if (!response.status) {
-            return errorResponse(res, response.message, 400)
+            return errorResponse(res, response.message, 400, response.data)
           }
     
           return successRes(res, response.data, response.message)

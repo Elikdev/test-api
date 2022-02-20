@@ -8,7 +8,7 @@ import { createConnection } from "typeorm"
 import {createClient} from "redis"
 
 if (process.env.NODE_ENV === "production") {
-	dotenv.config()
+	dotenv.config() //env
 } else {
 	dotenv.config({ path: ".env.local" })
 }
