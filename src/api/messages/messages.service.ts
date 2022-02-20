@@ -75,7 +75,6 @@ class MessageService extends BaseService {
 
     //check if the room exists on the db
     for (const msg of new_messages) {
-
       //perform action for admin here
       if (msg.room_id?.split("-")[1] === "admin") {
         const room_exists_for_admin = await roomService.getRoombyRoomIdOnly(
@@ -97,7 +96,7 @@ class MessageService extends BaseService {
           msg.sender,
           msg.receiver
         )
-  
+
         if (!room_exists) {
           return this.internalResponse(
             false,
@@ -107,8 +106,6 @@ class MessageService extends BaseService {
           )
         }
       }
-
-
     }
 
     //saving the messages
@@ -157,11 +154,11 @@ class MessageService extends BaseService {
 
   public async getMessagesInARoom(room_id: any) {
     const messages = await getRepository(Message).find({
-      where: {room_id},
-      relations: ["sender", "receiver"]
+      where: { room_id },
+      relations: ["sender", "receiver"],
     })
 
-    if(messages.length > 0) {
+    if (messages.length > 0) {
       for (const msg of messages) {
         delete msg.sender.email_verification
         delete msg.sender.password
@@ -173,7 +170,53 @@ class MessageService extends BaseService {
     return this.internalResponse(true, messages, 200, "messages")
   }
 
+  public async findMessageBymsgId(nsg_id: any) {
+    const msg = await this.findOne(Message, {
+      where: { message_id: nsg_id },
+    })
 
+    return msg
+  }
+
+  public async newMessage(msgDTO: IncomingMessage) {
+    const {
+      id,
+      sender,
+      receiver,
+      message,
+      room,
+      room_id,
+      time,
+      created_at,
+      updated_at,
+    } = msgDTO
+
+    //save the message
+    const msg = await this.newInstanceOfMessage({
+      id,
+      receiver,
+      sender,
+      message,
+      room,
+      room_id,
+      time,
+      created_at,
+      updated_at,
+    })
+
+    const new_msg = await this.save(Message, msg)
+
+    if (!new_msg) {
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "Error in saving the message"
+      )
+    }
+
+    return this.internalResponse(true, new_msg, 200, "maessage saved")
+  }
 }
 
 export const messageService = new MessageService()

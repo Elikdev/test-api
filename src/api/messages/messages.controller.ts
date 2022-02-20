@@ -58,4 +58,24 @@ messageRouter.post(
   }
 )
 
+messageRouter.post(
+  "/new-message",
+  messageValidation.newMessageValidation(),
+  async (req: Request, res: Response) => {
+    try {
+      //service is being called 
+      const response = await messageService.newMessage(req.body)
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400, response.data)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
 export default messageRouter
