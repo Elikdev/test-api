@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}))
 app.use(cors());
 
-appRoutes(app); 
+appRoutes(app); //routes
 
 
 app.use("*", (req, res) => {
