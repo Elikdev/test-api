@@ -32,6 +32,7 @@ import { Influencer } from "../influencer/influencer.model"
 import { compileEjs, sendEmail } from "../../helpers/mailer.helper"
 import { Campaign } from "./campaign.model"
 import { scheduleRequestJobChecker } from "../../helpers/cronjobs"
+const h2p  = require("html2plaintext")
 
 class AdminService extends BaseService {
   public async adminDashboard() {
@@ -1211,13 +1212,15 @@ class AdminService extends BaseService {
     const {type} = cDTO
     const campaigns = await getRepository(Campaign).find({
       where: {type},
-      relations: ["user"]
+      relations: ["user"],
+      order: {created_at: "DESC"}
     })
 
     if(campaigns.length > 0) {
       for (const campaign of campaigns) {
         delete campaign.user.email_verification
         delete campaign.user.password
+        campaign.text = h2p(campaign.text)
       }
     }
 
