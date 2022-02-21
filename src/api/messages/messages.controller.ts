@@ -59,7 +59,7 @@ messageRouter.post(
 )
 
 messageRouter.post(
-  "/new-message",
+  "/save-new-message",
   messageValidation.newMessageValidation(),
   async (req: Request, res: Response) => {
     try {

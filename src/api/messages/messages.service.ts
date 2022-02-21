@@ -18,13 +18,17 @@ class MessageService extends BaseService {
       message: incoming_msg,
       room: incoming_room,
       room_id,
+      unique_msg_id,
       time,
     } = message
+    
     //find users
     const incoming_sender = await userService.findUserWithId(sender)
+
     if (!incoming_sender) {
       return null
     }
+
     const incoming_receiver = await userService.findUserWithId(receiver)
     if (!incoming_receiver) {
       return null
@@ -41,6 +45,7 @@ class MessageService extends BaseService {
       new_message.room_id = room_id
       new_message.message = incoming_msg
       new_message.message_id = id
+      new_message.unique_msg_id = unique_msg_id
       new_message.room = room
       new_message.time = time
       return new_message
@@ -111,36 +116,41 @@ class MessageService extends BaseService {
     //saving the messages
     const messages_saved = []
     for (const save_msg of new_messages) {
-      const new_msg = await this.newInstanceOfMessage(save_msg)
+      const msg_saved_initially = await this.findMessageBymsgId(save_msg.unique_msg_id)
 
-      if (!new_msg) {
-        return this.internalResponse(
-          false,
-          { msg: save_msg },
-          400,
-          `Failed to save message due to invalid sender/receiver id or invalid room`
-        )
-      } else {
-        //save message
-        const saved_message = await this.saveMessage(new_msg)
+      if(!msg_saved_initially) { //if msg has not been saved initially
+        const new_msg = await this.newInstanceOfMessage(save_msg)
 
-        if (!saved_message) {
+        if (!new_msg) {
           return this.internalResponse(
             false,
             { msg: save_msg },
             400,
-            "Error in saving a message"
+            `Failed to save message due to invalid sender/receiver id or invalid room`
           )
         } else {
-          const { receiver, sender, ...data } = saved_message
-          const new_data = {
-            ...data,
-            receiver_id: receiver.id,
-            sender_id: sender.id,
+          //save message
+          const saved_message = await this.saveMessage(new_msg)
+  
+          if (!saved_message) {
+            return this.internalResponse(
+              false,
+              { msg: save_msg },
+              400,
+              "Error in saving a message"
+            )
+          } else {
+            const { receiver, sender, ...data } = saved_message
+            const new_data = {
+              ...data,
+              receiver_id: receiver.id,
+              sender_id: sender.id,
+            }
+            messages_saved.push(new_data)
           }
-          messages_saved.push(new_data)
         }
       }
+
     }
 
     //if everthing goes well
@@ -172,33 +182,37 @@ class MessageService extends BaseService {
 
   public async findMessageBymsgId(nsg_id: any) {
     const msg = await this.findOne(Message, {
-      where: { message_id: nsg_id },
+      where: { unique_msg_id: nsg_id },
     })
 
     return msg
   }
 
-  public async newMessage(msgDTO: IncomingMessage) {
+  public async newMessage(msgDTO: {message: IncomingMessage} ) {
+    const {message} = msgDTO
     const {
       id,
       sender,
       receiver,
-      message,
+      message: inc_msg,
       room,
       room_id,
+      unique_msg_id,
       time,
       created_at,
       updated_at,
-    } = msgDTO
+    } = message
+
 
     //save the message
     const msg = await this.newInstanceOfMessage({
       id,
-      receiver,
       sender,
-      message,
+      receiver,
+      message: inc_msg,
       room,
       room_id,
+      unique_msg_id,
       time,
       created_at,
       updated_at,
