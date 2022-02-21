@@ -5,7 +5,7 @@
 	"main": "src/index.ts",
 	"scripts": {
 		"test": "jest",
-		"start": "ts-node --fast src/index.ts",
+		"start": "ts-node -T src/index.ts",
 		"heroku-cleanup": "npm run typeorm migration:run",
 		"dev": "nodemon --exec ts-node src/index.ts",
 		"lint": "npx eslint . --fix --ext .ts",
@@ -50,7 +50,7 @@
 		"read-excel-file": "^5.2.25",
 		"redis": "^4.0.3",
 		"reflect-metadata": "^0.1.10",
-		"ts-node": "3.3.0",
+		"ts-node": "^10.5.0",
 		"typeorm": "0.2.33",
 		"typescript": "^3.3.3333",
 		"uuid": "^8.3.2"
