@@ -5,7 +5,7 @@
 	"main": "src/index.ts",
 	"scripts": {
 		"test": "jest",
-		"start": "node --max_old_space_size=4096 -r ts-node/register src/index.ts",
+		"start": "ts-node -T src/index.ts",
 		"heroku-cleanup": "npm run typeorm migration:run",
 		"dev": "nodemon --exec ts-node src/index.ts",
 		"lint": "npx eslint . --fix --ext .ts",

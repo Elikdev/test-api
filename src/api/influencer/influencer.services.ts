@@ -20,7 +20,7 @@ import {
 import { User } from "../user/user.model"
 import { userService } from "../user/user.services"
 import { Influencer } from "./influencer.model"
-import { redisClient } from "../../index"
+import client from "../../utils/redis"
 
 class InfluencerService extends BaseService {
   super: any
@@ -595,7 +595,7 @@ class InfluencerService extends BaseService {
     let rest
 
     //check if the redis has it
-    const results = await redisClient.get("spotlights")
+    const results = await client.get("spotlights")
     if (results == null) {
       const query = await getConnection()
         .createQueryBuilder()
@@ -616,7 +616,7 @@ class InfluencerService extends BaseService {
           delete q.transactions
         }
 
-        await redisClient.SETEX("spotlights", 604800, JSON.stringify(query))
+        await client.SETEX("spotlights", 604800, JSON.stringify(query))
         rest = query
       }
     } else {
