@@ -120,6 +120,7 @@ export type IncomingMessage = {
     message: any;
     room: number;
     room_id: string;
+    unique_msg_id: string;
     time: Date;
     created_at: Date;
     updated_at: Date;

@@ -24,6 +24,9 @@ export class Message extends BaseModel{
     room_id:string
 
     @Column()
+    unique_msg_id: string
+
+    @Column()
     time: Date
 
     @ManyToOne(()=>Room, room=>room.conversations)

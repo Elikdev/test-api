@@ -192,7 +192,7 @@ class RequestService extends BaseService{
             await queryRunner.release()
             return this.internalResponse(
               false,
-              {error: error},
+              {},
               400,
               "Request not successful. Please try again"
             )
