@@ -18,11 +18,18 @@ import { requestService } from "../requests/request.services"
 import { walletService } from "../wallet/wallet.services"
 import { influencerService } from "../influencer/influencer.services"
 import { transactionService } from "../transactions/transaction.services"
-import { getRepository, Like, ILike, MoreThanOrEqual, getConnection, Any } from "typeorm"
+import {
+  getRepository,
+  Like,
+  ILike,
+  MoreThanOrEqual,
+  getConnection,
+  Any,
+} from "typeorm"
 import { User } from "../user/user.model"
 import { Settings } from "./settings.model"
 import { AuthModule } from "../../utils/auth"
-import {extname} from "path"
+import { extname } from "path"
 import { Readable } from "stream"
 import readXlsxFile from "read-excel-file/node"
 import csv2 from "csvtojson"
@@ -32,7 +39,8 @@ import { Influencer } from "../influencer/influencer.model"
 import { compileEjs, sendEmail } from "../../helpers/mailer.helper"
 import { Campaign } from "./campaign.model"
 import { scheduleRequestJobChecker } from "../../helpers/cronjobs"
-const h2p  = require("html2plaintext")
+const h2p = require("html2plaintext")
+import sendBulkSms from "../../helpers/d7Helper"
 
 class AdminService extends BaseService {
   public async adminDashboard() {
@@ -415,14 +423,18 @@ class AdminService extends BaseService {
     const message = compileEjs({ template: "update-template" })({
       body: `You have been given an admin role on the Bamiki platform.
       `,
-      name: `${Array.isArray(new_admin.full_name.split(" ")) ? new_admin.full_name.split(" ")[0] : new_admin.full_name}`,
-    });
+      name: `${
+        Array.isArray(new_admin.full_name.split(" "))
+          ? new_admin.full_name.split(" ")[0]
+          : new_admin.full_name
+      }`,
+    })
 
     await sendEmail({
       html: message,
       subject: "Added as an Admin",
       to: new_admin.email,
-    });
+    })
 
     return this.internalResponse(
       true,
@@ -572,7 +584,6 @@ class AdminService extends BaseService {
       schedule_date: any
     }
   ) {
-
     // if (extname(recipient_file?.originalname) === ".xlsx") {
     //   /* tslint:disable-next-line: no-string-literal */
     //   const stream = Readable["from"](recipient_file.buffer)
@@ -644,13 +655,13 @@ class AdminService extends BaseService {
               }`,
               message: message,
             })
-    
+
             const email_sent = await sendEmail({
               html: htmlMessage,
               subject: campaign_name,
               to: user.email.toLowerCase(),
             })
-    
+
             if (!email_sent) {
               return this.internalResponse(
                 false,
@@ -659,7 +670,7 @@ class AdminService extends BaseService {
                 "Error in sending mail to this particular email"
               )
             }
-    
+
             //save to db
             const newCampaign = queryRunner.manager.create(Campaign, {
               campaign_name: campaign_name,
@@ -669,9 +680,9 @@ class AdminService extends BaseService {
               text: message,
               type: campaignType.EMAIL,
             })
-    
+
             const email_saved = await queryRunner.manager.save(newCampaign)
-    
+
             if (!email_saved) {
               await queryRunner.rollbackTransaction()
               await queryRunner.release()
@@ -683,9 +694,9 @@ class AdminService extends BaseService {
               )
             }
           }
-    
+
           await queryRunner.commitTransaction()
-    
+
           return this.internalResponse(
             true,
             {},
@@ -703,9 +714,9 @@ class AdminService extends BaseService {
               text: message,
               type: campaignType.EMAIL,
             })
-  
+
             const campaign_saved = await queryRunner.manager.save(newCampaign)
-  
+
             if (!campaign_saved) {
               await queryRunner.rollbackTransaction()
               await queryRunner.release()
@@ -717,35 +728,37 @@ class AdminService extends BaseService {
               )
             }
           }
-  
+
           await queryRunner.commitTransaction()
-  
+
           // create function for scheduled job
           const scheduledFunct = async () => {
             //get all the registered users
             const { users } = await userService.findAllVerifiedUsers()
-  
+
             for (const user of users) {
-              const htmlMessage = compileEjs({ template: "campaign-template" })({
-                name: `${
-                  Array.isArray(user.full_name.split(" "))
-                    ? user.full_name.split(" ")[0]
-                    : user.full_name
-                }`,
-                message: message,
-              })
-  
+              const htmlMessage = compileEjs({ template: "campaign-template" })(
+                {
+                  name: `${
+                    Array.isArray(user.full_name.split(" "))
+                      ? user.full_name.split(" ")[0]
+                      : user.full_name
+                  }`,
+                  message: message,
+                }
+              )
+
               const email_sent = await sendEmail({
                 html: htmlMessage,
                 subject: campaign_name,
                 to: user.email.toLowerCase(),
               })
-  
+
               if (email_sent) {
                 const campaign = await this.findOne(Campaign, {
                   where: { user: user.id, campaign_name },
                 })
-  
+
                 if (campaign.status === campaignStatus.SCHEDULED) {
                   await getConnection()
                     .createQueryBuilder()
@@ -757,9 +770,9 @@ class AdminService extends BaseService {
               }
             }
           }
-  
+
           scheduleRequestJobChecker(schedule_date, scheduledFunct)
-  
+
           return this.internalResponse(
             true,
             {},
@@ -768,8 +781,6 @@ class AdminService extends BaseService {
           )
         }
       }
-
-
     } catch (error) {
       await queryRunner.rollbackTransaction()
       await queryRunner.release()
@@ -789,7 +800,7 @@ class AdminService extends BaseService {
       campaign_name: string
       sender: string
       message: any
-      schedule: Boolean
+      schedule: any
       recipient_file: any
       schedule_date: any
     }
@@ -847,6 +858,7 @@ class AdminService extends BaseService {
     try {
       //get all the registered users
       const { users } = await userService.findAllVerifiedUsers()
+      let phone_numbers = []
 
       if (users.length <= 0) {
         return this.internalResponse(
@@ -857,8 +869,20 @@ class AdminService extends BaseService {
         )
       }
 
-      
-      if (schedule === true) {
+      phone_numbers = users.map((data) => {
+        return data.phone_number
+      })
+
+      if (phone_numbers.length <= 0) {
+        return this.internalResponse(
+          false,
+          {},
+          400,
+          "No phone numbers found on the platform"
+        )
+      }
+
+      if (schedule === "yes") {
         //save to db
         for (const user of users) {
           const newCampaign = queryRunner.manager.create(Campaign, {
@@ -888,25 +912,57 @@ class AdminService extends BaseService {
 
         // create function for scheduled job
         const scheduledFunct = async () => {
+          /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
+          let num = 0
+          /* <<<<<<<< end >>>>>>>> */
+
           //get all the registered users
           const { users } = await userService.findAllVerifiedUsers()
 
+          let test_phone_numbers = [process.env.TEST_NUMBER_1]
+
+          //d7 bulk sms comes in here
+          const options = {
+            numbers: test_phone_numbers,
+            message,
+            from: sender,
+          }
+          const { sms_error } = await sendBulkSms(options)
+
+          if (sms_error) {
+            return this.internalResponse(
+              false,
+              {},
+              400,
+              "Error in sending sms to phone numbers"
+            )
+          }
+
           for (const user of users) {
-            const sms_sent = false
+            /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
+            if (num > 1) {
+              break
+              /*<<<<<<<< end >>>>>>>> */
+            } else {
+              const sms_sent = false
 
-            if (sms_sent) {
-              const campaign = await this.findOne(Campaign, {
-                where: { user: user.id, campaign_name },
-              })
+              if (sms_sent) {
+                const campaign = await this.findOne(Campaign, {
+                  where: { user: user.id, campaign_name },
+                })
 
-              if (campaign.status === campaignStatus.SCHEDULED) {
-                await getConnection()
-                  .createQueryBuilder()
-                  .update(Campaign)
-                  .set({ status: campaignStatus.DELIVERED })
-                  .where("id = :id", { id: campaign.id })
-                  .execute()
+                if (campaign.status === campaignStatus.SCHEDULED) {
+                  await getConnection()
+                    .createQueryBuilder()
+                    .update(Campaign)
+                    .set({ status: campaignStatus.DELIVERED })
+                    .where("id = :id", { id: campaign.id })
+                    .execute()
+                }
               }
+              /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
+              num++
+              /*<<<<<<<< end >>>>>>>> */
             }
           }
         }
@@ -921,40 +977,72 @@ class AdminService extends BaseService {
         )
       }
 
+      /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
+      let num = 0
+
+      let test_phone_numbers = [process.env.TEST_NUMBER_1]
+      /*<<<<<<<< end >>>>>>>> */
+
+      //d7 bulk sms comes in here
+      const options = {
+        numbers: test_phone_numbers,
+        message,
+        from: sender,
+      }
+
+      const { sms_error } = await sendBulkSms(options)
+
+      if (sms_error) {
+        return this.internalResponse(
+          false,
+          {},
+          400,
+          "Error in sending sms to phone numbers"
+        )
+      }
+
       for (const user of users) {
-        //twilio bulk sms comes in here
-        const sms_sent = false
+        /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
+        if (num > 1) {
+          break
+          /*<<<<<<<< end >>>>>>>> */
+        } else {
+          const sms_sent = true
 
-        if (!sms_sent) {
-          return this.internalResponse(
-            false,
-            { phone_number: user.phone_number },
-            400,
-            "Error in sending sms to phone number"
-          )
-        }
+          if (!sms_sent) {
+            return this.internalResponse(
+              false,
+              { phone_number: user.phone_number },
+              400,
+              "Error in sending sms to phone number"
+            )
+          }
 
-        //save to db
-        const newCampaign = queryRunner.manager.create(Campaign, {
-          campaign_name: campaign_name,
-          sender: sender,
-          status: campaignStatus.DELIVERED,
-          user: user,
-          text: message,
-          type: campaignType.SMS,
-        })
+          //save to db
+          const newCampaign = queryRunner.manager.create(Campaign, {
+            campaign_name: campaign_name,
+            sender: sender,
+            status: campaignStatus.DELIVERED,
+            user: user,
+            text: message,
+            type: campaignType.SMS,
+          })
 
-        const sms_saved = await queryRunner.manager.save(newCampaign)
+          const sms_saved = await queryRunner.manager.save(newCampaign)
 
-        if (!sms_saved) {
-          await queryRunner.rollbackTransaction()
-          await queryRunner.release()
-          return this.internalResponse(
-            false,
-            {},
-            400,
-            "A campaign was not saved"
-          )
+          if (!sms_saved) {
+            await queryRunner.rollbackTransaction()
+            await queryRunner.release()
+            return this.internalResponse(
+              false,
+              {},
+              400,
+              "A campaign was not saved"
+            )
+          }
+          /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
+          num++
+          /*<<<<<<<< end >>>>>>>> */
         }
       }
 
@@ -1208,15 +1296,15 @@ class AdminService extends BaseService {
     return this.internalResponse(true, results, 200, "Results found")
   }
 
-  public async getCampaigns(cDTO: {type: string}) {
-    const {type} = cDTO
+  public async getCampaigns(cDTO: { type: string }) {
+    const { type } = cDTO
     const campaigns = await getRepository(Campaign).find({
-      where: {type},
+      where: { type },
       relations: ["user"],
-      order: {created_at: "DESC"}
+      order: { created_at: "DESC" },
     })
 
-    if(campaigns.length > 0) {
+    if (campaigns.length > 0) {
       for (const campaign of campaigns) {
         delete campaign.user.email_verification
         delete campaign.user.password
@@ -1224,18 +1312,22 @@ class AdminService extends BaseService {
       }
     }
 
-
     return this.internalResponse(true, campaigns, 200, "campaigns")
   }
 
-  public async findAdminBasedOnIds(aDTO: {id_1: number, id_2: number}){
-    const {id_1, id_2} = aDTO
+  public async findAdminBasedOnIds(aDTO: { id_1: number; id_2: number }) {
+    const { id_1, id_2 } = aDTO
     const admin = await getRepository(Admin).findOne({
-      where: {id: Any([id_1, id_2])}
+      where: { id: Any([id_1, id_2]) },
     })
-    
-    if(!admin){
-      return this.internalResponse(false, {}, 400, "Admin does not exist in both ids")
+
+    if (!admin) {
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "Admin does not exist in both ids"
+      )
     }
 
     delete admin.password
@@ -1243,7 +1335,6 @@ class AdminService extends BaseService {
 
     return this.internalResponse(true, admin, 200, "Admin found!")
   }
-
 }
 
 export const adminService = new AdminService()
