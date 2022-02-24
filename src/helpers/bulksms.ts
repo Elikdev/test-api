@@ -1,7 +1,7 @@
 import axios from "axios"
 
-const token = process.env.D7_TOKEN
-const url = process.env.D7_URL
+const token = process.env.INFOBIP_TOKEN
+const url = `${process.env.INFOBIP_BASE_URL}/sms/2/text/advanced`
 
 interface smsResponse {
  sms_error: boolean
@@ -9,24 +9,29 @@ interface smsResponse {
 
 const sendBulkSms =  async (options: {numbers: (string | number)[];  message: any; from: any}): Promise<smsResponse> => {
  const {numbers, message, from} = options
+
+ //format numbers
+ let eachNumbers = numbers.map((num) => {return {to: num}})
 try {
  const body = {
   messages: [
    {
-    to: numbers,
-    content: message,
-    from: from
+    from: from,
+    destinations: [
+     ...eachNumbers
+    ],
+    text: message
    }
   ]
  }
  const config = {
   headers: {
    "Content-Type": "application/json",
-   "Authorization": `Basic ${token}`
+   "Authorization": `App ${token}`
   }
  }
  const {data} = await axios.post(url, body, config)
- console.log(data?.data?.batchId)
+
  return {sms_error: false}
 } catch (error) {
  if(error.response){

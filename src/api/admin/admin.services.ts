@@ -40,7 +40,7 @@ import { compileEjs, sendEmail } from "../../helpers/mailer.helper"
 import { Campaign } from "./campaign.model"
 import { scheduleRequestJobChecker } from "../../helpers/cronjobs"
 const h2p = require("html2plaintext")
-import sendBulkSms from "../../helpers/d7Helper"
+import sendBulkSms from "../../helpers/bulksms"
 
 class AdminService extends BaseService {
   public async adminDashboard() {
@@ -980,7 +980,7 @@ class AdminService extends BaseService {
       /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
       let num = 0
 
-      let test_phone_numbers = [process.env.TEST_NUMBER_1]
+      let test_phone_numbers = [process.env.TEST_NUMBER_1, process.env.TEST_NUMBER_2, process.env.TEST_NUMBER_3]
       /*<<<<<<<< end >>>>>>>> */
 
       //d7 bulk sms comes in here
@@ -1003,7 +1003,7 @@ class AdminService extends BaseService {
 
       for (const user of users) {
         /* <<<<<<< REMOVE BEFORE PRODUCTION >>>>>>>> */
-        if (num > 1) {
+        if (num > 3) {
           break
           /*<<<<<<<< end >>>>>>>> */
         } else {

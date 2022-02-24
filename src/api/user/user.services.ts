@@ -156,8 +156,11 @@ class UserService extends BaseService{
             "received",
             "fan_rooms"
         ]
-        if (account_type === "celebrity") 
+        
+        if (account_type === "celebrity") {
             user_ralations.push("banks", "ratings", "influencer_rooms");
+        }
+
         const user = await this.findOne(User, {
             where: {
                 id
