@@ -919,12 +919,12 @@ class AdminService extends BaseService {
           //get all the registered users
           const { users } = await userService.findAllVerifiedUsers()
 
-          let test_phone_numbers = [process.env.TEST_NUMBER_1]
+          let test_phone_numbers = [process.env.TEST_NUMBER_1, process.env.TEST_NUMBER_2, process.env.TEST_NUMBER_3]
 
           //d7 bulk sms comes in here
           const options = {
             numbers: test_phone_numbers,
-            message,
+            message: h2p(message),
             from: sender,
           }
           const { sms_error } = await sendBulkSms(options)
@@ -986,7 +986,7 @@ class AdminService extends BaseService {
       //d7 bulk sms comes in here
       const options = {
         numbers: test_phone_numbers,
-        message,
+        message: h2p(message),
         from: sender,
       }
 
