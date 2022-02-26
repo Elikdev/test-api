@@ -2,6 +2,7 @@ import {Column, Entity, OneToOne, JoinColumn, ManyToMany, ManyToOne} from 'typeo
 import { BaseModel } from '../../helpers/db.helper';
 import { RequestStatus, RequestType, RequestDelivery } from '../../utils/enum';
 import { Influencer } from '../influencer/influencer.model';
+import { Room } from '../room/room.model';
 import { Transactions } from '../transactions/transaction.model';
 import { User } from '../user/user.model';
 
@@ -55,5 +56,9 @@ export class Requests extends BaseModel{
     @ManyToOne(()=>User,user=>user.fan_requests)
     @JoinColumn({"name":"fan"})
     fan:User
+
+    @OneToOne(() => Room, room => room.request)
+    @JoinColumn()
+    room: Room
     
 }
