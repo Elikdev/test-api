@@ -481,7 +481,7 @@ class AuthService extends BaseService {
       handle: user_exists.handle,
     })
   }
-
+  console.log(`Got here and moving-------`)
   // get data
   const userDetails = await userService.aggregateUserDetails(user_exists.id, user_exists.account_type);
 
