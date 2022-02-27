@@ -5,7 +5,7 @@ import { transactionService } from "../transactions/transaction.services"
 import { CreateRequestDto } from "./Dto/create-request.Dto"
 import { Requests } from "./request.model"
 import { getRepository } from "typeorm"
-import { jwtCred, RequestStatus } from "../../utils/enum"
+import { jwtCred, RequestStatus, RequestType } from "../../utils/enum"
 import { userService } from "../user/user.services"
 import { influencerService } from "../influencer/influencer.services"
 import { walletService } from "../wallet/wallet.services"
@@ -246,11 +246,59 @@ class RequestService extends BaseService {
     }
   }
 
+  public async formatRequests(requests: any) {
+    let results_helper = {}
+    let array_helper = []
+    const results_req = requests.reduce((r, d) => {
+      let key = `${d.fan.id}-${d.influencer.id}`
+
+      if (!results_helper[key]) {
+        results_helper[key] = Object.assign({}, d)
+        r[key] = results_helper[key]
+        r[key].previous = []
+      } else {
+        r[key].previous.push(d)
+      }
+      return r
+    }, {})
+
+    for (const prop in results_req) {
+      let { previous, ...curr_data } = results_req[prop]
+      let new_obj = {
+        current: curr_data,
+        previous: previous,
+      }
+      array_helper.push(new_obj)
+    }
+
+    return array_helper
+  }
+
   // cancel the request by fan
 
   public async getRequests(userId: number) {
     const [user_requests, count] = await getRepository(Requests).findAndCount({
       where: [{ fan: userId }, { influencer: userId }],
+      relations: ["influencer", "fan", "room"],
+      order: { created_at: "DESC" },
+    })
+
+    for (const request of user_requests) {
+      delete request.influencer.password
+      delete request.influencer?.email_verification
+      delete request.fan.password
+      delete request.fan?.email_verification
+    }
+
+    return { user_requests, count }
+  }
+
+  public async getRequestsByType(userId: number, type: RequestType) {
+    const [user_requests, count] = await getRepository(Requests).findAndCount({
+      where: [
+        { fan: userId, request_type: type },
+        { influencer: userId, request_type: type },
+      ],
       relations: ["influencer", "fan", "room"],
       order: { created_at: "DESC" },
     })
@@ -283,12 +331,72 @@ class RequestService extends BaseService {
     }
 
     //format response
-
+    let formatted_user_reqs = await this.formatRequests(user_requests)
     return this.internalResponse(
       true,
-      { total: count, requests: user_requests },
+      { total: count, requests: formatted_user_reqs },
       200,
       "Requests retrieved"
+    )
+  }
+
+  // get all my shout-out requests
+  public async getAllShoutOutRequestForAUser(user_id: number) {
+    const user_exists = await userService.findUserWithId(user_id)
+    if (!user_exists) {
+      return this.internalResponse(false, {}, 400, "user not found")
+    }
+
+    const { user_requests, count } = await this.getRequestsByType(
+      user_id,
+      RequestType.SHOUT_OUT
+    )
+    if (user_requests.length <= 0) {
+      return this.internalResponse(
+        false,
+        { total: 0, requests: [] },
+        400,
+        "No shout out requests available yet"
+      )
+    }
+
+    //format response
+    let formatted_user_reqs = await this.formatRequests(user_requests)
+    return this.internalResponse(
+      true,
+      { total: count, requests: formatted_user_reqs },
+      200,
+      "Shout out requests retrieved"
+    )
+  }
+
+  // get all my shout-out requests
+  public async getAllDMRequestForAUser(user_id: number) {
+    const user_exists = await userService.findUserWithId(user_id)
+    if (!user_exists) {
+      return this.internalResponse(false, {}, 400, "user not found")
+    }
+
+    const { user_requests, count } = await this.getRequestsByType(
+      user_id,
+      RequestType.DM
+    )
+    if (user_requests.length <= 0) {
+      return this.internalResponse(
+        false,
+        { total: 0, requests: [] },
+        400,
+        "No dm requests available yet"
+      )
+    }
+
+    //format response
+    let formatted_user_reqs = await this.formatRequests(user_requests)
+    return this.internalResponse(
+      true,
+      { total: count, requests: formatted_user_reqs },
+      200,
+      "Dm requests retrieved"
     )
   }
 
