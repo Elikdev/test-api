@@ -331,10 +331,10 @@ class RequestService extends BaseService {
     }
 
     //format response
-    let formatted_user_reqs = await this.formatRequests(user_requests)
+    // let formatted_user_reqs = await this.formatRequests(user_requests)
     return this.internalResponse(
       true,
-      { total: count, requests: formatted_user_reqs },
+      { total: count, requests: user_requests },
       200,
       "Requests retrieved"
     )
@@ -361,10 +361,10 @@ class RequestService extends BaseService {
     }
 
     //format response
-    let formatted_user_reqs = await this.formatRequests(user_requests)
+    // let formatted_user_reqs = await this.formatRequests(user_requests)
     return this.internalResponse(
       true,
-      { total: count, requests: formatted_user_reqs },
+      { total: count, requests: user_requests },
       200,
       "Shout out requests retrieved"
     )
@@ -391,10 +391,10 @@ class RequestService extends BaseService {
     }
 
     //format response
-    let formatted_user_reqs = await this.formatRequests(user_requests)
+    // let formatted_user_reqs = await this.formatRequests(user_requests)
     return this.internalResponse(
       true,
-      { total: count, requests: formatted_user_reqs },
+      { total: count, requests: user_requests },
       200,
       "Dm requests retrieved"
     )
