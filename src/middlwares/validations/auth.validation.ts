@@ -1,7 +1,8 @@
 import { celebrate } from "celebrate";
 import Joi from "joi";
 import { AccountType } from "../../utils/enum";
-
+/*.pattern(/^([0]{1}|\+?[234]{3})([7-9]{1})([0|1]{1})([\d]{1})([\d]{7})$/)*/
+/*.messages({"string.pattern.base": "Invalid phone number"})*/
 class AuthValidation {
  public signUpValidation(){
   return celebrate({
@@ -10,7 +11,7 @@ class AuthValidation {
     email: Joi.string().email().required(),
     handle: Joi.string().required(),
     password: Joi.string().min(8).required(),
-    phone_number: Joi.string().min(10).pattern(/^([0]{1}|\+?[234]{3})([7-9]{1})([0|1]{1})([\d]{1})([\d]{7})$/).required().messages({"string.pattern.base": "Invalid phone number"}),
+    phone_number: Joi.string().min(10).required(),
     country_code: Joi.number().required(),
     account_type: Joi.valid(AccountType.CELEB, AccountType.FAN, AccountType.ADMIN),
     social_media_link: Joi.string().uri().optional()
