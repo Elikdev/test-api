@@ -241,9 +241,9 @@ class MessageService extends BaseService {
     const { influencer_id, fan_id } = msgDTO
 
     //if the user id is not found in the id being used
-    let users: any = []
-    users = users.push(influencer_id)
-    users = users.push(fan_id)
+    let users = []
+    users.push(influencer_id)
+    users.push(fan_id)
 
     if (!users.includes(id)) {
       return this.internalResponse(
