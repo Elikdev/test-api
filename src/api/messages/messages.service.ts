@@ -259,7 +259,7 @@ class MessageService extends BaseService {
         { sender: influencer_id, receiver: fan_id },
         { sender: fan_id, receiver: influencer_id },
       ],
-      relations: ["sender", "reciever"],
+      relations: ["sender", "receiver"],
     })
 
     if (messages.length < 0) {
