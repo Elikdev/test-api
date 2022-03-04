@@ -12,13 +12,10 @@ roomRouter.post(
   verificationMiddleware.validateToken,
   async (req: Request, res: Response) => {
     try {
-      const userId = req.body.userId
-      if (!userId) {
-        return errorResponse(res, "userId is required", 400)
-      }
+      const authUser = (req as any).user
 
       //service is being called here
-      const response = await roomService.createRoomForHelpAndSupport(parseInt(userId))
+      const response = await roomService.createRoomForHelpAndSupport(parseInt(authUser.id))
 
       if (!response.status) {
         return errorResponse(res, response.message, 400, response.data)
