@@ -59,6 +59,33 @@ messageRouter.post(
 )
 
 messageRouter.post(
+  "/messages-by-users",
+  verificationMiddleware.validateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const authUser = (req as any).user
+      const fan_id = (req.body as any).fan_id
+      const influencer_id = (req.body as any).influencer_id
+
+      if(!fan_id || !influencer_id) {
+        return errorResponse(res,  "Both fan_id and influencer_id are required", 400)
+      }
+      //service is being called 
+      const response = await messageService.getMessagesByUsers(authUser, {fan_id: Number(fan_id), influencer_id: Number(influencer_id)})
+
+      if (!response.status) {
+        return errorResponse(res, response.message, 400, response.data)
+      }
+
+      return successRes(res, response.data, response.message)
+    } catch (error) {
+      console.log(error)
+      return errorResponse(res, "an error occured, contact support", 500)
+    }
+  }
+)
+
+messageRouter.post(
   "/save-new-message",
   messageValidation.newMessageValidation(),
   async (req: Request, res: Response) => {

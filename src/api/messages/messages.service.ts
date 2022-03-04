@@ -21,7 +21,7 @@ class MessageService extends BaseService {
       unique_msg_id,
       time,
     } = message
-    
+
     //find users
     const incoming_sender = await userService.findUserWithId(sender)
 
@@ -116,9 +116,12 @@ class MessageService extends BaseService {
     //saving the messages
     const messages_saved = []
     for (const save_msg of new_messages) {
-      const msg_saved_initially = await this.findMessageBymsgId(save_msg.unique_msg_id)
+      const msg_saved_initially = await this.findMessageBymsgId(
+        save_msg.unique_msg_id
+      )
 
-      if(!msg_saved_initially) { //if msg has not been saved initially
+      if (!msg_saved_initially) {
+        //if msg has not been saved initially
         const new_msg = await this.newInstanceOfMessage(save_msg)
 
         if (!new_msg) {
@@ -131,7 +134,7 @@ class MessageService extends BaseService {
         } else {
           //save message
           const saved_message = await this.saveMessage(new_msg)
-  
+
           if (!saved_message) {
             return this.internalResponse(
               false,
@@ -150,7 +153,6 @@ class MessageService extends BaseService {
           }
         }
       }
-
     }
 
     //if everthing goes well
@@ -188,8 +190,8 @@ class MessageService extends BaseService {
     return msg
   }
 
-  public async newMessage(msgDTO: {message: IncomingMessage} ) {
-    const {message} = msgDTO
+  public async newMessage(msgDTO: { message: IncomingMessage }) {
+    const { message } = msgDTO
     const {
       id,
       sender,
@@ -202,7 +204,6 @@ class MessageService extends BaseService {
       created_at,
       updated_at,
     } = message
-
 
     //save the message
     const msg = await this.newInstanceOfMessage({
@@ -230,6 +231,56 @@ class MessageService extends BaseService {
     }
 
     return this.internalResponse(true, new_msg, 200, "maessage saved")
+  }
+
+  public async getMessagesByUsers(
+    authUser: jwtCred,
+    msgDTO: { influencer_id: number; fan_id: number }
+  ) {
+    const { id } = authUser
+    const { influencer_id, fan_id } = msgDTO
+
+    //if the user id is not found in the id being used
+    let users: any = []
+    users = users.push(influencer_id)
+    users = users.push(fan_id)
+
+    if (!users.includes(id)) {
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "Unauthorized to view this conversation"
+      )
+    }
+
+    const messages = await getRepository(Message).find({
+      where: [
+        { sender: influencer_id, receiver: fan_id },
+        { sender: fan_id, receiver: influencer_id },
+      ],
+      relations: ["sender", "reciever"],
+    })
+
+    if (messages.length < 0) {
+      return this.internalResponse(
+        false,
+        {},
+        400,
+        "No messages found under this conversation"
+      )
+    }
+
+    if (messages.length > 0) {
+      for (const msg of messages) {
+        delete msg.sender.password
+        delete msg.sender.email_verification
+        delete msg.receiver.password
+        delete msg.receiver.email_verification
+      }
+    }
+
+    return this.internalResponse(true, messages, 200, "messages")
   }
 }
 
