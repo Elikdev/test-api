@@ -10,7 +10,7 @@ export class RefreshToken extends BaseModel {
  @Column()
  expires_in: Date
 
- @OneToOne(() => User, user => user.refresh_token)
- @JoinColumn()
- user: User
+ // @OneToOne(() => User, user => user.refresh_token)
+ // @JoinColumn()
+ // user: User
 }

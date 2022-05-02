@@ -13,9 +13,7 @@ class FanService extends BaseService {
     email: string,
     handle: string,
     country_code: number,
-    phone_number: string,
-    account_type: string,
-    referred_by: any
+    phone_number: string
   ) {
     const fan = new Fan()
     fan.full_name = full_name
@@ -24,8 +22,6 @@ class FanService extends BaseService {
     fan.handle = handle
     fan.country_code = country_code
     fan.phone_number = phone_number
-    fan.account_type = account_type
-    fan.referred_by = referred_by
     return await this.createFan(fan)
   }
 

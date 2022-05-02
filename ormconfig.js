@@ -23,7 +23,7 @@ module.exports = {
 	username: process.env.DB_USER,
 	password: process.env.DB_PASSWORD,
 	database: process.env.DB_NAME,
-	synchronize: false,
+	synchronize: true,
 	logging: false,
 	entities: ["src/api/**/*.model.ts"],
 	migrations: ["src/db/migration/**/*.ts"],

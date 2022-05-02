@@ -16,8 +16,8 @@ export enum AccountType {
 }
 
 export enum RoleType {
-    BAMIKI_ADMIN = "BAMIKI_ADMIN",
-    BAMIKI_USER = "BAMIKI_USER"
+    BAMIKI_ADMIN = "TEST_API_ADMIN",
+    BAMIKI_USER = "TEST_API_USER"
 }
 
 export enum ChannelType {

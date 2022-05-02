@@ -16,19 +16,6 @@ const rootPath = path.join(__dirname, "..", "templates/");
 
 let opts: any
 
-if(process.env.NODE_ENV === "production") {
-  opts = {
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        type: "OAuth2",
-        user: "support@bamiki.com",
-        serviceClient: process.env.CLIENT_ID,
-        privateKey: process.env.PRIVATE_KEY,
-      },
-    };
-} else {
   opts = {
     service: "Gmail",
     port: 465,
@@ -37,7 +24,7 @@ if(process.env.NODE_ENV === "production") {
       pass: process.env.EMAIL_PASSWORD,
      },
   };
-}
+
 
 // const opts: any = {
 //   host: "smtp.gmail.com",
@@ -78,7 +65,7 @@ export const sendEmail = (options: {
   return new Promise((resolve, reject) => {
     transport.sendMail(
       {
-        from: from ? from : '"Bamiki Support" <support@bamiki.com>',
+        from: from ? from : '"Test-API Support" <support@test-api.com>',
         to,
         subject,
         html,

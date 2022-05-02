@@ -20,7 +20,7 @@ import {
 import { User } from "../user/user.model"
 import { userService } from "../user/user.services"
 import { Influencer } from "./influencer.model"
-import client from "../../utils/redis"
+// import client from "../../utils/redis"
 
 class InfluencerService extends BaseService {
   super: any
@@ -483,149 +483,149 @@ class InfluencerService extends BaseService {
     )
   }
 
-  public async getFeaturedInfluencers(authUser: jwtCred) {
-    const { id } = authUser
-    //get the influencers from the featured influencers
-    let results = []
-    //choose the best influencers with the highest rating
-    if (results.length <= 0) {
-      const [list, count] = await getRepository(Influencer).findAndCount({
-        where: {
-          is_verified: true,
-          average_rating: MoreThanOrEqual("3.5"),
-          id: Not(Equal(id)),
-        },
-        order: { average_rating: "DESC" },
-        relations: [
-          "influencer_requests",
-          "fan_requests",
-          "transactions",
-          "shout_out_videos",
-          "ratings",
-          "followers",
-          "wallet",
-        ],
-        take: 10,
-      })
+  // public async getFeaturedInfluencers(authUser: jwtCred) {
+  //   const { id } = authUser
+  //   //get the influencers from the featured influencers
+  //   let results = []
+  //   //choose the best influencers with the highest rating
+  //   if (results.length <= 0) {
+  //     const [list, count] = await getRepository(Influencer).findAndCount({
+  //       where: {
+  //         is_verified: true,
+  //         average_rating: MoreThanOrEqual("3.5"),
+  //         id: Not(Equal(id)),
+  //       },
+  //       order: { average_rating: "DESC" },
+  //       relations: [
+  //         "influencer_requests",
+  //         "fan_requests",
+  //         "transactions",
+  //         "shout_out_videos",
+  //         "ratings",
+  //         "followers",
+  //         "wallet",
+  //       ],
+  //       take: 10,
+  //     })
 
-      results = list
-    }
+  //     results = list
+  //   }
 
-    let total_length: any
+  //   let total_length: any
 
-    if (results.length < 10) {
-      const [list, count] = await getRepository(Influencer).findAndCount({
-        where: { is_verified: true, id: Not(Equal(id)) },
-        relations: [
-          "influencer_requests",
-          "fan_requests",
-          "transactions",
-          "ratings",
-          "followers",
-          "wallet",
-        ],
-      })
+  //   if (results.length < 10) {
+  //     const [list, count] = await getRepository(Influencer).findAndCount({
+  //       where: { is_verified: true, id: Not(Equal(id)) },
+  //       relations: [
+  //         "influencer_requests",
+  //         "fan_requests",
+  //         "transactions",
+  //         "ratings",
+  //         "followers",
+  //         "wallet",
+  //       ],
+  //     })
 
-      //sort the fan that has the highest number of requests
-      list.sort((a, b) =>
-        a.influencer_requests.length > b.influencer_requests.length
-          ? -1
-          : b.influencer_requests.length > a.influencer_requests.length
-          ? 1
-          : 0
-      )
+  //     //sort the fan that has the highest number of requests
+  //     list.sort((a, b) =>
+  //       a.influencer_requests.length > b.influencer_requests.length
+  //         ? -1
+  //         : b.influencer_requests.length > a.influencer_requests.length
+  //         ? 1
+  //         : 0
+  //     )
 
-      //push to results
-      for (const infl of list) {
-        results.push(infl)
+  //     //push to results
+  //     for (const infl of list) {
+  //       results.push(infl)
 
-        if (results.length === 10) {
-          break
-        }
-      }
-      total_length = results.length
-    }
+  //       if (results.length === 10) {
+  //         break
+  //       }
+  //     }
+  //     total_length = results.length
+  //   }
 
-    if (total_length < 10) {
-      const query = await getConnection()
-        .createQueryBuilder()
-        .select("*")
-        .from(Influencer, "influencers")
-        .where(`NOT("id" = ${id})`)
-        .orderBy("RANDOM()")
-        .limit(6)
-        .execute()
+  //   if (total_length < 10) {
+  //     const query = await getConnection()
+  //       .createQueryBuilder()
+  //       .select("*")
+  //       .from(Influencer, "influencers")
+  //       .where(`NOT("id" = ${id})`)
+  //       .orderBy("RANDOM()")
+  //       .limit(6)
+  //       .execute()
 
-      for (const infl of query) {
-        results?.push(infl)
+  //     for (const infl of query) {
+  //       results?.push(infl)
 
-        if (results?.length === 10) {
-          break
-        }
-      }
-    }
-    //display them as featured
-    if (results.length > 0) {
-      //remove duplicates
-      results = results.filter(
-        (v, i, a) => a.findIndex((t) => t.id === v.id) === i
-      )
+  //       if (results?.length === 10) {
+  //         break
+  //       }
+  //     }
+  //   }
+  //   //display them as featured
+  //   if (results.length > 0) {
+  //     //remove duplicates
+  //     results = results.filter(
+  //       (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+  //     )
 
-      for (const influencer of results) {
-        delete influencer?.password
-        delete influencer?.email_verification
-        delete influencer?.wallet
-        delete influencer?.fan_requests
-        delete influencer?.influencer_requests
-        delete influencer?.transactions
-      }
-    }
+  //     for (const influencer of results) {
+  //       delete influencer?.password
+  //       delete influencer?.email_verification
+  //       delete influencer?.wallet
+  //       delete influencer?.fan_requests
+  //       delete influencer?.influencer_requests
+  //       delete influencer?.transactions
+  //     }
+  //   }
 
-    return this.internalResponse(
-      true,
-      results,
-      200,
-      "Featured influencers retrieved!"
-    )
-  }
+  //   return this.internalResponse(
+  //     true,
+  //     results,
+  //     200,
+  //     "Featured influencers retrieved!"
+  //   )
+  // }
 
-  public async getSpotlight(authUser: jwtCred) {
-    const { id } = authUser
+  // public async getSpotlight(authUser: jwtCred) {
+  //   const { id } = authUser
 
-    let rest
+  //   let rest
 
-    //check if the redis has it
-    const results = await client.get("spotlights")
-    if (results == null) {
-      const query = await getConnection()
-        .createQueryBuilder()
-        .select("*")
-        .from(Influencer, "influencers")
-        .where(`NOT("id" = ${id})`)
-        .orderBy("RANDOM()")
-        .limit(6)
-        .execute()
+  //   //check if the redis has it
+  //   const results = await client.get("spotlights")
+  //   if (results == null) {
+  //     const query = await getConnection()
+  //       .createQueryBuilder()
+  //       .select("*")
+  //       .from(Influencer, "influencers")
+  //       .where(`NOT("id" = ${id})`)
+  //       .orderBy("RANDOM()")
+  //       .limit(6)
+  //       .execute()
 
-      if (query.length > 0) {
-        for (const q of query) {
-          delete q.password
-          delete q.email_verification
-          delete q.wallet
-          delete q.fan_requestss
-          delete q.influencer_requests
-          delete q.transactions
-        }
+  //     if (query.length > 0) {
+  //       for (const q of query) {
+  //         delete q.password
+  //         delete q.email_verification
+  //         delete q.wallet
+  //         delete q.fan_requestss
+  //         delete q.influencer_requests
+  //         delete q.transactions
+  //       }
 
-        await client.SETEX("spotlights", 604800, JSON.stringify(query))
-        rest = query
-      }
-    } else {
-      console.log("fetching from redis")
-      rest = JSON.parse(results)
-    }
+  //       await client.SETEX("spotlights", 604800, JSON.stringify(query))
+  //       rest = query
+  //     }
+  //   } else {
+  //     console.log("fetching from redis")
+  //     rest = JSON.parse(results)
+  //   }
 
-    return this.internalResponse(true, rest, 200, "spotlights retrieved!")
-  }
+  //   return this.internalResponse(true, rest, 200, "spotlights retrieved!")
+  // }
 }
 
 export const influencerService = new InfluencerService()

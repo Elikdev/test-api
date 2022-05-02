@@ -161,8 +161,7 @@ class UserService extends BaseService{
         const user = await this.findOne(User, {
             where: {
                 id
-            },
-            relations: user_ralations
+            }
         })
 
         delete user.password

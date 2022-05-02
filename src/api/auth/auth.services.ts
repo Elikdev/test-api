@@ -1,19 +1,13 @@
 import { getRepository } from "typeorm"
 import {BaseService} from "../../helpers/db.helper"
-import { AccountType, LiveVideoVerificationStatus, RoleType } from '../../utils/enum';
+import { RoleType } from '../../utils/enum';
 import {AuthModule} from "../../utils/auth"
-import {Fan} from "../fan/fan.model"
 import { User } from "../user/user.model"
-import {Influencer} from "../influencer/influencer.model"
 import { sendEmail, compileEjs } from "../../helpers/mailer.helper"
 import {userService} from '../user/user.services'
-import { influencerService } from "../influencer/influencer.services"
-import { walletService } from "../wallet/wallet.services"
 import { fanService } from "../fan/fan.services"
-import { roomService } from "../room/room.service";
 import { RefreshToken } from "./refreshToken.model";
 import {v4 as uuidv4} from "uuid"
-import { Admin } from "../admin/admin.model";
 
 class AuthService extends BaseService {
 
@@ -26,10 +20,6 @@ class AuthService extends BaseService {
       password: string
       phone_number: string,
       country_code: number,
-      social_media_link: string,
-      live_video: string,
-      account_type: AccountType,
-      ref: string
     }) {
       const emailToLower = userDTO.email.toLowerCase()
       const user_exists = await userService.findOneUser(
@@ -57,46 +47,18 @@ class AuthService extends BaseService {
       }
 
       let user: any
-      let isFan: boolean
 
       //hash the password
       const hashedPassword = AuthModule.hashPassWord(userDTO.password)
 
-      //if account type is fan or influencer
-      if (userDTO.account_type === AccountType.CELEB) {
-        isFan = false
-
-        //generate invite_code
-        const ref_code = AuthModule.generateRefCode()
-
-        user = influencerService.newInfluencerInstance(
+      user = await fanService.newFan(
           userDTO.full_name,
           hashedPassword,
           emailToLower,
           userDTO.handle,
           userDTO.country_code,
           userDTO.phone_number,
-          userDTO?.social_media_link,
-          userDTO?.live_video,
-          userDTO.account_type,
-          ref_code,
-          userDTO?.ref
         )
-      }
-
-      if (userDTO.account_type === AccountType.FAN) {
-        isFan = true
-        user = await fanService.newFan(
-          userDTO.full_name,
-          hashedPassword,
-          emailToLower,
-          userDTO.handle,
-          userDTO.country_code,
-          userDTO.phone_number,
-          userDTO.account_type,
-          userDTO?.ref
-        )
-      }
 
       // generate otp
       const otp: string = AuthModule.generateOtp(6)
@@ -116,16 +78,12 @@ class AuthService extends BaseService {
 
       const email_sent = await sendEmail({
         html: htmlMessage,
-        subject: "Bamiki Account Registration",
+        subject: "Test API Account Registration",
         to: emailToLower,
       })
 
       if (email_sent) {
-        if (!isFan) {
-          user = await influencerService.createInfluencer(user)
-        } else {
           user = await fanService.createFan(user)
-        }
 
         //update the user
         user.email_verification = {
@@ -138,19 +96,6 @@ class AuthService extends BaseService {
 
         if (!user_created) {
           return this.internalResponse(false, {}, 400, "Error in saving user")
-        }
-
-        //create wallet
-        const new_wallet = walletService.newWalletInstance(user_created)
-        const wallet_created = await walletService.saveWallet(new_wallet)
-
-        if (!wallet_created) {
-          return this.internalResponse(
-            false,
-            {},
-            400,
-            "An error occured while creating wallet"
-          )
         }
 
         delete user.password
@@ -196,23 +141,10 @@ class AuthService extends BaseService {
           email_verification: {otp_verifed: false, otp_code: null, expires_in: null}
         }
       
-        if(user_exists.account_type === AccountType.CELEB) {
-          const influencer_exists = await influencerService.findInfluencerById(user_exists.id)
-
-          const infl_update_details = {
-            is_verified: true,
-            is_admin_verified: true,
-            email_verification: {otp_verifed: false, otp_code: null, expires_in: null},
-            live_video_verification_status: LiveVideoVerificationStatus.VERIFIED
-          }
-
-          this.schema(Influencer).merge(influencer_exists, infl_update_details)
-          await this.updateOne(Influencer, influencer_exists)
-        } else {
           this.schema(User).merge(user_exists, update_details)
       
           await this.updateOne(User, user_exists)
-        }
+
 
       
         
@@ -402,18 +334,6 @@ class AuthService extends BaseService {
     return this.internalResponse(false, { email: user_exists.email }, 401, "The email that you entered has not been verified")
   }
 
-  // if (user_exists.account_type === "celebrity") {
-  //   const influencer = await influencerService.findInfluencerWithEmail(emailToLower)
-  //   // send back the email for client to redirect to video upload screen
-  //   if (!influencer?.is_admin_verified && influencer?.live_video == null ) {
-  //     return this.internalResponse(false, { email: user_exists.email }, 401, "Video verification required")
-  //   }
-
-  //   if (user_exists.account_type === "celebrity" && !influencer?.is_admin_verified && influencer?.live_video != null ) {
-  //     return this.internalResponse(false, { email: user_exists.email }, 401, "Your account is awaiting approval")
-  //   }
-  // }
-
 
   // add this and update the usertable with migration
   if (user_exists.status === "disabled") {
@@ -437,50 +357,12 @@ class AuthService extends BaseService {
   
   let token: any
 
-  if (user_exists.role === "BAMIKI_ADMIN") {
-    const admin_exists =  await getRepository(Admin).findOne({
-      where: {id: user_exists.id}
-    })
-
-    if(!admin_exists) {
-      return this.internalResponse(false, {}, 400, "The email entered is not registered as an admin")
-    }
-
-    if(admin_exists.blocked || admin_exists.deleted) {
-      return this.internalResponse(false, {}, 400, "This admin has been denied access due to a deleted or blocked account")
-    }
-
-    const access = AuthModule.generateAccessToken(
-      {
-        id: user_exists.id,
-        email: user_exists.email,
-        full_name: user_exists.full_name,
-        handle: user_exists?.handle || "bamiki-admin",
-      },
-      300 //5mins(300)
-    )
-
-    const refresh = uuidv4()
-
-    //save the refresh token or update the existing one
-    const token_saved = await this.createRefreshToken(user_exists, 604800000, refresh) //expires in 7 days --  604800000
-
-    if(!token_saved) {
-      return this.internalResponse(false, {}, 400, "Error in saving admin's token")
-    }
-
-    token = {
-      refresh,
-      access,
-    }
-  } else {
     token = AuthModule.generateJWT({
       id: user_exists.id,
       email: user_exists.email,
       full_name: user_exists.full_name,
       handle: user_exists.handle,
     })
-  }
   
   // get data
   const userDetails = await userService.aggregateUserDetails(user_exists.id, user_exists.account_type);
@@ -489,264 +371,92 @@ class AuthService extends BaseService {
   return this.internalResponse(true, { data: userDetails, token }, 200, "User login successful")
  }
 
- public async uploadVideo(userDTO: {email: string, video_link: string}) {
-  const emailToLower = userDTO.email.toLowerCase()
+  // public async createRefreshToken (user: any, expires: number, token: string) {
+  //   let expiry_time = new Date(Date.now() + expires)
 
-  // check if you are an influencer
-  const influencer = await influencerService.findInfluencerWithEmail(emailToLower);
-  if (!influencer || influencer.account_type !== "celebrity") {
-    return this.internalResponse(false, {}, 400, "This function is not available for you")
-  }
+  //   //find if there is an existing one
+  //   const rt_exists = await this.findOne(RefreshToken, {
+  //     where: { user: user.id },
+  //   })
 
-  if (influencer.is_admin_verified) {
-    return this.internalResponse(false, {}, 400, "Your account has already been approved")
-  }
+  //   if (rt_exists) {
+  //     const update_fields = {
+  //       token: token,
+  //       expires_in: expiry_time,
+  //     }
+  //     const update_token = this.schema(RefreshToken).merge(
+  //       rt_exists,
+  //       update_fields
+  //     )
+  //     return await this.updateOne(RefreshToken, update_token)
+  //   } else {
+  //     const new_token = getRepository(RefreshToken).create({
+  //       token,
+  //       expires_in: expiry_time,
+  //       user,
+  //     })
 
-  const update_details = { live_video: userDTO.video_link }
+  //     return this.save(RefreshToken, new_token)
+  //   }
+  // }
 
-  // send mail to user that its received
-  const message = compileEjs({ template: "update-template" })({
-    body: `Your video verification has been received.
-    This may take a while as we are experiencing a larger than normal volume of requests recently and we are working through them as quickly as we can in order 
-    they are received.<br>
-    We would get back to you in due time 🚀.
-    `,
-    name: `${Array.isArray(influencer.full_name.split(" ")) ? influencer.full_name.split(" ")[0] : influencer.full_name}`,
-  });
-  const sent_mail = await sendEmail({
-    html: message,
-    subject: "Bamiki Influencer Video Verification",
-    to: emailToLower,
-  });
-  
-  if(!sent_mail) {
-    return this.internalResponse(true, {}, 400, "Error in sending email")
-  }
-  // update the user then
-  const result = await influencerService.updateInfluencer(influencer, update_details);
+  // public async refreshToken (rtDTO: {token: string, userId: number}) {
+  //   const {token, userId} = rtDTO
 
-  if (!result) {
-    return this.internalResponse(false, {}, 400, "Unable to upload video for verification")
-  }
+  //   if(!token || !userId) {
+  //     return this.internalResponse(false, {}, 400, "Both token and user id are required")
+  //   }
 
-  delete result.password
+  //   const token_exists = await this.findOne(RefreshToken, {
+  //     where: {user: userId}
+  //   })
 
-  return this.internalResponse(true, { }, 200, "Video uploaded successfully, Account pending approval")
-  }
+  //   if(!token_exists) {
+  //     return this.internalResponse(false, {}, 400, "Please make a new signin request because token does not exist")
+  //   }
 
-  public async verifyVideo(userDTO: {id: number}) {
-    const influencer = await influencerService.findInfluencerById(userDTO.id);
-    if (!influencer || influencer.account_type !== "celebrity") {
-      return this.internalResponse(false, {}, 400, "This function is not available for you")
-    }
-  
-    if (influencer.is_admin_verified) {
-      return this.internalResponse(false, {}, 400, "Account has already been approved")
-    }
-  
-    if (influencer.live_video == null) {
-      return this.internalResponse(false, {}, 400, "No video available for the user yet")
-    }
+  //   if(new Date(token_exists.expires_in) < new Date(Date.now())) {
+  //     return this.internalResponse(false, {}, 400, "Please make a new signin request because token has expired")
+  //   }
 
-    const update_details = { is_admin_verified: true }
-  
-    // // send mail to user that its received
-    const message = compileEjs({ template: "update-template" })({
-      body: `Hurray🚀. Your account has been approved. Login and start posting on bamiki today.
-      `,
-      name: `${Array.isArray(influencer.full_name.split(" ")) ? influencer.full_name.split(" ")[0] : influencer.full_name}`,
-    });
-    const sent_mail = await sendEmail({
-      html: message,
-      subject: "Bamiki Influencer Video Verification Successful",
-      to: influencer.email,
-    });
+  //   const user_exists = await userService.findUserWithId(userId)
     
-    if(!sent_mail) {
-      return this.internalResponse(true, {}, 400, "Error in sending email")
-    }
-    // // update the user then
-    const result = await influencerService.updateInfluencer(influencer, update_details);
+  //   if(!user_exists){
+  //     return this.internalResponse(false, {}, 400, "Please make a new signin request because user does not exist")
+  //   }
 
-    if (!result) {
-      return this.internalResponse(false, {}, 400, "Unable to update user")
-    }
+  //   const access = AuthModule.generateAccessToken(
+  //     {
+  //       id: user_exists.id,
+  //       email: user_exists.email,
+  //       full_name: user_exists.full_name,
+  //       handle: user_exists?.handle || "bamiki-admin",
+  //     },
+  //     300 //5mins
+  //   )
+
+  //   const refresh = uuidv4()
     
-    delete result.password
+  //   //update the token
+  //   const token_updated = await this.createRefreshToken(user_exists,  604800000, refresh) // 7 days --  604800000
 
-    if (result.referred_by !== null) {
-      const referrer = await influencerService.findInfluencerById(
-        result.referred_by
-      )
-      //update the referrer count
-      if (referrer) {
-        const update_details = {
-          referral_count: referrer?.referral_count
-            ? referrer.referral_count++
-            : 1,
-        }
+  //   if(!token_updated) {
+  //     return this.internalResponse(false, {}, 400, "error in updating the admin token")
+  //   }
 
-        const referrer_updated = await influencerService.updateInfluencer(
-          referrer,
-          update_details
-        )
+  //   //remove password
+  //   const {password, email_verification, ...data} = user_exists
 
-        if(!referrer_updated) {
-          return this.internalResponse(false, {}, 400, "Failed to update referrer")
-        }
+  //   const response = {
+  //     userDetails: data,
+  //     token: {
+  //       refresh,
+  //       access
+  //     }
+  //   }
 
-        // if (referrer_updated) {
-        //   const referrer_wallet = await walletService.findWalletByUserId(
-        //     referrer_updated.id
-        //   )
-        //   //update the wallet -- add to the ledger balance for now
-        //   const new_balance =
-        //     (parseFloat(referrer_wallet.ledger_balance) + 5.0).toFixed(2) //$5 bonus
-        //   const wallet_update_details = {
-        //     ledger_balance: new_balance,
-        //   }
-        //   const wallet_updated = await walletService.updateWallet(
-        //     referrer_wallet,
-        //     wallet_update_details
-        //   )
-
-        //   if (!wallet_updated) {
-        //     return this.internalResponse(
-        //       false,
-        //       {},
-        //       400,
-        //       "Failed to update referrer's wallet"
-        //     )
-        //   }
-        // }
-      }
-    }
-  
-    return this.internalResponse(true, { data: result }, 200, "Account approved")
-  }
-
-  public async verifyRoomAndToken(sDTO: {room_id: string, token: string, refreshToken: string}) {
-    const { room_id, token, refreshToken } = sDTO
-    //verify the token 
-    const {verified, userDetails} = AuthModule.verifyToken(token)
-
-    if(!verified) {
-      return this.internalResponse(false, {}, 400, "Invalid token")
-    }
-
-    //get the user
-    const user_exists = await userService.getUserDetails(userDetails.id)
-
-    if(!user_exists) {
-      return this.internalResponse(false, {}, 400, "User does not exist")
-    }
-
-    if(user_exists.role === RoleType.BAMIKI_ADMIN) {
-      const room_exists_for_admin = await roomService.getRoombyRoomIdOnly(room_id)
-
-      if(!room_exists_for_admin) {
-        return this.internalResponse(false, {}, 400, `Room_id ${room_id} does not exist for user`)
-      }
-      return this.internalResponse(true, {verified: true, user: user_exists.id}, 200, "Token and room verified")
-    }
-
-
-    // get the room for basic users
-    const room_exists = await roomService.findRoomByRoomId(room_id, user_exists.id)
-
-    if(!room_exists){
-      return this.internalResponse(false, {}, 400, `Room_id ${room_id} does not exist for user`)
-    }
-
-    return this.internalResponse(true, {verified: true, user: user_exists.id}, 200, "Token and room verified")
-  }
-
-  public async createRefreshToken (user: any, expires: number, token: string) {
-    let expiry_time = new Date(Date.now() + expires)
-
-    //find if there is an existing one
-    const rt_exists = await this.findOne(RefreshToken, {
-      where: { user: user.id },
-    })
-
-    if (rt_exists) {
-      const update_fields = {
-        token: token,
-        expires_in: expiry_time,
-      }
-      const update_token = this.schema(RefreshToken).merge(
-        rt_exists,
-        update_fields
-      )
-      return await this.updateOne(RefreshToken, update_token)
-    } else {
-      const new_token = getRepository(RefreshToken).create({
-        token,
-        expires_in: expiry_time,
-        user,
-      })
-
-      return this.save(RefreshToken, new_token)
-    }
-  }
-
-  public async refreshToken (rtDTO: {token: string, userId: number}) {
-    const {token, userId} = rtDTO
-
-    if(!token || !userId) {
-      return this.internalResponse(false, {}, 400, "Both token and user id are required")
-    }
-
-    const token_exists = await this.findOne(RefreshToken, {
-      where: {user: userId}
-    })
-
-    if(!token_exists) {
-      return this.internalResponse(false, {}, 400, "Please make a new signin request because token does not exist")
-    }
-
-    if(new Date(token_exists.expires_in) < new Date(Date.now())) {
-      return this.internalResponse(false, {}, 400, "Please make a new signin request because token has expired")
-    }
-
-    const user_exists = await userService.findUserWithId(userId)
-    
-    if(!user_exists){
-      return this.internalResponse(false, {}, 400, "Please make a new signin request because user does not exist")
-    }
-
-    const access = AuthModule.generateAccessToken(
-      {
-        id: user_exists.id,
-        email: user_exists.email,
-        full_name: user_exists.full_name,
-        handle: user_exists?.handle || "bamiki-admin",
-      },
-      300 //5mins
-    )
-
-    const refresh = uuidv4()
-    
-    //update the token
-    const token_updated = await this.createRefreshToken(user_exists,  604800000, refresh) // 7 days --  604800000
-
-    if(!token_updated) {
-      return this.internalResponse(false, {}, 400, "error in updating the admin token")
-    }
-
-    //remove password
-    const {password, email_verification, ...data} = user_exists
-
-    const response = {
-      userDetails: data,
-      token: {
-        refresh,
-        access
-      }
-    }
-
-    return this.internalResponse(true, response, 200, "Token refreshed")
-  }
+  //   return this.internalResponse(true, response, 200, "Token refreshed")
+  // }
 
   public async setToAdmin (userId: number) {
     const user_exists = await userService.findUserWithId(userId)
@@ -767,14 +477,6 @@ class AuthService extends BaseService {
     }
 
     return this.internalResponse(true, {}, 200, "User updated")
-  }
-
-  public async getAllSignUpsCount () {
-    const [list, count] = await getRepository(User).findAndCount({
-      where: {is_verified: true, role: RoleType.BAMIKI_USER}
-    })
-
-    return count;
   }
     
 }

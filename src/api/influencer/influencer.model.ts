@@ -1,9 +1,5 @@
 import { ChildEntity, Column, JoinColumn, ManyToOne, OneToMany } from "typeorm"
 import { User } from "../user/user.model"
-import { Wallet } from "../wallet/wallet.model"
-import { Bank } from "../bank/bank.model"
-import { Rating } from "../ratings/ratings.model"
-import { ShoutOutVideos } from "../requests/shoutOut.model"
 import { LiveVideoVerificationStatus } from "../../utils/enum"
 
 @ChildEntity()
@@ -45,18 +41,18 @@ export class Influencer extends User {
     expires_in: string
   }
 
-  @OneToMany(() => Bank, (bank) => bank.user)
-  banks: Bank[]
+  // @OneToMany(() => Bank, (bank) => bank.user)
+  // banks: Bank[]
 
-  @OneToMany(() => Rating, (ratings) => ratings.influencer)
-  ratings: Rating[]
+  // @OneToMany(() => Rating, (ratings) => ratings.influencer)
+  // ratings: Rating[]
 
-  @Column()
-  rate_dm:number
+  // @Column()
+  // rate_dm:number
 
-  @Column()
-  rate_shout_out:number
+  // @Column()
+  // rate_shout_out:number
 
-  @OneToMany(() => ShoutOutVideos, (sov) => sov.influencer)
-  shout_out_videos: ShoutOutVideos[]
+  // @OneToMany(() => ShoutOutVideos, (sov) => sov.influencer)
+  // shout_out_videos: ShoutOutVideos[]
 }
